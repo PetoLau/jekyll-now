@@ -5,8 +5,8 @@
 // IMPORTS
 //
 
-@import "reset";
-@import "variables";
+@import "_reset";
+@import "_variables";
 // Syntax highlighting @import is at the bottom of this file
 
 /**************/
@@ -18,9 +18,11 @@ html {
 }
 
 body {
-	background: $white;
-  font: 18px/1.4 $helvetica;
+  background: $white;
+  font: 16px/1.4 $helvetica; 
   color: $darkGray;
+  color: #333;
+  background-color: #fff;
 }
 
 .container {
@@ -34,7 +36,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: $helveticaNeue;
   color: $darkerGray;
   font-weight: bold;
-
+  
   line-height: 1.7;
   margin: 1em 0 15px;
   padding: 0;
@@ -43,23 +45,23 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.4;
   }
 }
-
-h1 {
+  
+h1 {  
   font-size: 30px;
   a {
     color: inherit;
   }
 }
 
-h2 {
+h2 {  
   font-size: 24px;
 }
 
-h3 {
+h3 {  
   font-size: 20px;
 }
 
-h4 {
+h4 {  
   font-size: 18px;
   color: $gray;
 }
@@ -110,11 +112,6 @@ img {
   max-width: 100%;
 }
 
-// Fixes images in popup boxes from Google Translate
-.gmnoprint img {
-  max-width: none;
-}
-
 .date {
   font-style: italic;
   color: $gray;
@@ -157,7 +154,7 @@ img {
 .masthead {
   padding: 20px 0;
   border-bottom: 1px solid $lightGray;
-
+  
   @include mobile {
     text-align: center;
   }
@@ -194,7 +191,7 @@ img {
   margin: 0;
   color: $darkGray;
   cursor: pointer;
-  font-family: $helveticaNeue;
+  font-family: $helveticaNeue; 
   font-weight: 300;
   font-size: 28px;
   letter-spacing: 1px;
@@ -204,7 +201,7 @@ img {
   margin: -5px 0 0 0;
   color: $gray;
   font-size: 16px;
-
+  
   @include mobile {
     margin: 3px 0;
   }
@@ -213,9 +210,9 @@ img {
 nav {
   float: right;
   margin-top: 23px; // @TODO: Vertically middle align
-  font-family: $helveticaNeue;
+  font-family: $helveticaNeue; 
   font-size: 18px;
-
+  
   @include mobile {
     float: none;
     margin-top: 9px;
@@ -251,7 +248,7 @@ nav {
   border-bottom: none;
 }
 
-.post {
+.post { 
   blockquote {
     margin: 1.8em .8em;
     border-left: 2px solid $gray;
@@ -282,6 +279,16 @@ footer {
   padding: 20px 0;
   text-align: center;
 }
+
+// ----------------------------------
+// table custom css taken from github
+// ----------------------------------
+
+table{display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}
+table th{font-weight:bold}
+table th, table td{padding:3px 6px;border:1px solid #ddd}
+table tr{background-color:#fff;border-top:1px solid #ccc}
+table tr:nth-child(2n){background-color:#f8f8f8}
 
 // Settled on moving the import of syntax highlighting to the bottom of the CSS
 // ... Otherwise it really bloats up the top of the CSS file and makes it difficult to find the start
