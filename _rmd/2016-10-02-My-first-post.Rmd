@@ -10,7 +10,7 @@ tags: R
 
 ## Data Analysis
 
-Generate random numbers:
+Generate some random numbers:
 
 ```{r eval=FALSE, echo=TRUE}
 rnorm(50)
