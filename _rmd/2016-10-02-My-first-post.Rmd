@@ -1,0 +1,30 @@
+---
+layout: post
+title: My first post
+author: Peter Laurinec
+published: false
+status: process
+draft: false
+tags: R
+---
+
+## Data Analysis
+
+Generate random numbers:
+
+```{r eval=FALSE, echo=TRUE}
+rnorm(50)
+```
+
+```{r eval=TRUE, echo=FALSE}
+timeseries_1 <- rnorm(50)
+timeseries_1
+```
+
+## Ploting time series
+
+Plot random numbers like time series:
+
+```{r plot, echo=TRUE}
+plot(ts(timeseries_1, start = 0), ylab = "", xlab = "Time")
+```
