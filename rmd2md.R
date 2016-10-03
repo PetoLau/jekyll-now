@@ -54,7 +54,7 @@ rmd2md <- function( path_site = getwd(),
           #render_markdown(strict=FALSE) #code didn't render properly on blog
           
           #andy change to render for jekyll
-          render_jekyll(highlight = "none")
+          render_jekyll(highlight = "pygments")
           #render_jekyll(highlight = "prettify") #for javascript
           
           opts_knit$set(out.format='markdown') 
