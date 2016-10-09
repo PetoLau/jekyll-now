@@ -280,26 +280,6 @@ footer {
   text-align: center;
 }
 
-.share-page {
-    text-align: center;
-    background: $white;
-    color: $blue;
-    padding: 8px 15px;
-    border-radius: 5px;
-    margin: 1.5 * 2 0;
-
-    a {
-        font-weight: 700;
-        color: #fff;
-        margin-left: 10px;
-
-        &:hover {
-            border-bottom: 1px dashed #fff;
-        }
-    }
-}
-
-
 // ----------------------------------
 // table custom css taken from github
 // ----------------------------------
