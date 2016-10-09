@@ -25,7 +25,7 @@ footer-links:
   instagram:
   linkedin: peter-laurinec-590a8a90
   pinterest:
-  rss: # just type anything here for a working RSS icon
+  rss: PetoLau # just type anything here for a working RSS icon
   twitter: 
   stackoverflow: # your stackoverflow profile, e.g. "users/50476/bart-kiers"
   youtube: # channel/<your_long_string> or user/<user-name>
@@ -34,7 +34,7 @@ footer-links:
 
 # Enter your Disqus shortname (not your username) to enable commenting on posts
 # You can find your shortname on the Settings page of your Disqus account
-disqus: PetoLau
+disqus: https-petolau-github-io
 
 # Enter your Google Analytics web tracking code (e.g. UA-2110908-2) to activate tracking
 google_analytics:
