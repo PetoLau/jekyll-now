@@ -57,7 +57,7 @@ rmd2md <- function( path_site = getwd(),
           render_jekyll(highlight = "pygments")
           #render_jekyll(highlight = "prettify") #for javascript
           
-          opts_knit$set(out.format='markdown') 
+          opts_knit$set(out.format='markdown')
           
           # andy BEWARE don't set base.dir!! it caused me problems
           # "base.dir is never used when composing the URL of the figures; it is 
@@ -66,7 +66,7 @@ rmd2md <- function( path_site = getwd(),
           # https://groups.google.com/forum/#!topic/knitr/18aXpOmsumQ
           
           opts_knit$set(base.url = "/")
-          opts_chunk$set(fig.path = url_images)                     
+          opts_chunk$set(fig.path = url_images)         
           
           #andy I could try to make figures bigger
           #but that might make not work so well on mobile
