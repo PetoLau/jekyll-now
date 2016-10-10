@@ -281,19 +281,23 @@ footer {
 }
 
 
-
 .share-page {
-    text-align: center;
-    background: grey;
-    color: grey;
-    padding: 8px 15px;
-    border-radius: 5px;
-    margin: 1.5 * 5 0;
+    //text-align: center;
+    //background: grey;
+    //color: grey;
+    //padding: 8px 15px;
+    //border-radius: 5px;
+    //margin: 1.5 * 5 0;
 
     a {
         font-weight: 700;
         color: #fff;
-        margin-left: 10px;
+        border-left: 10px;
+        border-right: 10px;
+        border-up: 2px;
+        border-bottom: 2px;
+        border-style:solid;
+        border-color:red;
 
         &:hover {
             border-bottom: 1px dashed #fff;
