@@ -282,28 +282,6 @@ footer {
 
 
 .share-page {
-    //text-align: center;
-    //background: grey;
-    //color: grey;
-    //padding: 8px 15px;
-    //border-radius: 5px;
-    //margin: 1.5 * 5 0;
-/*
-    a {
-        font-weight: 700;
-        color: #fff;
-        border-left: 10px;
-        border-right: 10px;
-        border-up: 2px;
-        border-bottom: 2px;
-        border-style:solid;
-        border-color:red;
-
-        &:hover {
-            border-bottom: 1px dashed #fff;
-        }
-    }
-    */
     a {
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -316,6 +294,7 @@ footer {
     background: #4479BA;
     color: #FFF;
     padding: 8px 12px;
+    font-family: $helveticaNeue;
     text-decoration: none;
 }
 }
