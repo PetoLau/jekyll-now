@@ -1,0 +1,307 @@
+---
+layout: post
+title: Enernoc smart meter data and forecast with similar day approach
+author: Peter Laurinec
+published: false
+status: process
+draft: false
+tags: R, forecast
+---
+
+## Exploring meta data of consumers (ID)
+
+Scan all needed packages.
+```{r, message=FALSE, warning=FALSE}
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(ggmap)
+library(gridExtra)
+library(forecast)
+```
+
+```{r setup}
+opts_knit$set(root.dir = "C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
+```
+
+Read meta data and show their structure.
+
+```{r}
+meta_data <- fread("meta\\all_sites.csv")
+str(meta_data)
+```
+Nice features to explore...so frequency table of industries:
+```{r}
+qplot(1:5, 1:5, geom = "blank") + theme_bw() + theme(line = element_blank(), text = element_blank()) +
+  annotation_custom(grob = tableGrob(meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]))
+```
+Map of USA of location of our consumers.
+```{r, message=FALSE, warning=FALSE}
+map <- get_map(location = "USA", zoom = 4) # c(lon = -125, lat = 22)
+ggmap(map) + geom_point(aes(x = LNG, y = LAT, color = INDUSTRY), size = 5, data = meta_data, alpha = .6) +
+theme(axis.title.x = element_text(colour = "white"), axis.title.y = element_text(colour = "white"), axis.text.x = element_text(colour = "white"), axis.text.y = element_text(colour = "white"))
+```
+
+Histogram of sqft -> square meter.
+```{r, cache=TRUE, cache.vars='meta_data'}
+set(meta_data, j = "SQ_FT", value = meta_data[["SQ_FT"]] * 0.09290304)
+setnames(meta_data, "SQ_FT", "SQ_M")
+ggplot(meta_data, aes(meta_data$SQ_M)) +
+  geom_histogram(bins = 32,
+                 col = "grey95",
+                 fill = "dodgerblue2", 
+                 alpha = .80) +
+  labs(title = "Histogram of SQ_M for all consumers") +
+  labs(x = "SQ_M", y = "Frequency") +
+  theme(title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold"))
+```
+
+Density plot of industries and SQ_M.
+```{r}
+ggplot(meta_data, aes(SQ_M, colour = INDUSTRY, fill = INDUSTRY)) + 
+  geom_density(alpha=0.55) +
+  theme(axis.text=element_text(size=10),
+        axis.title=element_text(size=12,face="bold"))
+```
+
+Load all .csv files containing electricity consumption in one data.table by rbindlist and lapply. See structure and change column names.
+```{r}
+files <- list.files(pattern = "*.csv")
+DT <- rbindlist(lapply(files, function(x) cbind(fread(x), gsub(".csv", "", x))))
+str(DT)
+setnames(DT, c("dttm_utc", "V2"), c("date", "ID"))
+```
+
+Prepare meta_data to merge with DT.
+```{r, echo=FALSE, message=FALSE, warning=FALSE, cache=TRUE, cache.vars='meta_data'}
+meta_data[, ':='(TIME_ZONE = NULL, TZ_OFFSET = NULL)]
+setnames(meta_data, "SITE_ID", "ID")
+meta_data[, ID := as.character(meta_data[["ID"]])]
+```
+
+Extract possible interesting features from ID.
+```{r}
+ID_stats <- DT[, .(Mean = mean(value), Median = median(value), Sum = sum(value)), .(ID)]
+```
+
+Merge and aggregate by sub_industry.
+```{r}
+data_m <- merge(ID_stats, meta_data, by = "ID")
+sub_sum <- data_m[, .(mean(Mean)), .(SUB_INDUSTRY)]
+```
+
+Bar plot of mean load by sub_industries.
+```{r}
+ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_INDUSTRY, V1))) +
+  geom_bar(stat = "identity", width = 0.8) +
+  labs(x = "", y = "Mean Load (kW)",
+       title = "Mean load by subindustries",
+       fill = "SUB_INDUSTRY") +
+  theme(title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold"),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+Regression line SQ_M vs Median Load.
+```{r}
+ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
+  geom_point(aes(colour = INDUSTRY, shape = INDUSTRY), size = 4, alpha = 0.8) +
+  geom_smooth(method = lm, color = "yellow1", se = TRUE) +
+  scale_shape_manual(values = c(15,16,17,18)) +
+  scale_color_manual(values=c("salmon", "dodgerblue2", "springgreen3", "plum3")) +
+  theme(axis.text=element_text(size=10),
+        axis.title=element_text(size=12,face="bold"))
+```
+
+Transform characters to classical Date and Date&Time format (POSIxt).
+```{r, cache=TRUE, cache.vars='DT'}
+DT[, date_time := ymd_hms(DT[["date"]])]
+DT[, date := as.Date(DT[["date"]], "%Y-%m-%d")]
+DT[, ':='(timestamp = NULL, estimated = NULL, anomaly = NULL)]
+str(DT)
+```
+Extract ID's with an whole length (105408)
+```{r, cache=TRUE, cache.vars='DT'}
+count_ID <- DT[, .N, ID]
+full <- count_ID[N == max(N), .(ID)]
+DT <- DT[ID %in% full[, ID]]
+```
+
+Extract date's with an all measurements during the day (288).  First and last date has not all measurements - so remove them.
+```{r, cache=TRUE, cache.vars='DT'}
+num_date <- DT[ID == 100, .N, .(date)]
+table(num_date[, N])
+DT <- DT[!date %in% num_date[c(1,367), date]]
+```
+Our extracted (filtered) ID's.
+```{r}
+unique(DT[,ID])
+```
+
+Plot one (ID 99).
+```{r}
+ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
+  geom_line() +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold"),
+        strip.text = element_text(size = 12, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+```
+
+Aggregate consumption to 48 measurements per day (every half hour) - due to reduction of dimensionality - 48/per day is good compromise.
+```{r, cache=TRUE, cache.vars='DT_48'}
+DT_48 <- DT[, .(value = sum(value), date, ID, date_time), by = (seq(nrow(DT)) - 1) %/% 6]
+DT_48 <- DT_48[seq(1, nrow(DT_48), by = 6)]
+DT_48[, seq := NULL]
+```
+
+Plot typical representants of 4 groups of industries.
+```{r}
+ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
+  geom_line() + 
+  facet_grid(ID ~ ., scales = "free_y", labeller = "label_both") +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold"),
+        strip.text = element_text(size = 12, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+```
+
+Aggregate consumption of all consumers (43).
+```{r}
+DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
+ggplot(DT_agg, aes(date_time, value)) +
+  geom_line() +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+```
+
+Median daily profile of aggregate consumption with MAD (median absolute deviation).
+```{r}
+Med_Mad <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% 48]
+ggplot(Med_Mad, aes(x = seq, Med)) + 
+  geom_line(size = 0.9) +
+  geom_ribbon(data = Med_Mad, aes(ymin = Med - Mad, ymax = Med + Mad),
+              fill = "firebrick2", alpha = 0.3) +
+  theme(title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(title = "Median daily profile +- Deviation (MAD)") +
+  labs(x = "Time", y = "Load (kW)")
+```
+
+Median weekly profile of aggregate consumption with MAD (median absolute deviation).
+```{r}
+Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
+ggplot(Med_Mad_Week, aes(x = seq, Med)) + 
+  geom_line(size = 0.9) + 
+  geom_ribbon(data = Med_Mad_Week, aes(ymin = Med - Mad, ymax = Med + Mad),
+              fill = "firebrick2", alpha = 0.3) +
+  geom_vline(xintercept = c(47, 47+(48*3), 47+(48*4), 47+(48*5)), linetype = 2, size = 1) +
+  theme(title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(title = "Median weekly profile +- Deviation (MAD)") +
+  labs(x = "Time", y = "Load (kW)")
+```
+
+## Creation of forecast model for different days during the week (similar day approach)
+
+Add corresponding weekdays to date for datasets DT_48 and DT_agg
+```{r, cache=TRUE, cache.vars=c('DT_48', DT_agg)}
+DT_48[, week := weekdays(date_time)]
+DT_agg[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+```
+Now we have datasets with all needed features to build model for different days.
+Extract date, ID, weekdays and period for better working with subsetting.
+```{r}
+n_ID <- unique(DT_48[, ID])
+n_weekdays <- unique(DT_agg[, week])
+n_date <- unique(DT_agg[, date])
+period <- 48
+```
+
+Define forecast methods. STL+ARIMA and STL+EXP.
+```{r}
+# STL + ARIMA
+stlARIMAPred <- function(Y, period = 48){
+  ts_Y <- ts(Y, start = 0, freq = period)
+  dekom <- stl(ts_Y, s.window="periodic", robust = T)
+  arima <- forecast(dekom, h = period, method = "arima")
+  return(as.vector(arima$mean))
+}
+# STL + EXP
+stlEXPPred <- function(Y, period = 48){
+  ts_Y <- ts(Y, start = 0, freq = period)
+  dekom <- stl(ts_Y, s.window = "periodic", robust = T)
+  expo <- forecast(dekom, h = period, method = "ets", etsmodel = "ZZN")
+  return(as.vector(expo$mean))
+}
+```
+
+Function to return forecast of the length one week.
+```{r}
+predictWeek <- function(data, set_of_date, FUN, train_win = 6){
+
+ for_mon <- FUN(data[(week == n_weekdays[1] & date %in% set_of_date), value])
+ seq_tuethu <- data[(week %in% n_weekdays[2:4] & date %in% set_of_date), value]
+ for_tuethu <- as.vector(sapply(2:0, function(j) FUN(seq_tuethu[(length(seq_tuethu)-(period*j)+1-(train_win*period)):(length(seq_tuethu)-(period*j))])))
+ for_fri <- FUN(data[(week == n_weekdays[5] & date %in% set_of_date), value])
+ for_sat <- FUN(data[(week == n_weekdays[6] & date %in% set_of_date), value])
+ for_sun <- FUN(data[(week == n_weekdays[7] & date %in% set_of_date), value])
+
+ return(c(for_mon, for_tuethu, for_fri, for_sat, for_sun))
+}
+```
+
+Define function to compute Mean Absolute Percentage Error.
+```{r}
+mape <- function(real, pred){
+  return(100 * mean(abs((real - pred)/real)))
+}
+```
+
+Run prediction and compute MAPE of both methods.
+```{r}
+for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred)
+for_week_exp <- predictWeek(DT_agg, n_date[56:84], stlEXPPred)
+real_week <- DT_agg[date %in% n_date[85:91], value]
+mape(real_week, for_week_arima)
+mape(real_week, for_week_exp)
+```
+
+Compute MAPE for every day of week separately.
+```{r}
+sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_arima[((i*period)+1):((i+1)*period)]))
+sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_exp[((i*period)+1):((i+1)*period)]))
+
+```
+
+Plot computed forecast of one week ahead.
+```{r}
+datas <- data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% n_date[78:91], value]),
+                    date = c(rep(DT_agg[date %in% n_date[85:91], date_time], 2), DT_agg[date %in% n_date[78:91], date_time]),
+                    type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
+
+ggplot(data = datas, aes(date, value, group = type, colour = type)) +
+  geom_line(size = 0.8) +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(x = "Time", y = "Load (kW)",
+       title = "Comparison of forecasts from two models")
+```
+
+THE END.

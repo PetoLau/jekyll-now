@@ -3,9 +3,9 @@ layout: post
 title: My first post
 author: Peter Laurinec
 published: false
-status: process
+status: processed
 draft: false
-tags: R
+tags: test
 ---
 
 ## Data Analysis
