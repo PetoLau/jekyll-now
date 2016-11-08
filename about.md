@@ -8,7 +8,7 @@ I am a PhD. student at the Faculty of Informatics and Information Technologies, 
 
 My [CV](/images/CV.pdf).
 
-And my publications are on [google scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en).
+My publications are on [Google Scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en), [Research Gate](https://www.researchgate.net/profile/Peter_Laurinec) and [Scopus](http://www.researcherid.com/rid/Q-2356-2016).
 
 
 ### Contact
