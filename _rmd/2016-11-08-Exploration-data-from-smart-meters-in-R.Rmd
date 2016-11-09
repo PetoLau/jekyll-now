@@ -8,7 +8,7 @@ draft: false
 tags: R, forecast
 ---
 
-## Exploring meta data of consumers (ID)
+# Exploring meta data of consumers (ID)
 
 Scan all needed packages.
 ```{r, message=FALSE, warning=FALSE}
@@ -21,6 +21,7 @@ library(forecast)
 ```
 
 ```{r setup}
+knitr::opts_chunk$set(include = FALSE)
 opts_knit$set(root.dir = "C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 ```
 
@@ -30,20 +31,22 @@ Read meta data and show their structure.
 meta_data <- fread("meta\\all_sites.csv")
 str(meta_data)
 ```
+
 Nice features to explore...so frequency table of industries:
-```{r}
+```{r, fig.width = 6, fig.height = 6}
 qplot(1:5, 1:5, geom = "blank") + theme_bw() + theme(line = element_blank(), text = element_blank()) +
   annotation_custom(grob = tableGrob(meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]))
 ```
+
 Map of USA of location of our consumers.
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, fig.width = 8.5, fig.height = 8}
 map <- get_map(location = "USA", zoom = 4) # c(lon = -125, lat = 22)
 ggmap(map) + geom_point(aes(x = LNG, y = LAT, color = INDUSTRY), size = 5, data = meta_data, alpha = .6) +
 theme(axis.title.x = element_text(colour = "white"), axis.title.y = element_text(colour = "white"), axis.text.x = element_text(colour = "white"), axis.text.y = element_text(colour = "white"))
 ```
 
 Histogram of sqft -> square meter.
-```{r, cache=TRUE, cache.vars='meta_data'}
+```{r, cache=TRUE, cache.vars='meta_data', fig.width = 8}
 set(meta_data, j = "SQ_FT", value = meta_data[["SQ_FT"]] * 0.09290304)
 setnames(meta_data, "SQ_FT", "SQ_M")
 ggplot(meta_data, aes(meta_data$SQ_M)) +
@@ -59,7 +62,7 @@ ggplot(meta_data, aes(meta_data$SQ_M)) +
 ```
 
 Density plot of industries and SQ_M.
-```{r}
+```{r, fig.width = 8, fig.height = 6.5}
 ggplot(meta_data, aes(SQ_M, colour = INDUSTRY, fill = INDUSTRY)) + 
   geom_density(alpha=0.55) +
   theme(axis.text=element_text(size=10),
@@ -93,7 +96,7 @@ sub_sum <- data_m[, .(mean(Mean)), .(SUB_INDUSTRY)]
 ```
 
 Bar plot of mean load by sub_industries.
-```{r}
+```{r, fig.width = 8, fig.height = 6.5}
 ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_INDUSTRY, V1))) +
   geom_bar(stat = "identity", width = 0.8) +
   labs(x = "", y = "Mean Load (kW)",
@@ -107,7 +110,7 @@ ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_IN
 ```
 
 Regression line SQ_M vs Median Load.
-```{r}
+```{r, fig.width = 8.5, fig.height = 7}
 ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
   geom_point(aes(colour = INDUSTRY, shape = INDUSTRY), size = 4, alpha = 0.8) +
   geom_smooth(method = lm, color = "yellow1", se = TRUE) +
@@ -117,6 +120,7 @@ ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
         axis.title=element_text(size=12,face="bold"))
 ```
 
+# Prepare dataset to forecast and explore time series from smart meters
 Transform characters to classical Date and Date&Time format (POSIxt).
 ```{r, cache=TRUE, cache.vars='DT'}
 DT[, date_time := ymd_hms(DT[["date"]])]
@@ -143,7 +147,7 @@ unique(DT[,ID])
 ```
 
 Plot one (ID 99).
-```{r}
+```{r, fig.width = 9, fig.height = 5}
 ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
   geom_line() +
   theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
@@ -162,7 +166,7 @@ DT_48[, seq := NULL]
 ```
 
 Plot typical representants of 4 groups of industries.
-```{r}
+```{r, fig.width = 9}
 ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
   geom_line() + 
   facet_grid(ID ~ ., scales = "free_y", labeller = "label_both") +
@@ -175,7 +179,7 @@ ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
 ```
 
 Aggregate consumption of all consumers (43).
-```{r}
+```{r, fig.width = 9, fig.height = 5}
 DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
 ggplot(DT_agg, aes(date_time, value)) +
   geom_line() +
@@ -187,7 +191,7 @@ ggplot(DT_agg, aes(date_time, value)) +
 ```
 
 Median daily profile of aggregate consumption with MAD (median absolute deviation).
-```{r}
+```{r, fig.width = 8, fig.height = 6}
 Med_Mad <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% 48]
 ggplot(Med_Mad, aes(x = seq, Med)) + 
   geom_line(size = 0.9) +
@@ -201,7 +205,7 @@ ggplot(Med_Mad, aes(x = seq, Med)) +
 ```
 
 Median weekly profile of aggregate consumption with MAD (median absolute deviation).
-```{r}
+```{r, fig.width = 8.5, fig.height = 6}
 Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
 ggplot(Med_Mad_Week, aes(x = seq, Med)) + 
   geom_line(size = 0.9) + 
@@ -288,7 +292,7 @@ sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_
 ```
 
 Plot computed forecast of one week ahead.
-```{r}
+```{r, fig.width = 9, fig.height = 6}
 datas <- data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% n_date[78:91], value]),
                     date = c(rep(DT_agg[date %in% n_date[85:91], date_time], 2), DT_agg[date %in% n_date[78:91], date_time]),
                     type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
