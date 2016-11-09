@@ -29,7 +29,7 @@ library(forecast)
 opts_knit$set(root.dir = "C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 ```
 
-Read meta data and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meters are.
+Read meta data and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meter data are.
 
 ```{r}
 meta_data <- fread("meta\\all_sites.csv")
@@ -233,8 +233,8 @@ ggplot(Med_Mad, aes(x = seq, Med)) +
 
 Looks like biggest peak of load is during the evening.
 
-Similarly, we can do this but with week pattern. So lets make median weekly profile of aggregate consumption with MAD.
-```{r, fig.width = 8.5, fig.height = 6}
+Similarly, we can do this but now with week pattern. So lets make median weekly profile of aggregate consumption with MAD.
+```{r, fig.width = 9, fig.height = 6}
 Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
 ggplot(Med_Mad_Week, aes(x = seq, Med)) + 
   geom_line(size = 0.9) + 
