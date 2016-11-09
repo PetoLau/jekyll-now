@@ -20,8 +20,7 @@ library(gridExtra)
 library(forecast)
 ```
 
-```{r setup}
-knitr::opts_chunk$set(include = FALSE)
+```{r, eval=TRUE, echo=FALSE}
 opts_knit$set(root.dir = "C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 ```
 
