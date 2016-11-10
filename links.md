@@ -5,7 +5,8 @@ permalink: /links/
 ---
 #### R
 * [R-bloggers](http://www.r-bloggers.com/)
-* [CRAN packages](https://cran.r-project.org/web/packages/available_packages_by_name.html)
+* [CRAN packages](https://cran.r-project.org/web/packages/)
+* [CRAN Task Views](https://cran.r-project.org/web/views/)
 
 #### My Faculty and University
 * [FIIT STU](http://www.fiit.stuba.sk/en.html?page_id=749)
