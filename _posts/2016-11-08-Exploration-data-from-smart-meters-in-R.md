@@ -5,17 +5,17 @@ author: Peter Laurinec
 published: true
 status: publish
 draft: false
-tags: R, forecast
+tags: R forecast
 ---
  
 Deployment of smart grids gives a space to emergence of new methods of machine learning and data analysis. Smart grids can contain of millions of smart meters, which produce large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make accurate forecast or to detect anomalies. In this blog post I will focus on exploration of available open smart meter data and on creation of simple forecast model, which use similar day approach (will be drawn up in detail below).
  
-Firstly, we must download smart meter data of electricity consumption. These data can be downloaded on this [link](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by company [EnerNOC](https://www.enernoc.com/) and consists of 100 anonymized commercial buildings for the 2012 year. So download **all-data.tar.gz** file and go explore it what is in.
+Firstly, we must download smart meter data of electricity consumption. These data can be downloaded on this [link](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by company [EnerNOC](https://www.enernoc.com/) and consists of 100 anonymized commercial buildings for the 2012 year. Dataset contain time series of 100 consumers and theirs corresponding meta data. So download **all-data.tar.gz** file and go explore it what is in.
  
 ### Exploring meta data of consumers (IDs)
 I will do every reading and filtering (cleaning) of dataset by awesome package `data.table`. As you maybe know, with [data.table](https://CRAN.R-project.org/package=data.table) you can change dataset by reference (`:=` or `set`), which is very effective. You can do similar things with package `dplyr`, but I prefer `data.table`, because of performance and memory usage. Interesting comparison between both packages can be seen on this stackoverflow [question](http://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly). To visualize interesting relations i will use package `ggplot2`. Manipulation with date and time can be done easily by package `lubridate`.
  
-So...I hope everything needed was said, we can go to programming and explorative part of this post. Scan all needed packages.
+So...I hope everything needed was said, go ahead to programming and exploration part of this post. First step - scan all needed packages.
 
 {% highlight r %}
 library(data.table)
@@ -28,7 +28,7 @@ library(forecast)
  
 
  
-Read meta data and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meters are.
+Read meta data by function `fread` and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meter data are situated.
  
 
 {% highlight r %}
@@ -66,7 +66,7 @@ qplot(1:5, 1:5, geom = "blank") + theme_bw() + theme(line = element_blank(), tex
   annotation_custom(grob = tableGrob(meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-6](/images/unnamed-chunk-6-1.png)
+![plot of chunk unnamed-chunk-5](/images/unnamed-chunk-5-1.png)
  
 By package `ggmap` it is easy to map location of our consumers to the map of USA. Lets split them by industries.
 
@@ -78,7 +78,7 @@ ggmap(map) +
         axis.text.x = element_text(colour = "white"), axis.text.y = element_text(colour = "white"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
+![plot of chunk unnamed-chunk-6](/images/unnamed-chunk-6-1.png)
  
 Now look at feature `SQ_FT`. Firstly I transform square feets to square meters (I am an European...). Histogram of `SQ_M` of buildings.
 
@@ -97,9 +97,9 @@ ggplot(meta_data, aes(meta_data$SQ_M)) +
         axis.title = element_text(size = 12, face = "bold"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-8](/images/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
  
-Looks like we have a majority of buildings under 20,000 m^2.
+Looks like we have a majority of buildings under $20,000~m^2$.
  
 Let's do something similar, but now do density plot for our 4 industries separately.
 
@@ -110,7 +110,7 @@ ggplot(meta_data, aes(SQ_M, colour = INDUSTRY, fill = INDUSTRY)) +
         axis.title=element_text(size=12,face="bold"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-9](/images/unnamed-chunk-9-1.png)
+![plot of chunk unnamed-chunk-8](/images/unnamed-chunk-8-1.png)
  
 Looks like Food Sales & Storage buildings have relatively small size, on other hand Commercial Property buildings have very variable size.
  
@@ -144,6 +144,11 @@ setnames(DT, c("dttm_utc", "V2"), c("date", "ID"))
  
 Prepare `meta_data` to merging with `DT`. Remove useless columns, change column name and unify class of column `ID`.
 
+{% highlight r %}
+meta_data[, ':='(TIME_ZONE = NULL, TZ_OFFSET = NULL)]
+setnames(meta_data, "SITE_ID", "ID")
+meta_data[, ID := as.character(meta_data[["ID"]])]
+{% endhighlight %}
  
 Lets extract possible interesting features from IDs - mean, median and sum of consumption.
 
@@ -173,9 +178,9 @@ ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_IN
         axis.ticks.x = element_blank())
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-14](/images/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-13](/images/unnamed-chunk-13-1.png)
  
-Looks like biggest consumers in average are manufacturers, shopping centers and business service buildings. On the other hand lowest consumption have schools.
+Looks like biggest consumers in average are manufacturers, shopping centers and business service buildings. On the other hand, schools have  lowest consumption.
  
 Look at possible (maybe obvious) dependence between amount of consumption and `SQ_M`. I will use median load and simple linear regression.
 
@@ -189,12 +194,24 @@ ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
         axis.title=element_text(size=12,face="bold"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-15](/images/unnamed-chunk-15-1.png)
+![plot of chunk unnamed-chunk-14](/images/unnamed-chunk-14-1.png)
  
 There is evident correlation between median load and square meters of consumers.
+
+{% highlight r %}
+cor(data_m[, .(SQ_M, Median)])
+{% endhighlight %}
+
+
+
+{% highlight text %}
+##             SQ_M    Median
+## SQ_M   1.0000000 0.4505678
+## Median 0.4505678 1.0000000
+{% endhighlight %}
  
 ### Prepare dataset to forecast and explore time series of load
-Lets do the must changes to construct our forecast model. Transform characters of date to classical date and date&time format (POSIxt). Remove useless columns and look at structure of current dataset of full of time series.
+Lets do the must changes to construct our forecast model. Transform characters of date to classical date and date&time format (POSIXct). Remove useless columns and look at structure of current dataset of full of time series.
 
 {% highlight r %}
 DT[, date_time := ymd_hms(DT[["date"]])]
@@ -214,7 +231,7 @@ str(DT)
 ##  - attr(*, ".internal.selfref")=<externalptr>
 {% endhighlight %}
  
-Extract IDs with an whole length (105408). This is necessary to facilitate further work with time series .
+Extract IDs with an whole length (105408). This is necessary to facilitate further work with time series.
 
 {% highlight r %}
 count_ID <- DT[, .N, ID]
@@ -232,7 +249,7 @@ nrow(full) # number of extracted IDs
 Our extracted (filtered) IDs:
 
 {% highlight r %}
-unique(DT[,ID])
+unique(DT[, ID])
 {% endhighlight %}
 
 
@@ -244,10 +261,33 @@ unique(DT[,ID])
 ## [34] "718" "731" "761" "765" "766" "832" "88"  "9"   "92"  "99"
 {% endhighlight %}
  
-Extract date with an all measurements during the day (288). First and last date has not all measurements - so remove them. So our day period (daily seasonality) is 288.
+Extract date with an all measurements during the day (288). First and last date has not all measurements - so remove them. So our period of day (daily seasonality) is 288.
 
 {% highlight r %}
 num_date <- DT[ID == 100, .N, .(date)]
+num_date
+{% endhighlight %}
+
+
+
+{% highlight text %}
+##            date   N
+##   1: 2012-01-01 287
+##   2: 2012-01-02 288
+##   3: 2012-01-03 288
+##   4: 2012-01-04 288
+##   5: 2012-01-05 288
+##  ---               
+## 363: 2012-12-28 288
+## 364: 2012-12-29 288
+## 365: 2012-12-30 288
+## 366: 2012-12-31 288
+## 367: 2013-01-01   1
+{% endhighlight %}
+
+
+
+{% highlight r %}
 table(num_date[, N])
 {% endhighlight %}
 
@@ -265,7 +305,7 @@ table(num_date[, N])
 DT <- DT[!date %in% num_date[c(1,367), date]]
 {% endhighlight %}
  
-Let finally look at one ID - num. 99.
+Lets finally look at one ID and corresponding time series - num. 99.
 
 {% highlight r %}
 ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
@@ -282,7 +322,7 @@ ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
  
 There is strong dependence on time. Daily, weekly and monthly seasonalities are represented.
  
-Aggregate consumption to 48 measurements per day (every half hour) is highly recommended - due to reduction of dimensionality. 48 measurements per day is good compromise. So do it:
+It is highly recommended to aggregate our time series to lower dimension, thus reduce dimension (period) from 288 measurements per day to 48 per day. So do it:
 
 {% highlight r %}
 DT_48 <- DT[, .(value = sum(value), date, ID, date_time), by = (seq(nrow(DT)) - 1) %/% 6]
@@ -290,7 +330,7 @@ DT_48 <- DT_48[seq(1, nrow(DT_48), by = 6)]
 DT_48[, seq := NULL]
 {% endhighlight %}
  
-Plot typical representants of 4 groups of industries. ID 213 is from the Primary/Secondary School segment, ID 401 is the Grocer/Market, ID 832 is the Corporate Office and ID 9 is the Manufactory.
+Plot typical representants of 4 groups of sub-industries. ID 213 is from the Primary/Secondary School segment, ID 401 is the Grocer/Market, ID 832 is the Corporate Office and ID 9 is the Manufactory.
 
 {% highlight r %}
 ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
@@ -306,7 +346,7 @@ ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
 
 ![plot of chunk unnamed-chunk-22](/images/unnamed-chunk-22-1.png)
  
-Forecast of electricity consumption is mainly done for some area of consumers. So aggregate consumption is used. Aggregate it for all our consumers (43) and plot it.
+Forecast of electricity consumption, in practice, is mainly done for some area of consumers. So aggregate (cummulative) consumption is used. Aggregate it for all our consumers (43) and plot it.
 
 {% highlight r %}
 DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
@@ -340,7 +380,7 @@ ggplot(Med_Mad, aes(x = seq, Med)) +
  
 Looks like biggest peak of load is during the evening.
  
-Similarly, we can do this but with week pattern. So lets make median weekly profile of aggregate consumption with MAD.
+Similarly, we can do this now with week pattern. So lets make median weekly profile of aggregate consumption with MAD.
 
 {% highlight r %}
 Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
@@ -358,11 +398,11 @@ ggplot(Med_Mad_Week, aes(x = seq, Med)) +
 
 ![plot of chunk unnamed-chunk-25](/images/unnamed-chunk-25-1.png)
  
-This is much more interesting plot then the previous one, isn't it? We can see 5 different patterns (separated by vertical lines) in behavior of consumers during the week. From Monday till Friday is consumption quite similar, but Monday starts with low consumption (because of weekend) so it's different than others. Friday has similar pattern, but consumption is much lower than at Thursday. It is obvious that weekend is absolutely different than workdays. Thereto Saturday and Sunday are different too.
+This is much more interesting plot then the previous one, isn't it? We can see 5 different patterns (separated by vertical lines) in behavior of consumers during the week. From Monday till Friday is consumption quite similar, but Monday starts with low consumption (because of weekend) so it's different than others. Friday has similar pattern, but consumption is little bit lower than at Thursday. It is obvious that weekend is absolutely different than workdays. Thereto Saturday and Sunday are different too.
  
 ### Creation of forecast model for different days during the week (similar day approach)
  
-Ass we have seen in the previous plot (plots), forecast of time series of electricity consumption will be challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt forecast model to this problem. One of the ideas to overcome this problem is to use similar day approach - separate forecast models for groups of days.
+As we have seen in the previous plot (plots), forecast of time series of electricity consumption will be challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt forecast model to this problem. One of the ideas to overcome this problem is to use similar day approach - separate forecast models for groups of days.
  
 Lets prepare data and define all functions to achieve this goal. Add corresponding weekdays to date for datasets `DT_48` and `DT_agg`.
 
@@ -386,7 +426,29 @@ Extract date, ID, weekdays and period for further better working with subsetting
 {% highlight r %}
 n_ID <- unique(DT_48[, ID])
 n_weekdays <- unique(DT_agg[, week])
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in unique.default(DT_agg[, week]): unique() applies only to vectors
+{% endhighlight %}
+
+
+
+{% highlight r %}
 n_date <- unique(DT_agg[, date])
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in unique.default(DT_agg[, date]): unique() applies only to vectors
+{% endhighlight %}
+
+
+
+{% highlight r %}
 period <- 48
 {% endhighlight %}
  
@@ -409,7 +471,7 @@ stlEXPPred <- function(Y, period = 48){
 }
 {% endhighlight %}
  
-Next it is a necessary to define metric, with which our forecasts will be compared. For simple comparison [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error) is used. Lets define function to compute Mean Absolute Percentage Error.  
+Next it is a necessary to define metric, with which our forecasts will be evaluated and compared. For simple comparison, [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error) is used. Lets define function to compute Mean Absolute Percentage Error.  
 
 {% highlight r %}
 mape <- function(real, pred){
@@ -417,7 +479,7 @@ mape <- function(real, pred){
 }
 {% endhighlight %}
  
-Now it's "simple" to define function, which will produce forecast for whole week. It's based on subsetting the given `data.table` by group of weekdays. We can simply change in it basic function of forecast (`FUN`), set of dates and length of training window (`train_win`).
+Now it's "simple" to define function, which will produce forecast for whole week. It's based on subsetting the given `data.table` by group of weekdays. We can simply vary these features as arguments of function: training data (`data`), function of forecast (`FUN`), set of dates (`set_of_date`) and length of training window (`train_win`).
 
 {% highlight r %}
 predictWeek <- function(data, set_of_date, FUN, train_win = 6){
@@ -437,22 +499,55 @@ predictWeek <- function(data, set_of_date, FUN, train_win = 6){
 Lets do some examples of using `predictWeek` function. Run forecast for selection of dates on aggregated consumption and compute MAPE for both methods (STL+ARIMA and STL+EXP).
 
 {% highlight r %}
-for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred)
-for_week_exp <- predictWeek(DT_agg, n_date[56:84], stlEXPPred)
-real_week <- DT_agg[date %in% n_date[85:91], value]
-c(ARIMA = mape(real_week, for_week_arima), EXP = mape(real_week, for_week_exp))
+for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred) # forecast for one week
 {% endhighlight %}
 
 
 
 {% highlight text %}
-##    ARIMA      EXP 
-## 3.796372 4.813500
+## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
+for_week_exp <- predictWeek(DT_agg, n_date[56:84], stlEXPPred)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
+real_week <- DT_agg[date %in% n_date[85:91], value] # real consumption
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in match(x, table, nomatch = 0L): object 'n_date' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
+c(ARIMA = mape(real_week, for_week_arima),
+  EXP = mape(real_week, for_week_exp))
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in mean(abs((real - pred)/real)): object 'real_week' not found
 {% endhighlight %}
  
 Not so bad, actually very accurate.
  
-Compute MAPE for every day of week separately - for better analysis.
+Compute MAPE for every day of the week separately - for better analysis.
 
 {% highlight r %}
 sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_arima[((i*period)+1):((i+1)*period)]))
@@ -461,7 +556,7 @@ sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_
 
 
 {% highlight text %}
-## [1] 3.649075 2.869293 5.301543 4.731049 4.334487 2.584994 3.104161
+## Error in mean(abs((real - pred)/real)): object 'real_week' not found
 {% endhighlight %}
 
 
@@ -473,7 +568,7 @@ sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_
 
 
 {% highlight text %}
-## [1] 5.172147 3.931334 5.680406 7.224436 4.688619 3.281471 3.716090
+## Error in mean(abs((real - pred)/real)): object 'real_week' not found
 {% endhighlight %}
  
 And of course...plot computed forecast for one week ahead.
@@ -482,7 +577,17 @@ And of course...plot computed forecast for one week ahead.
 datas <- data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% n_date[78:91], value]),
                     date = c(rep(DT_agg[date %in% n_date[85:91], date_time], 2), DT_agg[date %in% n_date[78:91], date_time]),
                     type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
- 
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% : object 'for_week_arima' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
 ggplot(data = datas, aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
   theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
@@ -494,28 +599,65 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-33](/images/unnamed-chunk-33-1.png)
+
+
+{% highlight text %}
+## Error in ggplot(data = datas, aes(date, value, group = type, colour = type)): object 'datas' not found
+{% endhighlight %}
  
 Seems ARIMA can produce more accurate forecast on aggregated consumption than exponential smoothing.
  
-Lets try it on dissagregated load, so on one consumer (ID).
+Lets try it on dissagregated load, so on one consumer (ID). We can simply use variable `nID` to subset dataset `DT_48`.
  
 
 {% highlight r %}
 for_week_arima <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlARIMAPred)
-for_week_exp <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlEXPPred)
-real_week <- DT_48[ID == n_ID[40] & date %in% n_date[85:91], value]
-c(ARIMA = mape(real_week, for_week_arima), EXP = mape(real_week, for_week_exp))
 {% endhighlight %}
 
 
 
 {% highlight text %}
-##    ARIMA      EXP 
-## 5.516613 7.131615
+## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
+for_week_exp <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlEXPPred)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
+real_week <- DT_48[ID == n_ID[40] & date %in% n_date[85:91], value]
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in match(x, table, nomatch = 0L): object 'n_date' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
+c(ARIMA = mape(real_week, for_week_arima),
+  EXP = mape(real_week, for_week_exp))
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in mean(abs((real - pred)/real)): object 'real_week' not found
 {% endhighlight %}
  
-Similar results, but obviously not so accurate because of stochastic behavior of consumers.
+Similar results, but obviously not so accurate because of stochastic behavior of consumer.
  
 Plot computed forecast for one week ahead.
 
@@ -523,7 +665,17 @@ Plot computed forecast for one week ahead.
 datas <- data.table(value = c(for_week_arima, for_week_exp, DT_48[ID == n_ID[40] & date %in% n_date[78:91], value]),
                     date = c(rep(DT_48[ID == n_ID[40] & date %in% n_date[85:91], date_time], 2), DT_48[ID == n_ID[40] & date %in% n_date[78:91], date_time]),
                     type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
- 
+{% endhighlight %}
+
+
+
+{% highlight text %}
+## Error in data.table(value = c(for_week_arima, for_week_exp, DT_48[ID == : object 'for_week_arima' not found
+{% endhighlight %}
+
+
+
+{% highlight r %}
 ggplot(data = datas, aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
   theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
@@ -535,10 +687,15 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
+
+
+{% highlight text %}
+## Error in ggplot(data = datas, aes(date, value, group = type, colour = type)): object 'datas' not found
+{% endhighlight %}
  
-Some words about forecast.
+Again STL+ARIMA is winning againts STL+EXP.
  
 Like this you can make forecast for any consumer, any set of date and with your own forecast method.
  
-On future posts I want mainly focus on regression methods for time series forecasting, because they can handle similar day approach much more easelly. So methods like multiple linear regression, generalized additive model, support vector regression, regression trees and forests and artificial neural networks will be shown.
+To sum it up, I showed which interesting features can contain smart meter data. Then forecast model with similar day approach was proposed.
+On future posts I want focus mainly on regression methods for time series forecasting, because they can handle similar day approach much more easelly. So methods like multiple linear regression, generalized additive model, support vector regression, regression trees and forests and artificial neural networks will be shown.
