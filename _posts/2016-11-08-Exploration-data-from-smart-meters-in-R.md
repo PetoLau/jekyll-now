@@ -199,15 +199,13 @@ ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
 There is evident correlation between median load and square meters of consumers.
 
 {% highlight r %}
-cor(data_m[, .(SQ_M, Median)])
+cor(data_m[, SQ_M], data_m[, Median])
 {% endhighlight %}
 
 
 
 {% highlight text %}
-##             SQ_M    Median
-## SQ_M   1.0000000 0.4505678
-## Median 0.4505678 1.0000000
+## [1] 0.4505678
 {% endhighlight %}
  
 ### Prepare dataset to forecast and explore time series of load
