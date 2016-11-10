@@ -259,7 +259,7 @@ This is much more interesting plot then the previous one, isn't it? We can see 5
 As we have seen in the previous plot (plots), forecast of time series of electricity consumption will be challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt forecast model to this problem. One of the ideas to overcome this problem is to use similar day approach - separate forecast models for groups of days.
 
 Lets prepare data and define all functions to achieve this goal. Add corresponding weekdays to date for datasets `DT_48` and `DT_agg`.
-```{r, cache=TRUE, cache.vars=c('DT_48', DT_agg)}
+```{r, cache=TRUE, cache.vars=c('DT_48', 'DT_agg')}
 DT_48[, week := weekdays(date_time)]
 DT_agg[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
 unique(DT_agg[, week])

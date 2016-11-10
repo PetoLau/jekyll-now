@@ -424,29 +424,7 @@ Extract date, ID, weekdays and period for further better working with subsetting
 {% highlight r %}
 n_ID <- unique(DT_48[, ID])
 n_weekdays <- unique(DT_agg[, week])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in unique.default(DT_agg[, week]): unique() applies only to vectors
-{% endhighlight %}
-
-
-
-{% highlight r %}
 n_date <- unique(DT_agg[, date])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in unique.default(DT_agg[, date]): unique() applies only to vectors
-{% endhighlight %}
-
-
-
-{% highlight r %}
 period <- 48
 {% endhighlight %}
  
@@ -498,41 +476,8 @@ Lets do some examples of using `predictWeek` function. Run forecast for selectio
 
 {% highlight r %}
 for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred) # forecast for one week
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 for_week_exp <- predictWeek(DT_agg, n_date[56:84], stlEXPPred)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 real_week <- DT_agg[date %in% n_date[85:91], value] # real consumption
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in match(x, table, nomatch = 0L): object 'n_date' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 c(ARIMA = mape(real_week, for_week_arima),
   EXP = mape(real_week, for_week_exp))
 {% endhighlight %}
@@ -540,7 +485,8 @@ c(ARIMA = mape(real_week, for_week_arima),
 
 
 {% highlight text %}
-## Error in mean(abs((real - pred)/real)): object 'real_week' not found
+##    ARIMA      EXP 
+## 3.796372 4.813500
 {% endhighlight %}
  
 Not so bad, actually very accurate.
@@ -554,7 +500,7 @@ sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_
 
 
 {% highlight text %}
-## Error in mean(abs((real - pred)/real)): object 'real_week' not found
+## [1] 3.649075 2.869293 5.301543 4.731049 4.334487 2.584994 3.104161
 {% endhighlight %}
 
 
@@ -566,7 +512,7 @@ sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_
 
 
 {% highlight text %}
-## Error in mean(abs((real - pred)/real)): object 'real_week' not found
+## [1] 5.172147 3.931334 5.680406 7.224436 4.688619 3.281471 3.716090
 {% endhighlight %}
  
 And of course...plot computed forecast for one week ahead.
@@ -575,17 +521,7 @@ And of course...plot computed forecast for one week ahead.
 datas <- data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% n_date[78:91], value]),
                     date = c(rep(DT_agg[date %in% n_date[85:91], date_time], 2), DT_agg[date %in% n_date[78:91], date_time]),
                     type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% : object 'for_week_arima' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 ggplot(data = datas, aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
   theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
@@ -597,11 +533,7 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in ggplot(data = datas, aes(date, value, group = type, colour = type)): object 'datas' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-33](/images/unnamed-chunk-33-1.png)
  
 Seems ARIMA can produce more accurate forecast on aggregated consumption than exponential smoothing.
  
@@ -610,41 +542,8 @@ Lets try it on dissagregated load, so on one consumer (ID). We can simply use va
 
 {% highlight r %}
 for_week_arima <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlARIMAPred)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 for_week_exp <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlEXPPred)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'n_weekdays' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 real_week <- DT_48[ID == n_ID[40] & date %in% n_date[85:91], value]
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in match(x, table, nomatch = 0L): object 'n_date' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 c(ARIMA = mape(real_week, for_week_arima),
   EXP = mape(real_week, for_week_exp))
 {% endhighlight %}
@@ -652,7 +551,8 @@ c(ARIMA = mape(real_week, for_week_arima),
 
 
 {% highlight text %}
-## Error in mean(abs((real - pred)/real)): object 'real_week' not found
+##    ARIMA      EXP 
+## 5.516613 7.131615
 {% endhighlight %}
  
 Similar results, but obviously not so accurate because of stochastic behavior of consumer.
@@ -663,17 +563,7 @@ Plot computed forecast for one week ahead.
 datas <- data.table(value = c(for_week_arima, for_week_exp, DT_48[ID == n_ID[40] & date %in% n_date[78:91], value]),
                     date = c(rep(DT_48[ID == n_ID[40] & date %in% n_date[85:91], date_time], 2), DT_48[ID == n_ID[40] & date %in% n_date[78:91], date_time]),
                     type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in data.table(value = c(for_week_arima, for_week_exp, DT_48[ID == : object 'for_week_arima' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 ggplot(data = datas, aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
   theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
@@ -685,11 +575,7 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in ggplot(data = datas, aes(date, value, group = type, colour = type)): object 'datas' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
  
 Again STL+ARIMA is winning againts STL+EXP.
  
