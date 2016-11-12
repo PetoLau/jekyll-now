@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Enernoc smart meter data - forecast electricity consumption with similar day approach
+title: Enernoc smart meter data - forecast electricity consumption with similar day approach in R
 author: Peter Laurinec
 published: false
 status: process
@@ -8,14 +8,14 @@ draft: false
 tags: R forecast
 ---
 
-Deployment of smart grids gives a space to emergence of new methods of machine learning and data analysis. Smart grids can contain of millions of smart meters, which produce large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make accurate forecast or to detect anomalies. In this blog post I will focus on exploration of available open smart meter data and on creation of simple forecast model, which use similar day approach (will be drawn up in detail below).
+Deployment of smart grids gives space to an occurrence of new methods of machine learning and data analysis. Smart grids can contain of millions of smart meters, which produce a large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about the consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make an accurate forecast or to detect anomalies. In this blog post, I will focus on the exploration of available open smart meter data and on the creation of a simple forecast model, which uses similar day approach (will be drawn up in detail below).
 
-Firstly, we must download smart meter data of electricity consumption. These data can be downloaded on this [link](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by company [EnerNOC](https://www.enernoc.com/) and consists of 100 anonymized commercial buildings for the 2012 year. Dataset contain time series of 100 consumers and theirs corresponding meta data. So download **all-data.tar.gz** file and go explore it what is in.
+Firstly, we must download smart meter data of electricity consumption. These data can be downloaded [here](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by the[EnerNOC](https://www.enernoc.com/) company and consists of 100 anonymized commercial buildings for 2012. The dataset contains time series of 100 consumers and theirs corresponding meta data. Let’s download the **all-data.tar.gz** file and explore it.
 
 ### Exploring meta data of consumers (IDs)
-I will do every reading and filtering (cleaning) of dataset by awesome package `data.table`. As you maybe know, with [data.table](https://CRAN.R-project.org/package=data.table) you can change dataset by reference (`:=` or `set`), which is very effective. You can do similar things with package `dplyr`, but I prefer `data.table`, because of performance and memory usage. Interesting comparison between both packages can be seen on this stackoverflow [question](http://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly). To visualize interesting relations i will use package `ggplot2`. Manipulation with date and time can be done easily by package `lubridate`.
+I will do every reading and filtering (cleaning) of the dataset by means of the awesome package `data.table`. As you may already know, with [data.table](https://CRAN.R-project.org/package=data.table) you can change dataset by reference (`:=` or `set`), which is very effective. You can do similar things with package `dplyr`, but I prefer `data.table`, because of performance and memory usage. An interesting comparison of both packages can be seen on this stackoverflow [question](http://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly). To visualize interesting relations, I will use package `ggplot2`. Manipulation with date and time can be done easily by package `lubridate`.
 
-So...I hope everything needed was said, go ahead to programming and exploration part of this post. First step - scan all needed packages.
+So...I hope I haven't forgotten something, go ahead to the programming and exploration part of this post. First step - scan all of the needed packages.
 ```{r, message=FALSE, warning=FALSE}
 library(data.table)
 library(lubridate)
@@ -29,16 +29,16 @@ library(forecast)
 opts_knit$set(root.dir = "C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 ```
 
-Read meta data by function `fread` and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meter data are situated.
+Read the metadata by function `fread` and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meter data are situated.
 
 ```{r}
 meta_data <- fread("meta\\all_sites.csv")
 str(meta_data)
 ```
 
-Nice features to explore...
+These are some nice features for you to explore...
 
-We can do something interesting with features `INDUSTRY`, `SUB_INDUSTRY`, `SQ_FT`, `LAT` and `LNG`. So frequency table of industries and subindustries would be nice. This can be done by package `data.table` very effectively:
+We can do something interesting with the `INDUSTRY`, `SUB_INDUSTRY`, `SQ_FT`, `LAT` and `LNG` features. For instance, making a frequency table of industries and sub-industries would be nice. This can be done by package `data.table` very effectively:
 ```{r, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
 meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]
 ```
@@ -49,7 +49,7 @@ qplot(1:5, 1:5, geom = "blank") + theme_bw() + theme(line = element_blank(), tex
   annotation_custom(grob = tableGrob(meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]))
 ```
 
-By package `ggmap` it is easy to map location of our consumers to the map of USA. Lets split them by industries.
+With the package `ggmap` it is easy to map location of our consumers to the map of USA. Let’s split them by industries.
 ```{r, message=FALSE, warning=FALSE, fig.width = 9.5, fig.height = 8}
 map <- get_map(location = "USA", zoom = 4)
 ggmap(map) + 
@@ -58,7 +58,7 @@ ggmap(map) +
         axis.text.x = element_text(colour = "white"), axis.text.y = element_text(colour = "white"))
 ```
 
-Now look at feature `SQ_FT`. Firstly I transform square feets to square meters (I am an European...). Histogram of `SQ_M` of buildings.
+Now look at the `SQ_FT` feature. Firstly, I transform square feets to square meters (I am an European...). Histogram of `SQ_M` of buildings.
 ```{r, cache=TRUE, cache.vars='meta_data', fig.width = 8}
 set(meta_data, j = "SQ_FT", value = meta_data[["SQ_FT"]] * 0.09290304)
 setnames(meta_data, "SQ_FT", "SQ_M")
@@ -84,10 +84,10 @@ ggplot(meta_data, aes(SQ_M, colour = INDUSTRY, fill = INDUSTRY)) +
         axis.title=element_text(size=12,face="bold"))
 ```
 
-Looks like Food Sales & Storage buildings have relatively small size, on other hand Commercial Property buildings have very variable size.
+Looks like Food Sales & Storage buildings have relatively small size. On the other hand, Commercial Property buildings have very variable size.
 
-Now try combine meta data with real electricity consumption data and see interesting relations between them.
-Load all `.csv` files containing electricity consumption in one `data.table` by functions `rbindlist` and `lapply`. See structure of these data and change column names. `V2` to `ID` and `dttm_utc` to `date`.
+Now try to combine metadata with real electricity consumption data and see interesting relations between them.
+Load all `.csv` files containing electricity consumption in one `data.table` by functions `rbindlist` and `lapply`. See the structure of these data and change the column names. `V2` to `ID` and `dttm_utc` to `date`.
 ```{r}
 files <- list.files(pattern = "*.csv")
 DT <- rbindlist(lapply(files, function(x) cbind(fread(x), gsub(".csv", "", x))))
@@ -95,14 +95,14 @@ str(DT)
 setnames(DT, c("dttm_utc", "V2"), c("date", "ID"))
 ```
 
-Prepare `meta_data` to merging with `DT`. Remove useless columns, change column name and unify class of column `ID`.
+Prepare `meta_data` to merging with `DT`. Remove useless columns, change the column name and unify class of column `ID`.
 ```{r, message=FALSE, warning=FALSE, cache=TRUE, cache.vars='meta_data'}
 meta_data[, ':='(TIME_ZONE = NULL, TZ_OFFSET = NULL)]
 setnames(meta_data, "SITE_ID", "ID")
 meta_data[, ID := as.character(meta_data[["ID"]])]
 ```
 
-Lets extract possible interesting features from IDs - mean, median and sum of consumption.
+Let’s extract possible interesting features from IDs - mean, median and sum of consumption.
 ```{r}
 ID_stats <- DT[, .(Mean = mean(value), Median = median(value), Sum = sum(value)), .(ID)]
 ```
@@ -113,7 +113,7 @@ data_m <- merge(ID_stats, meta_data, by = "ID")
 sub_sum <- data_m[, .(mean(Mean)), .(SUB_INDUSTRY)]
 ```
 
-Bar plot of mean load by subindustries:
+Bar plot of mean load by sub-industries:
 ```{r, fig.width = 8.5, fig.height = 6.5}
 ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_INDUSTRY, V1))) +
   geom_bar(stat = "identity", width = 0.8) +
@@ -127,7 +127,7 @@ ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_IN
         axis.ticks.x = element_blank())
 ```
 
-Looks like biggest consumers in average are manufacturers, shopping centers and business service buildings. On the other hand, schools have  lowest consumption.
+Looks like the biggest consumers in average are manufacturers, shopping centers and business service buildings. On the other hand, schools have the lowest consumption.
 
 Look at possible (maybe obvious) dependence between amount of consumption and `SQ_M`. I will use median load and simple linear regression.
 ```{r, fig.width = 8.5, fig.height = 6.5}
@@ -140,13 +140,13 @@ ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
         axis.title=element_text(size=12,face="bold"))
 ```
 
-There is evident correlation between median load and square meters of consumers.
+There is an evident correlation between median load and square meters of consumers.
 ```{r}
 cor(data_m[, SQ_M], data_m[, Median])
 ```
 
 ### Prepare dataset to forecast and explore time series of load
-Lets do the must changes to construct our forecast model. Transform characters of date to classical date and date&time format (POSIXct). Remove useless columns and look at structure of current dataset of full of time series.
+Let’s do the must changes to construct our forecast model. Transform characters of date to classical date and date&time format (POSIXct). Remove the useless columns and look at structure of current dataset, which is full of time series.
 ```{r, cache=TRUE, cache.vars='DT'}
 DT[, date_time := ymd_hms(DT[["date"]])]
 DT[, date := as.Date(DT[["date"]], "%Y-%m-%d")]
@@ -154,7 +154,7 @@ DT[, ':='(timestamp = NULL, estimated = NULL, anomaly = NULL)]
 str(DT)
 ```
 
-Extract IDs with an whole length (105408). This is necessary to facilitate further work with time series.
+Extract IDs with a whole length (105408). This is necessary to facilitate further work with time series.
 ```{r, cache=TRUE, cache.vars='DT'}
 count_ID <- DT[, .N, ID]
 full <- count_ID[N == max(N), .(ID)]
@@ -167,7 +167,7 @@ Our extracted (filtered) IDs:
 unique(DT[, ID])
 ```
 
-Extract date with an all measurements during the day (288). First and last date has not all measurements - so remove them. So our period of day (daily seasonality) is 288.
+Extract date with all measurements during the day (288). First and last date has not all measurements - so remove them. So our period of day (daily seasonality) is 288.
 ```{r, cache=TRUE, cache.vars='DT'}
 num_date <- DT[ID == 100, .N, .(date)]
 num_date
@@ -175,7 +175,7 @@ table(num_date[, N])
 DT <- DT[!date %in% num_date[c(1,367), date]]
 ```
 
-Lets finally look at one ID and corresponding time series - num. 99.
+Let’s finally look at one ID and corresponding time series - num. 99.
 ```{r, fig.width = 9, fig.height = 5}
 ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
   geom_line() +
@@ -189,7 +189,7 @@ ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
 
 There is strong dependence on time. Daily, weekly and monthly seasonalities are represented.
 
-It is highly recommended to aggregate our time series to lower dimension, thus reduce dimension (period) from 288 measurements per day to 48 per day. So do it:
+It is highly recommended to aggregate our time series to lower dimension, thus reduce dimension (period) from 288 measurements per day to 48 per day. Do it this way:
 ```{r, cache=TRUE, cache.vars='DT_48'}
 DT_48 <- DT[, .(value = sum(value), date, ID, date_time), by = (seq(nrow(DT)) - 1) %/% 6]
 DT_48 <- DT_48[seq(1, nrow(DT_48), by = 6)]
@@ -209,7 +209,7 @@ ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
   labs(x = "Date", y = "Load (kW)")
 ```
 
-Forecast of electricity consumption, in practice, is mainly done for some area of consumers. So aggregate (cummulative) consumption is used. Aggregate it for all our consumers (43) and plot it.
+Forecast of electricity consumption, in practice, is mainly done for some area of consumers. So aggregate (cumulative) consumption is used. Aggregate it for all our consumers (43) and plot it.
 ```{r, fig.width = 10, fig.height = 4.5}
 DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
 ggplot(DT_agg, aes(date_time, value)) +
@@ -221,7 +221,7 @@ ggplot(DT_agg, aes(date_time, value)) +
   labs(x = "Date", y = "Load (kW)")
 ```
 
-For utility (distribution) companies is very helpful creation of daily profiles of consumers or daily profile for some area. It is characteristic behavior of consumer during the day. So lets create median daily profile of aggregate consumption with MAD (median absolute deviation). I use medians and MAD because of theirs robustness.
+For utility (distribution) companies it is very helpful to create daily profiles of consumers or daily profiles for some area. It deals with characteristic behavior of consumer during the day. So let’s create median daily profile of aggregate consumption with MAD (median absolute deviation). I use medians and MAD because of theirs robustness.
 ```{r, fig.width = 8, fig.height = 6}
 Med_Mad <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% 48]
 ggplot(Med_Mad, aes(x = seq, Med)) + 
@@ -235,9 +235,9 @@ ggplot(Med_Mad, aes(x = seq, Med)) +
   labs(x = "Time", y = "Load (kW)")
 ```
 
-Looks like biggest peak of load is during the evening.
+Looks like the biggest peak of the load is during the evening.
 
-Similarly, we can do this now with week pattern. So lets make median weekly profile of aggregate consumption with MAD.
+Similarly, we can do this now with week pattern. So let’s make median weekly profile of aggregate consumption with MAD.
 ```{r, fig.width = 9.5, fig.height = 6}
 Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
 ggplot(Med_Mad_Week, aes(x = seq, Med)) + 
@@ -252,20 +252,20 @@ ggplot(Med_Mad_Week, aes(x = seq, Med)) +
   labs(x = "Time", y = "Load (kW)")
 ```
 
-This is much more interesting plot then the previous one, isn't it? We can see 5 different patterns (separated by vertical lines) in behavior of consumers during the week. From Monday till Friday is consumption quite similar, but Monday starts with low consumption (because of weekend) so it's different than others. Friday has similar pattern, but consumption is little bit lower than at Thursday. It is obvious that weekend is absolutely different than workdays. Thereto Saturday and Sunday are different too.
+This is a much more interesting plot than the previous one, isn't it? We can see 5 different patterns (separated by vertical lines) in behavior of the consumers during the week. From Monday till Friday the consumption is quite similar, but Monday starts with low consumption (because of the weekend), so it's different than others. Friday has a similar pattern, but consumption is a little bit lower than on Thursday. It is obvious that weekend is absolutely different than workdays. Thereto Saturday and Sunday are different too.
 
 ### Creation of forecast model for different days during the week (similar day approach)
 
-As we have seen in the previous plot (plots), forecast of time series of electricity consumption will be challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt forecast model to this problem. One of the ideas to overcome this problem is to use similar day approach - separate forecast models for groups of days.
+As we have seen in the previous plot (plots), a forecast of time series of electricity consumption will be a challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt the forecast model to this problem. One of the ideas to overcome this problem is to use a similar day approach - separate forecast models for groups of days.
 
-Lets prepare data and define all functions to achieve this goal. Add corresponding weekdays to date for datasets `DT_48` and `DT_agg`.
+Let’s prepare data and define all functions to achieve this goal. Add corresponding weekdays to date for datasets `DT_48` and `DT_agg`.
 ```{r, cache=TRUE, cache.vars=c('DT_48', 'DT_agg')}
 DT_48[, week := weekdays(date_time)]
 DT_agg[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
 unique(DT_agg[, week])
 ```
 
-Now we have datasets with all needed features to build model for different days.
+Now we have datasets with all the needed features to build a model for different days.
 
 Extract date, ID, weekdays and period for further better working with subsetting.
 ```{r}
@@ -275,7 +275,7 @@ n_date <- unique(DT_agg[, date])
 period <- 48
 ```
 
-Lets define basic forecast methods - functions, which will produce forecasts. I am using two powerful methods, which are based on decomposition of time series. STL + ARIMA and STL + exponential smoothing. [STL](https://www.otexts.org/fpp/6/5) decomposition is widely used decomposition for seasonal time series, it is based on Loess regression. With [package](https://CRAN.R-project.org/package=forecast) `forecast` it can be combined to produce very accurate forecasts. We have two main possibilities of usage - with [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) and with [exponential smoothing](https://en.wikipedia.org/wiki/Exponential_smoothing). We will use both to compare the performance (accuracy) of both. It should be added that the functions returns forecast of the length of one period (in this case 48 values).
+Let’s define basic forecast methods - functions, which will produce forecasts. I am using two powerful methods, which are based on the decomposition of time series. STL + ARIMA and STL + exponential smoothing. [STL](https://www.otexts.org/fpp/6/5) decomposition is widely used decomposition for seasonal time series, based on Loess regression. With [package](https://CRAN.R-project.org/package=forecast) `forecast` it can be combined to produce very accurate forecasts. We have two main possibilities of usage - with [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) and with [exponential smoothing](https://en.wikipedia.org/wiki/Exponential_smoothing). We will use both to compare the performance (accuracy) of both. It should be added that the functions return forecast of the length of one period (in this case 48 values).
 ```{r}
 # STL + ARIMA
 stlARIMAPred <- function(Y, period = 48){
@@ -293,14 +293,14 @@ stlEXPPred <- function(Y, period = 48){
 }
 ```
 
-Next it is a necessary to define metric, with which our forecasts will be evaluated and compared. For simple comparison, [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error) is used. Lets define function to compute Mean Absolute Percentage Error.  
+Next, it is necessary to define the metric, with which our forecasts will be evaluated and compared. For a simple comparison, [MAPE](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error) is used. Let’s define a function to compute Mean Absolute Percentage Error.  
 ```{r}
 mape <- function(real, pred){
   return(100 * mean(abs((real - pred)/real)))
 }
 ```
 
-Now it's "simple" to define function, which will produce forecast for whole week. It's based on subsetting the given `data.table` by group of weekdays. We can simply vary these features as arguments of function: training data (`data`), function of forecast (`FUN`), set of dates (`set_of_date`) and length of training window (`train_win`).
+Now it's "simple" to define the function, which will produce a forecast for the whole week. It's based on subsetting the given `data.table` by a group of weekdays. We can simply vary these features as arguments of a function: training data (`data`), a function of a forecast (`FUN`), a set of dates (`set_of_date`) and length of training window (`train_win`).
 ```{r}
 predictWeek <- function(data, set_of_date, FUN, train_win = 6){
 
@@ -316,7 +316,7 @@ predictWeek <- function(data, set_of_date, FUN, train_win = 6){
 }
 ```
 
-Lets do some examples of using `predictWeek` function. Run forecast for selection of dates on aggregated consumption and compute MAPE for both methods (STL+ARIMA and STL+EXP).
+Let’s do some examples of using `predictWeek` function. Run the forecast for selection of dates on aggregated consumption and compute MAPE for both methods (STL+ARIMA and STL+EXP).
 ```{r}
 for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred) # forecast for one week
 for_week_exp <- predictWeek(DT_agg, n_date[56:84], stlEXPPred)
@@ -351,10 +351,9 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 ```
 
-Seems ARIMA can produce more accurate forecast on aggregated consumption than exponential smoothing.
+Seems like ARIMA can produce more accurate forecast on aggregated consumption than exponential smoothing.
 
-Lets try it on dissagregated load, so on one consumer (ID). We can simply use variable `nID` to subset dataset `DT_48`.
-
+Let’s try it on a disaggregated load, so on one consumer (ID). We can simply use variable `nID` to subset dataset `DT_48`.
 ```{r}
 for_week_arima <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlARIMAPred)
 for_week_exp <- predictWeek(DT_48[ID == n_ID[40]], n_date[56:84], stlEXPPred)
@@ -363,7 +362,7 @@ c(ARIMA = mape(real_week, for_week_arima),
   EXP = mape(real_week, for_week_exp))
 ```
 
-Similar results, but obviously not so accurate because of stochastic behavior of consumer.
+Similar results, but obviously not so accurate because of stochastic behavior of the consumer.
 
 Plot computed forecast for one week ahead.
 ```{r, fig.width = 10, fig.height = 6}
@@ -382,9 +381,11 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 ```
 
-Again STL+ARIMA is winning againts STL+EXP.
+Again, STL+ARIMA is winning against STL+EXP.
 
-Like this you can make forecast for any consumer, any set of date and with your own forecast method.
+In this way, you can make a forecast for any consumer, any set of dates and with your own forecast method.
 
-To sum it up, I showed which interesting features can contain smart meter data. Then forecast model with similar day approach was proposed.
-On future posts I want focus mainly on regression methods for time series forecasting, because they can handle similar day approach much more easelly. So methods like multiple linear regression, generalized additive model, support vector regression, regression trees and forests and artificial neural networks will be shown.
+Except for the two methods shown, you can try for example these functions (methods): `HoltWinters`, `ar`, `arima` and `snaive`, which are suitable for seasonal time series. These methods are starters (benchmarks) for time series analyses and forecast. In **R**, there are already implemented methods of time series, which can handle two seasons. For example `dshw` and `tbats` (both in the package `forecast`). Their disadvantage is high computational complexity and not as good results of the forecast as the custom functions that I have shown you.
+
+To sum up, I have pointed out to you, which interesting features are contained in smart meter data. Then a forecast model with similar day approach was proposed.
+In my future posts, I want to focus mainly on regression methods for time series forecasting, because they can handle similar day approach much easier. So methods like multiple linear regression, generalized additive model, support vector regression, regression trees and forests and artificial neural networks will be demonstrated.
