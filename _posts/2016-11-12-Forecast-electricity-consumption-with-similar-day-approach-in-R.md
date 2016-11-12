@@ -10,7 +10,7 @@ tags: R forecast
  
 Deployment of smart grids gives space to an occurrence of new methods of machine learning and data analysis. Smart grids can contain of millions of smart meters, which produce a large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about the consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make an accurate forecast or to detect anomalies. In this blog post, I will focus on the exploration of available open smart meter data and on the creation of a simple forecast model, which uses similar day approach (will be drawn up in detail below).
  
-Firstly, we must download smart meter data of electricity consumption. These data can be downloaded [here](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by the[EnerNOC](https://www.enernoc.com/) company and consists of 100 anonymized commercial buildings for 2012. The dataset contains time series of 100 consumers and theirs corresponding meta data. Let’s download the **all-data.tar.gz** file and explore it.
+Firstly, we must download smart meter data of electricity consumption. These data can be downloaded [here](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by the [EnerNOC](https://www.enernoc.com/) company and consists of 100 anonymized commercial buildings for 2012. The dataset contains time series of 100 consumers and theirs corresponding meta data. Let’s download the **all-data.tar.gz** file and explore it.
  
 ### Exploring meta data of consumers (IDs)
 I will do every reading and filtering (cleaning) of the dataset by means of the awesome package `data.table`. As you may already know, with [data.table](https://CRAN.R-project.org/package=data.table) you can change dataset by reference (`:=` or `set`), which is very effective. You can do similar things with package `dplyr`, but I prefer `data.table`, because of performance and memory usage. An interesting comparison of both packages can be seen on this stackoverflow [question](http://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly). To visualize interesting relations, I will use package `ggplot2`. Manipulation with date and time can be done easily by package `lubridate`.
@@ -28,7 +28,7 @@ library(forecast)
  
 
  
-Read the metadata by function `fread` and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meter data are situated.
+Read the meta data by function `fread` and show their structure. Of course, you must firstly set your working directory by `setwd("YOUR PATH")`, where smart meter data are situated.
  
 
 {% highlight r %}
@@ -62,7 +62,8 @@ meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]
 Plot to table:
 
 {% highlight r %}
-qplot(1:5, 1:5, geom = "blank") + theme_bw() + theme(line = element_blank(), text = element_blank()) +
+qplot(1:5, 1:5, geom = "blank") + theme_bw() + 
+  theme(line = element_blank(), text = element_blank()) +
   annotation_custom(grob = tableGrob(meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]))
 {% endhighlight %}
 
@@ -99,7 +100,7 @@ ggplot(meta_data, aes(meta_data$SQ_M)) +
 
 ![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
  
-Looks like we have a majority of buildings under $20,000~m^2$.
+Looks like we have a majority of buildings under 20,000 m^2.
  
 Let's do something similar, but now do density plot for our 4 industries separately.
 
@@ -114,7 +115,7 @@ ggplot(meta_data, aes(SQ_M, colour = INDUSTRY, fill = INDUSTRY)) +
  
 Looks like Food Sales & Storage buildings have relatively small size. On the other hand, Commercial Property buildings have very variable size.
  
-Now try to combine metadata with real electricity consumption data and see interesting relations between them.
+Now try to combine meta data with real electricity consumption data and see interesting relations between them.
 Load all `.csv` files containing electricity consumption in one `data.table` by functions `rbindlist` and `lapply`. See the structure of these data and change the column names. `V2` to `ID` and `dttm_utc` to `date`.
 
 {% highlight r %}
@@ -153,7 +154,8 @@ meta_data[, ID := as.character(meta_data[["ID"]])]
 Let’s extract possible interesting features from IDs - mean, median and sum of consumption.
 
 {% highlight r %}
-ID_stats <- DT[, .(Mean = mean(value), Median = median(value), Sum = sum(value)), .(ID)]
+ID_stats <- DT[, .(Mean = mean(value), Median = median(value),
+                   Sum = sum(value)), .(ID)]
 {% endhighlight %}
  
 Merge it with `meta_data` and aggregate result by `SUB_INDUSTRY`.
@@ -166,7 +168,8 @@ sub_sum <- data_m[, .(mean(Mean)), .(SUB_INDUSTRY)]
 Bar plot of mean load by sub-industries:
 
 {% highlight r %}
-ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1, fill = reorder(SUB_INDUSTRY, V1))) +
+ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1,
+                    fill = reorder(SUB_INDUSTRY, V1))) +
   geom_bar(stat = "identity", width = 0.8) +
   labs(x = "", y = "Mean Load (kW)",
        title = "Mean load by subindustries",
@@ -229,7 +232,8 @@ str(DT)
 ##  - attr(*, ".internal.selfref")=<externalptr>
 {% endhighlight %}
  
-Extract IDs with a whole length (105408). This is necessary to facilitate further work with time series.
+Not every ID has all measurements during the observed year. So extract IDs
+with a whole length (105408). This is necessary to facilitate further work with time series.
 
 {% highlight r %}
 count_ID <- DT[, .N, ID]
@@ -308,8 +312,10 @@ Let’s finally look at one ID and corresponding time series - num. 99.
 {% highlight r %}
 ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
   geom_line() +
-  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), 
+        panel.grid.major.x = element_line(colour = "grey90"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12, face = "bold"),
         strip.text = element_text(size = 12, face = "bold")) +
@@ -323,9 +329,27 @@ There is strong dependence on time. Daily, weekly and monthly seasonalities are 
 It is highly recommended to aggregate our time series to lower dimension, thus reduce dimension (period) from 288 measurements per day to 48 per day. Do it this way:
 
 {% highlight r %}
-DT_48 <- DT[, .(value = sum(value), date, ID, date_time), by = (seq(nrow(DT)) - 1) %/% 6]
+DT_48 <- DT[, .(value = sum(value), date, ID, date_time),
+            by = (seq(nrow(DT)) - 1) %/% 6]
 DT_48 <- DT_48[seq(1, nrow(DT_48), by = 6)]
 DT_48[, seq := NULL]
+{% endhighlight %}
+
+
+
+{% highlight text %}
+##           value       date  ID           date_time
+##      1: 32.0394 2012-01-02 100 2012-01-02 00:00:00
+##      2: 30.4636 2012-01-02 100 2012-01-02 00:30:00
+##      3: 32.0393 2012-01-02 100 2012-01-02 01:00:00
+##      4: 31.5142 2012-01-02 100 2012-01-02 01:30:00
+##      5: 31.5144 2012-01-02 100 2012-01-02 02:00:00
+##     ---                                           
+## 753356: 22.1120 2012-12-31  99 2012-12-31 21:30:00
+## 753357: 20.0061 2012-12-31  99 2012-12-31 22:00:00
+## 753358: 23.6915 2012-12-31  99 2012-12-31 22:30:00
+## 753359: 24.2181 2012-12-31  99 2012-12-31 23:00:00
+## 753360: 22.6384 2012-12-31  99 2012-12-31 23:30:00
 {% endhighlight %}
  
 Plot typical representants of 4 groups of sub-industries. ID 213 is from the Primary/Secondary School segment, ID 401 is the Grocer/Market, ID 832 is the Corporate Office and ID 9 is the Manufactory.
@@ -334,8 +358,10 @@ Plot typical representants of 4 groups of sub-industries. ID 213 is from the Pri
 ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
   geom_line() + 
   facet_grid(ID ~ ., scales = "free_y", labeller = "label_both") +
-  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12, face = "bold"),
         strip.text = element_text(size = 12, face = "bold")) +
@@ -347,11 +373,14 @@ ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
 Forecast of electricity consumption, in practice, is mainly done for some area of consumers. So aggregate (cumulative) consumption is used. Aggregate it for all our consumers (43) and plot it.
 
 {% highlight r %}
-DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
+DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)],
+                                  FUN = sum, simplify = TRUE))
 ggplot(DT_agg, aes(date_time, value)) +
   geom_line() +
-  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12, face = "bold")) +
   labs(x = "Date", y = "Load (kW)")
@@ -362,7 +391,8 @@ ggplot(DT_agg, aes(date_time, value)) +
 For utility (distribution) companies it is very helpful to create daily profiles of consumers or daily profiles for some area. It deals with characteristic behavior of consumer during the day. So let’s create median daily profile of aggregate consumption with MAD (median absolute deviation). I use medians and MAD because of theirs robustness.
 
 {% highlight r %}
-Med_Mad <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% 48]
+Med_Mad <- DT_agg[, .(Med = median(value), Mad = mad(value)),
+                  by = (seq(nrow(DT_agg)) - 1) %% 48]
 ggplot(Med_Mad, aes(x = seq, Med)) + 
   geom_line(size = 0.9) +
   geom_ribbon(data = Med_Mad, aes(ymin = Med - Mad, ymax = Med + Mad),
@@ -381,7 +411,8 @@ Looks like the biggest peak of the load is during the evening.
 Similarly, we can do this now with week pattern. So let’s make median weekly profile of aggregate consumption with MAD.
 
 {% highlight r %}
-Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)), by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
+Med_Mad_Week <- DT_agg[, .(Med = median(value), Mad = mad(value)),
+                       by = (seq(nrow(DT_agg)) - 1) %% (48*7)]
 ggplot(Med_Mad_Week, aes(x = seq, Med)) + 
   geom_line(size = 0.9) + 
   geom_ribbon(data = Med_Mad_Week, aes(ymin = Med - Mad, ymax = Med + Mad),
@@ -518,14 +549,19 @@ sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_
 And of course...plot computed forecast for one week ahead.
 
 {% highlight r %}
-datas <- data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% n_date[78:91], value]),
-                    date = c(rep(DT_agg[date %in% n_date[85:91], date_time], 2), DT_agg[date %in% n_date[78:91], date_time]),
-                    type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
+datas <- data.table(value = c(for_week_arima, for_week_exp,
+                              DT_agg[date %in% n_date[78:91], value]),
+                    date = c(rep(DT_agg[date %in% n_date[85:91], date_time], 2),
+                             DT_agg[date %in% n_date[78:91], date_time]),
+                    type = c(rep("ARIMA", period*7), rep("EXP", period*7),
+                             rep("REAL", period*14)))
  
 ggplot(data = datas, aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
-  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
         title = element_text(size = 14),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12, face = "bold")) +
@@ -559,14 +595,19 @@ Similar results, but obviously not so accurate because of stochastic behavior of
 Plot computed forecast for one week ahead.
 
 {% highlight r %}
-datas <- data.table(value = c(for_week_arima, for_week_exp, DT_48[ID == n_ID[40] & date %in% n_date[78:91], value]),
-                    date = c(rep(DT_48[ID == n_ID[40] & date %in% n_date[85:91], date_time], 2), DT_48[ID == n_ID[40] & date %in% n_date[78:91], date_time]),
-                    type = c(rep("ARIMA", period*7), rep("EXP", period*7), rep("REAL", period*14)))
+datas <- data.table(value = c(for_week_arima, for_week_exp,
+                              DT_48[ID == n_ID[40] & date %in% n_date[78:91], value]),
+                    date = c(rep(DT_48[ID == n_ID[40] & date %in% n_date[85:91], date_time], 2),
+                             DT_48[ID == n_ID[40] & date %in% n_date[78:91], date_time]),
+                    type = c(rep("ARIMA", period*7), rep("EXP", period*7),
+                             rep("REAL", period*14)))
  
 ggplot(data = datas, aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
-  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
         title = element_text(size = 14),
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12, face = "bold")) +
