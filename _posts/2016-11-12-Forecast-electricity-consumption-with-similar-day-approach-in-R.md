@@ -67,7 +67,7 @@ qplot(1:5, 1:5, geom = "blank") + theme_bw() +
   annotation_custom(grob = tableGrob(meta_data[, .N, by = .(INDUSTRY, SUB_INDUSTRY)]))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-5](/images/unnamed-chunk-5-1.png)
+![plot of chunk unnamed-chunk-5](/images/post_1/unnamed-chunk-5-1.png)
  
 With the package `ggmap` it is easy to map location of our consumers to the map of USA. Let’s split them by industries.
 
@@ -79,7 +79,7 @@ ggmap(map) +
         axis.text.x = element_text(colour = "white"), axis.text.y = element_text(colour = "white"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-6](/images/unnamed-chunk-6-1.png)
+![plot of chunk unnamed-chunk-6](/images/post_1/unnamed-chunk-6-1.png)
  
 Now look at the `SQ_FT` feature. Firstly, I transform square feets to square meters (I am an European...). Histogram of `SQ_M` of buildings.
 
@@ -98,7 +98,7 @@ ggplot(meta_data, aes(meta_data$SQ_M)) +
         axis.title = element_text(size = 12, face = "bold"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
+![plot of chunk unnamed-chunk-7](/images/post_1/unnamed-chunk-7-1.png)
  
 Looks like we have a majority of buildings under 20,000 m^2.
  
@@ -111,7 +111,7 @@ ggplot(meta_data, aes(SQ_M, colour = INDUSTRY, fill = INDUSTRY)) +
         axis.title=element_text(size=12,face="bold"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-8](/images/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-8](/images/post_1/unnamed-chunk-8-1.png)
  
 Looks like Food Sales & Storage buildings have relatively small size. On the other hand, Commercial Property buildings have very variable size.
  
@@ -181,7 +181,7 @@ ggplot(sub_sum, aes(x = reorder(SUB_INDUSTRY, V1), y = V1,
         axis.ticks.x = element_blank())
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-13](/images/unnamed-chunk-13-1.png)
+![plot of chunk unnamed-chunk-13](/images/post_1/unnamed-chunk-13-1.png)
  
 Looks like the biggest consumers in average are manufacturers, shopping centers and business service buildings. On the other hand, schools have the lowest consumption.
  
@@ -197,7 +197,7 @@ ggplot(data_m[, .(SQ_M, Median, INDUSTRY)], aes(x = SQ_M, y = Median)) +
         axis.title=element_text(size=12,face="bold"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-14](/images/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-14](/images/post_1/unnamed-chunk-14-1.png)
  
 There is an evident correlation between median load and square meters of consumers.
 
@@ -322,7 +322,7 @@ ggplot(DT[ID == 99, .(value, date)], aes(date, value)) +
   labs(x = "Date", y = "Load (kW)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-20](/images/unnamed-chunk-20-1.png)
+![plot of chunk unnamed-chunk-20](/images/post_1/unnamed-chunk-20-1.png)
  
 There is strong dependence on time. Daily, weekly and monthly seasonalities are represented.
  
@@ -368,7 +368,7 @@ ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
   labs(x = "Date", y = "Load (kW)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-22](/images/unnamed-chunk-22-1.png)
+![plot of chunk unnamed-chunk-22](/images/post_1/unnamed-chunk-22-1.png)
  
 Forecast of electricity consumption, in practice, is mainly done for some area of consumers. So aggregate (cumulative) consumption is used. Aggregate it for all our consumers (43) and plot it.
 
@@ -386,7 +386,7 @@ ggplot(DT_agg, aes(date_time, value)) +
   labs(x = "Date", y = "Load (kW)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-23](/images/unnamed-chunk-23-1.png)
+![plot of chunk unnamed-chunk-23](/images/post_1/unnamed-chunk-23-1.png)
  
 For utility (distribution) companies it is very helpful to create daily profiles of consumers or daily profiles for some area. It deals with characteristic behavior of consumer during the day. So let’s create median daily profile of aggregate consumption with MAD (median absolute deviation). I use medians and MAD because of theirs robustness.
 
@@ -404,7 +404,7 @@ ggplot(Med_Mad, aes(x = seq, Med)) +
   labs(x = "Time", y = "Load (kW)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-24](/images/unnamed-chunk-24-1.png)
+![plot of chunk unnamed-chunk-24](/images/post_1/unnamed-chunk-24-1.png)
  
 Looks like the biggest peak of the load is during the evening.
  
@@ -425,7 +425,7 @@ ggplot(Med_Mad_Week, aes(x = seq, Med)) +
   labs(x = "Time", y = "Load (kW)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-25](/images/unnamed-chunk-25-1.png)
+![plot of chunk unnamed-chunk-25](/images/post_1/unnamed-chunk-25-1.png)
  
 This is a much more interesting plot than the previous one, isn't it? We can see 5 different patterns (separated by vertical lines) in behavior of the consumers during the week. From Monday till Friday the consumption is quite similar, but Monday starts with low consumption (because of the weekend), so it's different than others. Friday has a similar pattern, but consumption is a little bit lower than on Thursday. It is obvious that weekend is absolutely different than workdays. Thereto Saturday and Sunday are different too.
  
@@ -569,7 +569,7 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-33](/images/unnamed-chunk-33-1.png)
+![plot of chunk unnamed-chunk-33](/images/post_1/unnamed-chunk-33-1.png)
  
 Seems like ARIMA can produce more accurate forecast on aggregated consumption than exponential smoothing.
  
@@ -615,7 +615,7 @@ ggplot(data = datas, aes(date, value, group = type, colour = type)) +
        title = "Comparison of forecasts from two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
+![plot of chunk unnamed-chunk-35](/images/post_1/unnamed-chunk-35-1.png)
  
 Again, STL+ARIMA is winning against STL+EXP.
  
