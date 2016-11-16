@@ -1,0 +1,664 @@
+Sys.setenv("plotly_username"="PetoLau")
+Sys.setenv("plotly_api_key"="g0opxjqh1d")
+
+rm(list=ls())
+gc()
+
+## Prepare DT ----
+setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
+
+files <- list.files(pattern = "*.csv")
+DT <- rbindlist(lapply(files, function(x) cbind(fread(x), gsub(".csv", "", x))))
+str(DT)
+setnames(DT, c("dttm_utc", "V2"), c("date", "ID"))
+
+DT[, date_time := ymd_hms(DT[["date"]])]
+DT[, date := as.Date(DT[["date"]], "%Y-%m-%d")]
+DT[, ':='(timestamp = NULL, estimated = NULL, anomaly = NULL)]
+str(DT)
+
+# Extract ID's with an whole length (105408)
+count_ID <- DT[, .N, ID]
+full <- count_ID[N == max(N), .(ID)]
+DT <- DT[ID %in% full[, ID]]
+
+# Extract date's with an all measurements during the day (288)
+num_date <- DT[ID == 100, .N, .(date)]
+DT <- DT[!date %in% num_date[c(1,367), date]] # first and last date has not all measurements - so remove them
+unique(DT[,ID]) # our extracted (filtered) ID's
+
+DT_48 <- DT[, .(value = sum(value), date, ID, date_time), by = (seq(nrow(DT)) - 1) %/% 6]
+DT_48 <- DT_48[seq(1, nrow(DT_48), by = 6)]
+DT_48[, seq := NULL]
+
+DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
+
+DT_48[, week := weekdays(date_time)]
+DT_agg[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+
+# now we have datasets with all needed features to build model for different days
+n_ID <- unique(DT_48[, ID])
+n_weekdays <- unique(DT_agg[, week])
+n_date <- unique(DT_agg[, date])
+period <- 48
+
+setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+meta_data <- fread("meta\\all_sites.csv")
+# prepare meta_data
+meta_data[, ':='(TIME_ZONE = NULL, TZ_OFFSET = NULL)]
+setnames(meta_data, "SITE_ID", "ID")
+meta_data[, ID := as.character(meta_data[["ID"]])]
+
+indus <- unique(meta_data[ID %in% n_ID, INDUSTRY])
+DT_48 <- merge(DT_48, meta_data[, .(ID, INDUSTRY)], by = "ID")
+
+
+DT_ind_com <- as.data.table(aggregate(DT_48[INDUSTRY == indus[1], .(value)], by = DT_48[INDUSTRY == indus[1], .(date_time)], FUN = sum, simplify = TRUE))
+DT_ind_edu <- as.data.table(aggregate(DT_48[INDUSTRY == indus[2], .(value)], by = DT_48[INDUSTRY == indus[2], .(date_time)], FUN = sum, simplify = TRUE))
+DT_ind_food <- as.data.table(aggregate(DT_48[INDUSTRY == indus[3], .(value)], by = DT_48[INDUSTRY == indus[3], .(date_time)], FUN = sum, simplify = TRUE))
+DT_ind_ind <- as.data.table(aggregate(DT_48[INDUSTRY == indus[4], .(value)], by = DT_48[INDUSTRY == indus[4], .(date_time)], FUN = sum, simplify = TRUE))
+DT_ind_ind[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+DT_ind_food[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+DT_ind_edu[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+DT_ind_com[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+DT_ind_com[, type := indus[1]]
+DT_ind_edu[, type := indus[2]]
+DT_ind_food[, type := indus[3]]
+DT_ind_ind[, type := indus[4]]
+DT_all_agg <- rbindlist(list(DT_ind_com, DT_ind_edu, DT_ind_food, DT_ind_ind))
+
+write_feather(DT_all_agg, "DT_4_ind")
+
+## Post from here ----
+setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+
+library(feather)
+library(data.table)
+library(ggplot2)
+# library(MASS)
+library(plotly)
+library(animation)
+# library(mgcv)
+
+# Use feather (fast to share data) to read data.table
+DT <- as.data.table(read_feather("DT_4_ind"))
+
+# Plot aggregated time series of consumption by industry
+ggplot(data = DT, aes(x = date, y = value)) +
+  geom_line() + 
+  facet_grid(type ~ ., scales = "free_y") +
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold"),
+        strip.text = element_text(size = 9, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+# Food Sales & Storage...it is interesting that there aren't changes during holidays
+
+
+# prepare DT to work with a regression model
+# tranform charactres of weekdays to integers
+DT[, week_num := as.integer(as.factor(DT[, week]))]
+
+# store information of the type of consumer, date, weekday and period
+n_type <- unique(DT[, type])
+n_weekdays <- unique(DT[, week])
+n_date <- unique(DT[, date])
+period <- 48
+
+# Let's look at some data chunk of consumption and try do some regression analysis. Pick aggregate consumption of education (schools) buildings.
+data_r <- DT[(type == n_type[2] & date %in% n_date[57:84])]
+
+ggplot(data_r, aes(date_time, value)) +
+  geom_line() +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+
+# Multiple linear regression (form, assumptions). Like in the previous form, we want to forecast consumption one week ahead,
+# so construction of seasonal features is necessery. Let's create daily and weekly seasonal dummy variables. Form like 10001...11110000.
+# Compute features to model and store it in matrix_train.
+N <- nrow(data_r)
+
+matrix_train <- matrix(0, nrow = N, ncol = period + 6)
+for(j in 1:period){
+  matrix_train[seq(j, N, by = period), j] <- 1
+}
+
+# using feature week_num
+for(j in 1:6){
+  matrix_train[data_r[, week_num] == j, period + j] <- 1
+}
+
+matrix_train <- as.data.frame(cbind(data_r[, value], matrix_train))
+
+colnames(matrix_train) <- c("Load",
+                            sapply(1:period, function(i) paste("d", i, sep = "")),
+                            sapply(1:6, function(i) paste("w", i, sep = "")))
+
+# Collinearity and singularity, so w7 isn't constructed. Names of features are needed due to clarity and class of object `lm`.
+# Lets create our first multiple linear model (I will refer it as MLR) with function `lm`. Intercept is inappropiate in this sceniario, again due to collinearity and meaningfulness.
+
+lm_m_1 <- lm(Load ~ 0 + ., data = matrix_train)
+
+summary(lm_m_1)
+# summary seems not bad, R-squared high, F-statistic of goodness of fit is fine too.
+# Let's look on fitted values and residuals.
+
+datas <- rbindlist(list(data_r[, .(value, date_time)], data.table(value = lm_m_1$fitted.values, data_time = data_r[, date_time])))
+datas[, type := c(rep("Real", nrow(data_r)), rep("Fitted", nrow(data_r)))]
+
+ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
+  geom_line(size = 0.8) +
+  theme_bw() +
+  labs(x = "Time", y = "Load (kW)",
+       title = "Fit from MLR")
+
+# Fit vs residuals - heteroscedasticity - non constant and nonnormal residuals (assumptions)
+ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals = lm_m_1$residuals),
+       aes(Fitted_values, Residuals)) +
+  geom_point(size = 1.7) +
+  geom_smooth() +
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+  labs(title = "Fitted vs Residuals")
+
+# Function to create Normal Q-Q plot with qqline
+ggQQ <- function(lm){
+  # extract standardized residuals from the fit
+  d <- data.frame(std.resid = rstandard(lm))
+  # calculate 1Q/4Q line
+  y <- quantile(d$std.resid[!is.na(d$std.resid)], c(0.25, 0.75))
+  x <- qnorm(c(0.25, 0.75))
+  slope <- diff(y)/diff(x)
+  int <- y[1L] - slope * x[1L]
+  
+  p <- ggplot(data = d, aes(sample = std.resid)) +
+    stat_qq(shape = 1, size = 3) +         # open circles
+    labs(title = "Normal Q-Q",             # plot title
+         x = "Theoretical Quantiles",      # x-axis label
+         y = "Standardized Residuals") +   # y-axis label
+    geom_abline(slope = slope, intercept = int, linetype = "dashed", size = 1, col = "firebrick1")  # dashed reference line
+  return(p)
+}
+
+# Absolutely not normal residuals
+ggQQ(lm_m_1)
+
+# What we can do now? Nonlinear regression? Machine learning methods? What about interactions between dummy day features and week features.
+# Again take care about singularities, so omit d48...(d1+d2+...+d47):w1 + (d1+d2+...+d47):w2 + ... + (d1+d2+...+d47):w6.
+# This could solve problem, what we have seen in the plot of fitted values.
+# Define new formula to linear model:
+
+# First interactions
+m_interactions <- sapply(50:55, function(x) paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
+                                                  colnames(matrix_train)[x], sep = ""))
+m_interactions <- paste(m_interactions, collapse = " + ")
+
+# Whole formula together:
+frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
+                          paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "", collapse = " + "),
+                          "+", m_interactions))
+frmla
+
+lm_m_2 <- lm(frmla, data = matrix_train)
+
+# Because of long lenght of summary I will not print it, just quick view on most important values. First R^2^:
+c(Previous = summary(lm_m_1)$r.squared, New = summary(lm_m_2)$r.squared)
+# Boxplot of residuals (same as statistics in summary)
+ggplot(data.table(Residuals = c(lm_m_1$residuals, lm_m_2$residuals),
+                  type = c(rep("Previous", nrow(data_r)), rep("New", nrow(data_r)))), 
+       aes(type, Residuals, fill = type)) + 
+  geom_boxplot()
+
+ggplotly()
+
+# Much better then previous one, seems interactions working...prove it with next three plots, fitted values, fit vs residuals and qqplot
+datas <- rbindlist(list(data_r[, .(value, date_time)], data.table(value = lm_m_2$fitted.values, data_time = data_r[, date_time])))
+datas[, type := c(rep("Real", nrow(data_r)), rep("Fitted", nrow(data_r)))]
+
+ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
+  geom_line(size = 0.8) +
+  theme_bw() +
+  labs(x = "Time", y = "Load (kW)",
+       title = "Fit from MLR")
+
+# Fit vs residuals - much better
+ggplot(data = data.table(Fitted_values = lm_m_2$fitted.values, Residuals = lm_m_2$residuals),
+       aes(Fitted_values, Residuals)) +
+  geom_point(size = 1.7) +
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+  labs(title = "Fitted vs Residuals")
+
+ggQQ(lm_m_2)
+
+# Tried trend but not helped...so go ahead to forecast with this model.
+# Put all to one function: arguments `data` and `set_of_date`. Function returns forecast to whole week.
+
+predWeekReg <- function(data, set_of_date){
+  
+  data_train <- data[date %in% set_of_date]
+  
+  N <- nrow(data_train)
+  
+  matrix_train <- matrix(0, nrow = N, ncol = period + 6)
+  for(j in 1:period){
+    matrix_train[seq(j, N, by = period), j] <- 1
+  }
+  
+  for(j in 1:6){
+    matrix_train[data_train[, week_num] == j, period + j] <- 1
+  }
+  
+  matrix_train <- as.data.frame(cbind(data_train[, value], matrix_train))
+  
+  colnames(matrix_train) <- c("Load",
+                              sapply(1:period, function(i) paste("d", i, sep = "")),
+                              sapply(1:6, function(i) paste("w", i, sep = "")))
+  
+  # Interactions
+  m_interactions <- sapply(50:55, function(x) paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
+                                                    colnames(matrix_train)[x], sep = ""))
+  m_interactions <- paste(m_interactions, collapse = " + ")
+  frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
+                            paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "", collapse = " + "),
+                            "+", m_interactions))
+  
+  lm_m <- lm(frmla, data = matrix_train)
+  
+  pred_week <- predict(lm_m, matrix_train[1:(7*period), -1])
+  
+  return(as.vector(pred_week))
+}
+
+## Mean Absolute Percentage Error
+mape <- function(real, pred){
+  return(100 * mean(abs((real - pred)/real)))
+}
+
+# Training set of lenght of two weeks - experimentaly set. Make forecast to 50 weeks.
+
+n_weeks <- floor(length(n_date)/7) - 2
+
+lm_pred_weeks_1 <- sapply(0:(n_weeks-1), function(i)
+  predWeekReg(DT[type == n_type[1]], n_date[((i*7)+1):((i*7)+7*2)]))
+
+lm_pred_weeks_2 <- sapply(0:(n_weeks-1), function(i)
+  predWeekReg(DT[type == n_type[2]], n_date[((i*7)+1):((i*7)+7*2)]))
+
+lm_pred_weeks_3 <- sapply(0:(n_weeks-1), function(i)
+  predWeekReg(DT[type == n_type[3]], n_date[((i*7)+1):((i*7)+7*2)]))
+
+lm_pred_weeks_4 <- sapply(0:(n_weeks-1), function(i)
+  predWeekReg(DT[type == n_type[4]], n_date[((i*7)+1):((i*7)+7*2)]))
+
+lm_err_mape_1 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[1] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
+       lm_pred_weeks_1[, i+1]))
+
+lm_err_mape_2 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[2] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
+       lm_pred_weeks_2[, i+1]))
+
+lm_err_mape_3 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[3] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
+       lm_pred_weeks_3[, i+1]))
+
+lm_err_mape_4 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[4] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
+       lm_pred_weeks_4[, i+1]))
+
+# MAPE error for our forecasts.
+summary(lm_err_mape_1) # n_type[1]
+summary(lm_err_mape_2) # n_type[2]
+summary(lm_err_mape_3) # n_type[3]
+summary(lm_err_mape_4) # n_type[4]
+
+# BoxPlot
+ggplot(data.table(MAPE = c(lm_err_mape_1, lm_err_mape_2, lm_err_mape_3, lm_err_mape_4),
+                  Industry = c(rep(n_type[1], length(lm_err_mape_1)),
+                           rep(n_type[2], length(lm_err_mape_2)),
+                           rep(n_type[3], length(lm_err_mape_3)),
+                           rep(n_type[4], length(lm_err_mape_4)))), 
+       aes(Industry, MAPE, fill = Industry)) + 
+  geom_boxplot()
+
+ggplotly()
+
+# Visualization of forecast...one plot - nonsense..try animation!
+
+datas <- data.table(value = c(as.vector(lm_pred_weeks_3),
+                              DT[(type == n_type[3]) & (date %in% n_date[-c(1:14,365)]), value]),
+                    date_time = c(rep(DT[-c(1:(14*48), (17473:nrow(DT))), date_time], 2)),
+                    type = c(rep("MLR", nrow(lm_pred_weeks_1)*ncol(lm_pred_weeks_1)),
+                             rep("Real", nrow(lm_pred_weeks_1)*ncol(lm_pred_weeks_1))),
+                    week = c(rep(1:50, each = 336), rep(1:50, each = 336)))
+
+saveGIF({
+  oopt = ani.options(interval = 0.9, nmax = 50)
+  for(i in 1:ani.options("nmax")){
+    print(ggplot(data = datas[week == i], aes(date_time, value, group = type, colour = type)) +
+            geom_line(size = 0.8) +
+            scale_y_continuous(limits = c(min(datas[, value]), max(datas[, value]))) + 
+            theme(panel.border = element_blank(), panel.background = element_blank(),
+                  panel.grid.minor = element_line(colour = "grey90"),
+                  panel.grid.major = element_line(colour = "grey90"),
+                  panel.grid.major.x = element_line(colour = "grey90"),
+                  title = element_text(size = 15),
+                  axis.text = element_text(size = 10),
+                  axis.title = element_text(size = 12, face = "bold")) +
+            labs(x = "Time", y = "Load (kW)",
+                 title = paste("Forecast of MLR (", n_type[3], "); ", "week: ", i, "; MAPE: ",
+                               round(lm_err_mape_3[i], 2), "%", sep = "")))
+    ani.pause()
+  }}, movie.name = "industry_3.gif", ani.height = 450, ani.width = 750)
+
+# Comparison with STL+ARIMA...MLR is better.
+
+# library(forecast)
+# 
+# arima_pred_weeks_3 <- sapply(0:(n_weeks-1), function(i)
+#   predictWeek(DT[type == n_type[3]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))
+# 
+# arima_err_mape_3 <- sapply(0:(n_weeks-1), function(i)
+#   mape(DT[(type == n_type[3] & date %in% n_date[(22+(i*7)):(28+(i*7))]), value],
+#        arima_pred_weeks_3[, i+1]))
+# 
+# summary(arima_err_mape_3)
+# summary(lm_err_mape_3)
+
+
+# predWeekReg <- function(data, set_of_date){
+#   
+#   data_train <- data[date %in% set_of_date]
+#   
+#   N <- nrow(data_train)
+#   
+#   matrix_train <- matrix(0, nrow = N, ncol = period + 6)
+#   for(j in 1:period){
+#     matrix_train[seq(j, N, by = period), j] <- 1
+#   }
+#   
+#   for(j in 1:6){
+#     matrix_train[data_train[, week_num] == j, period + j] <- 1
+#   }
+#   
+#   matrix_train <- as.data.frame(cbind(data_train[, value], matrix_train))
+#   
+#   colnames(matrix_train) <- c("Load",
+#                               sapply(1:period, function(i) paste("d", i, sep = "")),
+#                               sapply(1:6, function(i) paste("w", i, sep = "")))
+#   
+#   # Interactions
+#   m_interactions <- sapply(50:55, function(x) paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
+#                                                     colnames(matrix_train)[x], sep = ""))
+#   m_interactions <- paste(m_interactions, collapse = " + ")
+#   frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
+#                             paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "", collapse = " + "),
+#                             "+", m_interactions))
+#   
+#   lm_m <- lm(frmla, data = matrix_train)
+#   
+#   lambda.y <- which.max(boxCox(lm_m, family="yjPower", plotit = F)$y)
+#   lambda <- boxCox(lm_m, family="yjPower", plotit = F)$x[lambda.y]
+#   depvar.transformed <- yjPower(matrix_train$Load, lambda)
+#   
+#   matrix_train$Load <- depvar.transformed
+#   
+#   lm_m <- lm(frmla, data = matrix_train)
+#   
+#   pred_week <- predict(lm_m, matrix_train[1:(7*period), -1])
+#   
+#   return(as.vector(reverseYJ(pred_week, lambda)))
+# }
+
+# error separate for weekdays 
+err_days <- sapply(0:6, function(j)
+        sapply(0:(n_weeks-1), function(i)
+          mape(DT[(type == n_type[2] & date %in% n_date[(15+(i*7)):(21+(i*7))] & week == n_weekdays[j+1]), value],
+               lm_pred_weeks[((period*j)+1):(period*(j+1)), i+1])))
+
+colMeans(err_days)
+
+summary(lm_err_mape)
+summary(lm_err_mape_2)
+summary(lm_err_mape_3)
+
+# library(gganimate)
+library(animation)
+
+datas <- data.table(value = c(as.vector(lm_pred_weeks),
+                              DT[(type == n_type[2]) & (date %in% n_date[-c(1:14,365)]), value]),
+                    date = c(rep(DT[-c(1:(14*48), (17473:nrow(DT))), date_time], 2)),
+                    type = c(rep("MLR", nrow(lm_pred_weeks)*ncol(lm_pred_weeks)),
+                             rep("Real", nrow(lm_pred_weeks)*ncol(lm_pred_weeks))),
+                    week = c(rep(1:50, each = 336), rep(1:50, each = 336)))
+
+nrow(DT[type == n_type[1]])-48
+
+ggplot(data = datas[week == 1], aes(date, value, group = type, colour = type)) +
+  geom_line(size = 0.8) +
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(x = "Time", y = "Load (kW)",
+       title = "Forecast from MLR")
+
+ggplot(data = datas[week == 1], aes(date, value, group = type, colour = type)) +
+  geom_line(size = 0.8) +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        title = element_text(size = 14),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(x = "Time", y = "Load (kW)",
+       title = "Comparison of forecasts from two models",
+       caption = paste("MAPE: ", round(lm_err_mape_3[1],3), "%", sep = ""))
+
+plot(ts(datas[week == 1, value], freq = 48))
+
+p <- ggplot(data = datas, aes(date, value, group = type, colour = type, frame = week, cumulative = TRUE)) +
+      geom_line(size = 0.8) +
+      labs(x = "Time", y = "Load (kW)",
+           title = "Forecast from MLR, week: ")
+
+temp_wd <- getwd()
+theme_set(theme_bw())
+saveGIF({
+  oopt = ani.options(interval = 0.9, nmax = 50)
+  for(i in 1:ani.options("nmax")){
+    print(ggplot(data = datas[week == i], aes(date, value, group = type, colour = type)) +
+      geom_line(size = 0.8) +
+      theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+            panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+            title = element_text(size = 14),
+            axis.text = element_text(size = 10),
+            axis.title = element_text(size = 12, face = "bold")) +
+      labs(x = "Time", y = "Load (kW)",
+           title = paste("Forecast of MLR, week: ", i, "; MAPE: ", round(lm_err_mape_3[i], 2), "%", sep = "")))
+    ani.pause()
+  }}, movie.name = "test_1.gif")
+setwd(temp_wd)
+
+
+theme_set(theme_bw())
+gg_animate(p, pause = .4, filename = "test1.gif")
+
+# library(gapminder)
+# theme_set(theme_bw())
+# p <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, color = continent, frame = year)) +
+#   geom_point() +
+#   scale_x_log10()
+# gg_animate(p)
+
+lm_m_1 <- lm(Load ~ 0 + ., data = matrix_train)
+lm_m_2 <- lm(frmla, data = matrix_train)
+
+summary(lm_m_1)
+summary(lm_m_2)
+lm_m_2$terms
+lm_m_2$coefficients
+pred_week_2 <- predict(lm_m_2, matrix_train[1:(7*period), -1])
+
+library(car)
+ncvTest(lm_m_2) # Homoscedasticity test
+qqnorm(residuals(lm_m_2), ylab="Residuals")
+qqline(residuals(lm_m_2), col = "red", lwd = 2, lty = 2)
+shapiro.test(residuals(lm_m_2))
+plot(fitted(lm_m_2), residuals(lm_m_2))
+abline(h = 0, col = "red") # Heteroscedasticity
+plot(fitted(lm_m_2), abs(residuals(lm_m_2)))
+
+# Heteroscedasticity, nonnormal variance => box-cox transform
+boxcox(lm_m_2, plotit = TRUE)
+lambda.y <- which.max(boxCox(lm_m_2, family="yjPower", plotit = F)$y)
+lambda <- boxCox(lm_m_2, family="yjPower", plotit = F)$x[lambda.y]
+depvar.transformed <- yjPower(matrix_train$Load, lambda)
+plot(ts(matrix_train$Load, freq = period))
+plot(ts(depvar.transformed, freq = period))
+
+# fit model with transformed dependent variable
+matrix_train$Load <- depvar.transformed
+lm_m_3 <- lm(frmla, data = matrix_train)
+summary(lm_m_3)
+
+reverseYJ <- function(Y, lambda){
+  return(exp(log((lambda*Y) + 1)/lambda) - 1)
+}
+
+# Diagnostics
+ncvTest(lm_m_3) # Homoscedasticity test
+qqnorm(residuals(lm_m_3), ylab="Residuals")
+qqline(residuals(lm_m_3), col = "red", lwd = 2, lty = 2)
+shapiro.test(residuals(lm_m_3))
+plot(fitted(lm_m_3), residuals(lm_m_3))
+abline(h = 0, col = "red") # Heteroscedasticity
+plot(fitted(lm_m_3), abs(residuals(lm_m_3)))
+layout(matrix(1:2, nrow = 2))
+layout(1)
+
+plot(ts(matrix_train$Load, freq = period, start = 0))
+lines(ts(lm_m_3$fitted.values, freq = period, start = 0), col = "red")
+
+pred_week_2 <- predict(lm_m_2, matrix_train[1:(7*period), -1])
+pred_week_3 <- predict(lm_m_3, matrix_train[1:(7*period), -1])
+plot(ts(data[, value], freq = period, start = 0), xlim = c(0, 28+7))
+lines(ts(pred_week_2, freq = period, start = 28), col = "blue")
+lines(ts(reverseYJ(pred_week_3, lambda), freq = period, start = 28), col = "red")
+
+plot(ts(matrix_train$Load, freq = period, start = 0), xlim = c(0, 28+7))
+lines(ts(pred_week_3, freq = period, start = 28), col = "blue")
+
+rlm_m <- rlm(frmla, data = matrix_train, method="M", psi=psi.huber, k = 1)
+summary(rlm_m)
+pred_week_4 <- predict(rlm_m, matrix_train[1:(7*period), -1])
+lines(ts(reverseYJ(pred_week_4, lambda), freq = period, start = 28), col = "green")
+
+# library(kernlab)
+# svr_m <- ksvm(Load ~ ., data = matrix_train, type = "eps-svr", kernel = "rbfdot", eps = 0.1, C = 10)
+# plot(ts(data[, value], freq = period, start = 0))
+# plot(ts(attributes(svr_m)$fitted, freq = period, start = 0), col = "red")
+# 
+# pred_week <- predict(svr_m, matrix_train[1:(7*period), -1])
+# plot(ts(data[, value], freq = period, start = 0), xlim = c(0, 28+7))
+# lines(ts(pred_week, freq = period, start = 28), col = "red")
+
+## GAM
+library(mgcv)
+matrix_gam <- data.frame(Load = data[, value], Season1 = rep(1:period, window), Season2 = data[, week_num])
+mod_gam <- gamm(Load ~ s(Season1, bs = "cc", k = period) + s(Season2, bs = "cc", k = 7), data = matrix_gam)
+mod_gam_2 <- gamm(Load ~ s(Season1, bs = "cc", k = period) + s(Season2, bs = "cc", k = 7) +
+                  s(Season1, bs = "cc", by = Season2, k = period, m = 1), data = matrix_gam)
+mod_gam_3 <- gamm(Load ~ s(Season1, bs = "cc", k = period) + s(Season2, bs = "cc", k = 7) +
+                    s(Season1, bs = "cc", by = Season2, k = period, m = 1) +
+                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1), data = matrix_gam)
+mod_gam_4 <- gamm(Load ~ s(Season1, bs = "cc", k = period) +
+                    s(Season2, bs = "cc", k = 7) +
+                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1) +
+                    te(Season1, Season2, bs = rep("cc",2)), data = matrix_gam)
+
+mod_gam_4$gam$model
+
+summary(mod_gam$gam)
+summary(mod_gam_2$gam)
+summary(mod_gam_3$gam)
+summary(mod_gam_4$gam)
+
+plot(ts(matrix_gam$Load, freq = period, start = 0))
+lines(ts(mod_gam$gam$fitted.values, freq = period, start = 0), col = "blue")
+lines(ts(mod_gam_3$gam$fitted.values, freq = period, start = 0), col = "green")
+lines(ts(mod_gam_4$gam$fitted.values, freq = period, start = 0), col = "red")
+
+layout(matrix(1:2, ncol = 2))
+acf(resid(mod_gam_4$lme), lag.max = 48*7, main = "ACF")
+pacf(resid(mod_gam_4$lme), lag.max = 48*7, main = "pACF")
+layout(1)
+
+ctrl <- list(niterEM = 0, msVerbose = TRUE, optimMethod="L-BFGS-B")
+mod_gam_5 <- gamm(Load ~ s(Season1, bs = "cc", k = period) +
+                    s(Season2, bs = "cc", k = 7) +
+                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1) +
+                    te(Season1, Season2, bs = rep("cc",2)),
+                  data = matrix_gam,
+                  correlation = corARMA(form = ~ 1|Season2, p = 1),
+                  control = ctrl)
+
+# Comparison of GAMs
+anova(mod_gam$lme, mod_gam_3$lme, mod_gam_4$lme, mod_gam_5$lme)
+
+summary(mod_gam_5$gam)
+layout(matrix(1:2, ncol = 2))
+res <- resid(mod_gam_5$lme, type = "normalized")
+acf(res, lag.max = 48*7, main = "ACF - AR(1) errors")
+pacf(res, lag.max = 48*7, main = "pACF- AR(1) errors")
+
+qqnorm(resid(mod_gam_5$lme, type = "normalized"), ylab="Residuals")
+qqline(resid(mod_gam_5$lme, type = "normalized"), col = "red", lwd = 2, lty = 2)
+shapiro.test(resid(mod_gam_5$lme, type = "normalized"))
+plot(mod_gam_5$gam$fitted.values, resid(mod_gam_5$lme, type = "normalized"))
+abline(h = 0, col = "red") # Heteroscedasticity
+
+layout(matrix(1:2, ncol = 2))
+plot(mod_gam_5$gam, scale = 0)
+layout(1)
+
+plot(ts(data[, value], freq = period, start = 0))
+lines(ts(mod_gam_4$gam$fitted.values, freq = period, start = 0), col = "blue")
+lines(ts(mod_gam_5$gam$fitted.values, freq = period, start = 0), col = "green")
+lines(ts(reverseYJ(mod_gam_6$gam$fitted.values, lambda), freq = period, start = 0), col = "red")
+
+new.data <- matrix_gam[1:(48*7), -1]
+pred <- predict(mod_gam_4$gam,  newdata = new.data, type = "response", se.fit = FALSE)
+lines(ts(as.vector(pred), freq= period))
+plot(ts(reverseYJ(as.vector(pred),lambda), freq= period), col = "red")
+lines(ts(as.vector(pred), freq= period), col = "blue")
+
+plot(ts(data[, value], freq = period, start = 0), xlim = c(0, 28+7))
+lines(ts(as.vector(pred), freq = period, start = 28), col = "blue")
+
+# Box-Cox (YJ) with GAM
+matrix_gam$Load <- depvar.transformed
+mod_gam_6 <- gamm(Load ~ s(Season1, bs = "cc", k = period) +
+                    s(Season2, bs = "cc", k = 7) +
+                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1) +
+                    te(Season1, Season2, bs = rep("cc",2)),
+                  data = matrix_gam,
+                  correlation = corARMA(form = ~ 1|Season2, p = 1),
+                  control = ctrl)
+
+summary(mod_gam_6$gam)
+layout(matrix(1:2, ncol = 1))
+plot(mod_gam_6$gam$fitted.values, resid(mod_gam_6$lme, type = "normalized"))
+abline(h = 0, col = "red") # Heteroscedasticity
+layout(1)
+
+qqnorm(resid(mod_gam_6$lme, type = "normalized"), ylab="Residuals")
+qqline(resid(mod_gam_6$lme, type = "normalized"), col = "red", lwd = 2, lty = 2)
+shapiro.test(resid(mod_gam_6$lme, type = "normalized"))

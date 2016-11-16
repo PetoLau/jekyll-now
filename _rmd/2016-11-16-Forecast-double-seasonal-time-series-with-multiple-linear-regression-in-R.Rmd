@@ -1,0 +1,130 @@
+---
+title: "Forecast double seasonal time series with multiple linear regression in R"
+author: Peter Laurinec
+published: false
+status: process
+draft: false
+tags: R forecast
+---
+
+So...I hope I haven't forgotten something, go ahead to the programming and exploration part of this post. First step - scan all of the needed packages.
+```{r, message=FALSE, warning=FALSE}
+library(feather)
+library(data.table)
+library(ggplot2)
+library(plotly)
+library(animation)
+```
+
+```{r, eval=TRUE, echo=FALSE}
+opts_knit$set(root.dir = "C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+```
+
+Use feather (fast to share data) to read `data.table`.
+```{r}
+DT <- as.data.table(read_feather("DT_4_ind"))
+```
+
+Plot aggregated time series of consumption by industry.
+```{r, fig.width = 10}
+ggplot(data = DT, aes(x = date, y = value)) +
+  geom_line() + 
+  facet_grid(type ~ ., scales = "free_y") +
+  theme(panel.border = element_blank(), panel.background = element_blank(),
+        panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"),
+        panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold"),
+        strip.text = element_text(size = 9, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+```
+
+Prepare `DT` to work with a regression model. Tranform charactres of weekdays to integers.
+```{r, cache=TRUE, cache.vars='DT'}
+DT[, week_num := as.integer(as.factor(DT[, week]))]
+```
+
+Store information of the type of consumer, date, weekday and period.
+```{r}
+n_type <- unique(DT[, type])
+n_weekdays <- unique(DT[, week])
+n_date <- unique(DT[, date])
+period <- 48
+```
+
+Let's look at some data chunk of consumption and try do some regression analysis. Pick aggregate consumption of education (schools) buildings.
+```{r, fig.width = 9}
+data_r <- DT[(type == n_type[2] & date %in% n_date[57:84])]
+
+ggplot(data_r, aes(date_time, value)) +
+  geom_line() +
+  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
+        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 12, face = "bold")) +
+  labs(x = "Date", y = "Load (kW)")
+```
+
+Multiple linear regression (form, assumptions). Like in the previous form, we want to forecast consumption one week ahead,
+so construction of seasonal features is necessery. Let's create daily and weekly seasonal dummy variables. Form like 10001...11110000.
+Compute features to model and store it in matrix_train.
+```{r}
+N <- nrow(data_r)
+
+matrix_train <- matrix(0, nrow = N, ncol = period + 6)
+for(j in 1:period){
+  matrix_train[seq(j, N, by = period), j] <- 1
+}
+
+# using feature week_num
+for(j in 1:6){
+  matrix_train[data_r[, week_num] == j, period + j] <- 1
+}
+
+matrix_train <- as.data.frame(cbind(data_r[, value], matrix_train))
+
+colnames(matrix_train) <- c("Load",
+                            sapply(1:period, function(i) paste("d", i, sep = "")),
+                            sapply(1:6, function(i) paste("w", i, sep = "")))
+```
+
+Collinearity and singularity, so w7 isn't constructed. Names of features are needed due to clarity and class of object `lm`.
+Lets create our first multiple linear model (I will refer it as MLR) with function `lm`. Intercept is inappropiate in this sceniario, again due to collinearity and meaningfulness.
+
+```{r}
+lm_m_1 <- lm(Load ~ 0 + ., data = matrix_train)
+```
+
+```{r}
+summary(lm_m_1)
+```
+
+Summary seems not bad, R-squared high, F-statistic of goodness of fit is fine too.
+Let's look on fitted values and residuals.
+
+```{r, fig.width = 8}
+datas <- rbindlist(list(data_r[, .(value, date_time)], data.table(value = lm_m_1$fitted.values, data_time = data_r[, date_time])))
+datas[, type := c(rep("Real", nrow(data_r)), rep("Fitted", nrow(data_r)))]
+
+ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
+  geom_line(size = 0.8) +
+  theme_bw() +
+  labs(x = "Time", y = "Load (kW)",
+       title = "Fit from MLR")
+```
+
+Fit vs residuals - heteroscedasticity - non constant and nonnormal residuals (assumptions).
+```{r}
+gg <- ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals = lm_m_1$residuals),
+       aes(Fitted_values, Residuals)) +
+  geom_point(size = 1.7) +
+  geom_smooth() +
+  geom_hline(yintercept = 0, color = "red", size = 1) +
+  labs(title = "Fitted vs Residuals")
+
+plt <- htmltools::tagList()
+plt <- as.widget(ggplotly(gg))
+plt
+```
+
