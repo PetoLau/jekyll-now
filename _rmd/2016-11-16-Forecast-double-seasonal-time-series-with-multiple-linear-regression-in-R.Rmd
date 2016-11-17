@@ -117,17 +117,11 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 ```
 
 Fit vs residuals - heteroscedasticity - non constant and nonnormal residuals (assumptions).
-```{r, echo=FALSE}
+```{r}
 gg <- ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals = lm_m_1$residuals),
        aes(Fitted_values, Residuals)) +
   geom_point(size = 1.5) +
   geom_smooth() +
   geom_hline(yintercept = 0, color = "red", size = 0.8) +
   labs(title = "Fitted vs Residuals")
-# library(webshot)
-# plt <- htmltools::tagList()
-# plt <- as.widget(ggplotly(gg))
-
-# p <- plotly(username = "PetoLau", key = "g0opxjqh1d")
-# q <- ggplotly(gg)
 ```
