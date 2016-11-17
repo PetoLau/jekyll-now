@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "Forecast double seasonal time series with multiple linear regression in R"
-author: "Peter Laurinec"
+title: Forecast double seasonal time series with multiple linear regression in R
+author: Peter Laurinec
 published: false
 status: process
 tags: test
@@ -124,16 +124,10 @@ gg <- ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals =
   geom_smooth() +
   geom_hline(yintercept = 0, color = "red", size = 0.8) +
   labs(title = "Fitted vs Residuals")
-library(webshot)
-plt <- htmltools::tagList()
-plt <- as.widget(ggplotly(gg))
+# library(webshot)
+# plt <- htmltools::tagList()
+# plt <- as.widget(ggplotly(gg))
 
 # p <- plotly(username = "PetoLau", key = "g0opxjqh1d")
-# p$ggplotly(gg)
+# q <- ggplotly(gg)
 ```
-
-```{r, plotly=TRUE}
-plt
-```
-
-
