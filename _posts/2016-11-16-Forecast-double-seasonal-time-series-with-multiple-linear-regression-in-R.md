@@ -7,7 +7,9 @@ status: publish
 tags: test
 draft: false
 ---
- 
+
+Deployment of smart grids gives space to an occurrence of new methods of machine learning and data analysis. Smart grids can contain of millions of smart meters, which produce a large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about the consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make an accurate forecast or to detect anomalies. In this blog post, I will focus on the exploration of available open smart meter data and on the creation of a simple forecast model, which uses similar day approach (will be drawn up in detail below).
+
 So...I hope I haven't forgotten something, go ahead to the programming and exploration part of this post. First step - scan all of the needed packages.
 
 {% highlight r %}
@@ -235,5 +237,5 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
  
 Fit vs residuals - heteroscedasticity - non constant and nonnormal residuals (assumptions).
 
-<iframe width="700" height="600" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/0.embed"></iframe>
+<iframe width="500" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/0.embed"></iframe>
 
