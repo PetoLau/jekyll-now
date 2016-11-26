@@ -1,10 +1,17 @@
-Sys.setenv("plotly_username"="PetoLau")
-Sys.setenv("plotly_api_key"="g0opxjqh1d")
+library(knitr)
+library(markdown)
+knit('2016-11-16-Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R.Rmd')
+markdownToHTML("2016-11-16-Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R.md", "r-knitr-markdown.html", fragment.only = TRUE)
 
 rm(list=ls())
 gc()
 
+Sys.setenv("plotly_username"="PetoLau")
+Sys.setenv("plotly_api_key"="g0opxjqh1d")
+
 ## Prepare DT ----
+library(lubridate)
+
 setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 
 files <- list.files(pattern = "*.csv")
@@ -51,7 +58,6 @@ meta_data[, ID := as.character(meta_data[["ID"]])]
 
 indus <- unique(meta_data[ID %in% n_ID, INDUSTRY])
 DT_48 <- merge(DT_48, meta_data[, .(ID, INDUSTRY)], by = "ID")
-
 
 DT_ind_com <- as.data.table(aggregate(DT_48[INDUSTRY == indus[1], .(value)], by = DT_48[INDUSTRY == indus[1], .(date_time)], FUN = sum, simplify = TRUE))
 DT_ind_edu <- as.data.table(aggregate(DT_48[INDUSTRY == indus[2], .(value)], by = DT_48[INDUSTRY == indus[2], .(date_time)], FUN = sum, simplify = TRUE))
@@ -109,7 +115,7 @@ n_date <- unique(DT[, date])
 period <- 48
 
 # Let's look at some data chunk of consumption and try do some regression analysis. Pick aggregate consumption of education (schools) buildings.
-data_r <- DT[(type == n_type[2] & date %in% n_date[57:84])]
+data_r <- DT[(type == n_type[2] & date %in% n_date[57:70])]
 
 ggplot(data_r, aes(date_time, value)) +
   geom_line() +
@@ -145,7 +151,15 @@ colnames(matrix_train) <- c("Load",
 
 lm_m_1 <- lm(Load ~ 0 + ., data = matrix_train)
 
-summary(lm_m_1)
+smmr_1 <- summary(lm_m_1)
+paste("R-squared: ",
+      round(smmr_1$r.squared, 3),
+      ", p-value of F test: ",
+      1-pf(smmr_1$fstatistic[1], smmr_1$fstatistic[2], smmr_1$fstatistic[3]))
+
+# sm_1$adj.r.squared
+# 1-pf(sm_1$fstatistic[1], sm_1$fstatistic[2], sm_1$fstatistic[3])
+
 # summary seems not bad, R-squared high, F-statistic of goodness of fit is fine too.
 # Let's look on fitted values and residuals.
 
@@ -161,10 +175,14 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 # Fit vs residuals - heteroscedasticity - non constant and nonnormal residuals (assumptions)
 ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals = lm_m_1$residuals),
        aes(Fitted_values, Residuals)) +
-  geom_point(size = 1.7) +
+  geom_point(size = 1.5) +
   geom_smooth() +
-  geom_hline(yintercept = 0, color = "red", size = 1) +
+  geom_hline(yintercept = 0, color = "red", size = 0.8) +
   labs(title = "Fitted vs Residuals")
+
+# g <- ggplotly(width = 600, height = 500)
+# plotly_POST(x = g, filename = "test_1", fileopt = "overwrite",
+#             sharing = c("public"))
 
 # Function to create Normal Q-Q plot with qqline
 ggQQ <- function(lm){
@@ -210,11 +228,14 @@ lm_m_2 <- lm(frmla, data = matrix_train)
 c(Previous = summary(lm_m_1)$r.squared, New = summary(lm_m_2)$r.squared)
 # Boxplot of residuals (same as statistics in summary)
 ggplot(data.table(Residuals = c(lm_m_1$residuals, lm_m_2$residuals),
-                  type = c(rep("Previous", nrow(data_r)), rep("New", nrow(data_r)))), 
-       aes(type, Residuals, fill = type)) + 
+                  Type = c(rep("MLR - simple", nrow(data_r)), rep("MLR with interactions", nrow(data_r)))), 
+       aes(Type, Residuals, fill = Type)) +
   geom_boxplot()
 
 ggplotly()
+
+plotly_POST(x = last_plot(), filename = "mlr1_vs_mlr2", fileopt = "overwrite",
+            sharing = c("public"))
 
 # Much better then previous one, seems interactions working...prove it with next three plots, fitted values, fit vs residuals and qqplot
 datas <- rbindlist(list(data_r[, .(value, date_time)], data.table(value = lm_m_2$fitted.values, data_time = data_r[, date_time])))
@@ -319,10 +340,7 @@ summary(lm_err_mape_4) # n_type[4]
 
 # BoxPlot
 ggplot(data.table(MAPE = c(lm_err_mape_1, lm_err_mape_2, lm_err_mape_3, lm_err_mape_4),
-                  Industry = c(rep(n_type[1], length(lm_err_mape_1)),
-                           rep(n_type[2], length(lm_err_mape_2)),
-                           rep(n_type[3], length(lm_err_mape_3)),
-                           rep(n_type[4], length(lm_err_mape_4)))), 
+                  Industry = rep(n_type, each = length(lm_err_mape_1))), 
        aes(Industry, MAPE, fill = Industry)) + 
   geom_boxplot()
 
@@ -358,64 +376,79 @@ saveGIF({
 
 # Comparison with STL+ARIMA...MLR is better.
 
-# library(forecast)
-# 
-# arima_pred_weeks_3 <- sapply(0:(n_weeks-1), function(i)
-#   predictWeek(DT[type == n_type[3]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))
-# 
-# arima_err_mape_3 <- sapply(0:(n_weeks-1), function(i)
-#   mape(DT[(type == n_type[3] & date %in% n_date[(22+(i*7)):(28+(i*7))]), value],
-#        arima_pred_weeks_3[, i+1]))
-# 
-# summary(arima_err_mape_3)
-# summary(lm_err_mape_3)
+library(forecast)
+
+stlARIMAPred <- function(Y, period = 48){
+  ts_Y <- ts(Y, start = 0, freq = period)
+  dekom <- stl(ts_Y, s.window="periodic", robust = T)
+  arima <- forecast(dekom, h = period, method = "arima")
+  return(as.vector(arima$mean))
+}
+
+predictWeek <- function(data, set_of_date, FUN, train_win = 6){
+  
+  for_mon <- FUN(data[(week == n_weekdays[1] & date %in% set_of_date), value])
+  seq_tuethu <- data[(week %in% n_weekdays[2:4] & date %in% set_of_date), value]
+  for_tuethu <- as.vector(sapply(2:0, function(j) FUN(seq_tuethu[(length(seq_tuethu)-(period*j)+1-(train_win*period)):(length(seq_tuethu)-(period*j))])))
+  for_fri <- FUN(data[(week == n_weekdays[5] & date %in% set_of_date), value])
+  for_sat <- FUN(data[(week == n_weekdays[6] & date %in% set_of_date), value])
+  for_sun <- FUN(data[(week == n_weekdays[7] & date %in% set_of_date), value])
+  
+  return(c(for_mon, for_tuethu, for_fri, for_sat, for_sun))
+}
+
+n_weeks <- floor(length(n_date)/7) - 3
+
+arima_pred_weeks_1 <- sapply(0:(n_weeks-1), function(i)
+  predictWeek(DT[type == n_type[1]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))
+
+arima_err_mape_1 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[1] & date %in% n_date[(22+(i*7)):(28+(i*7))]), value],
+       arima_pred_weeks_1[, i+1]))
+
+arima_pred_weeks_2 <- sapply(0:(n_weeks-1), function(i)
+  predictWeek(DT[type == n_type[2]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))
+
+arima_err_mape_2 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[2] & date %in% n_date[(22+(i*7)):(28+(i*7))]), value],
+       arima_pred_weeks_2[, i+1]))
+
+arima_pred_weeks_3 <- sapply(0:(n_weeks-1), function(i)
+  predictWeek(DT[type == n_type[3]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))
+
+arima_err_mape_3 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[3] & date %in% n_date[(22+(i*7)):(28+(i*7))]), value],
+       arima_pred_weeks_3[, i+1]))
+
+arima_pred_weeks_4 <- sapply(0:(n_weeks-1), function(i)
+  predictWeek(DT[type == n_type[4]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))
+
+arima_err_mape_4 <- sapply(0:(n_weeks-1), function(i)
+  mape(DT[(type == n_type[4] & date %in% n_date[(22+(i*7)):(28+(i*7))]), value],
+       arima_pred_weeks_4[, i+1]))
+
+# BoxPlot
+n_type <- c("Comm. Prop.", "Education", "Food Sales", "Light Ind.")
+ggplot(data.table(MAPE = c(lm_err_mape_1, lm_err_mape_2, lm_err_mape_3, lm_err_mape_4,
+                           arima_err_mape_1, arima_err_mape_2, arima_err_mape_3, arima_err_mape_4),
+                  Industry = c(rep(n_type, each = length(lm_err_mape_1)),
+                               rep(n_type, each = length(arima_err_mape_1))),
+                  Method = c(rep("MLR", length(lm_err_mape_1)*4),
+                             rep("STL+ARIMA", length(arima_err_mape_1)*4))), 
+       aes(Industry, MAPE, fill = Industry)) +
+  facet_grid(. ~ Method, labeller = "label_both") + 
+  geom_boxplot() +
+  theme(axis.text = element_text(size = 10),
+        axis.title = element_text(size = 10, face = "bold"),
+        strip.text = element_text(size = 12, face = "bold"))
 
 
-# predWeekReg <- function(data, set_of_date){
-#   
-#   data_train <- data[date %in% set_of_date]
-#   
-#   N <- nrow(data_train)
-#   
-#   matrix_train <- matrix(0, nrow = N, ncol = period + 6)
-#   for(j in 1:period){
-#     matrix_train[seq(j, N, by = period), j] <- 1
-#   }
-#   
-#   for(j in 1:6){
-#     matrix_train[data_train[, week_num] == j, period + j] <- 1
-#   }
-#   
-#   matrix_train <- as.data.frame(cbind(data_train[, value], matrix_train))
-#   
-#   colnames(matrix_train) <- c("Load",
-#                               sapply(1:period, function(i) paste("d", i, sep = "")),
-#                               sapply(1:6, function(i) paste("w", i, sep = "")))
-#   
-#   # Interactions
-#   m_interactions <- sapply(50:55, function(x) paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
-#                                                     colnames(matrix_train)[x], sep = ""))
-#   m_interactions <- paste(m_interactions, collapse = " + ")
-#   frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
-#                             paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "", collapse = " + "),
-#                             "+", m_interactions))
-#   
-#   lm_m <- lm(frmla, data = matrix_train)
-#   
-#   lambda.y <- which.max(boxCox(lm_m, family="yjPower", plotit = F)$y)
-#   lambda <- boxCox(lm_m, family="yjPower", plotit = F)$x[lambda.y]
-#   depvar.transformed <- yjPower(matrix_train$Load, lambda)
-#   
-#   matrix_train$Load <- depvar.transformed
-#   
-#   lm_m <- lm(frmla, data = matrix_train)
-#   
-#   pred_week <- predict(lm_m, matrix_train[1:(7*period), -1])
-#   
-#   return(as.vector(reverseYJ(pred_week, lambda)))
-# }
+ggplotly()
 
-# error separate for weekdays 
+plotly_POST(x = last_plot(), filename = "mlr_vs_arima", fileopt = "overwrite",
+                        sharing = c("public"))
+
+# error separate for weekdays
 err_days <- sapply(0:6, function(j)
         sapply(0:(n_weeks-1), function(i)
           mape(DT[(type == n_type[2] & date %in% n_date[(15+(i*7)):(21+(i*7))] & week == n_weekdays[j+1]), value],
@@ -423,12 +456,6 @@ err_days <- sapply(0:6, function(j)
 
 colMeans(err_days)
 
-summary(lm_err_mape)
-summary(lm_err_mape_2)
-summary(lm_err_mape_3)
-
-# library(gganimate)
-library(animation)
 
 datas <- data.table(value = c(as.vector(lm_pred_weeks),
                               DT[(type == n_type[2]) & (date %in% n_date[-c(1:14,365)]), value]),
@@ -490,175 +517,3 @@ setwd(temp_wd)
 
 theme_set(theme_bw())
 gg_animate(p, pause = .4, filename = "test1.gif")
-
-# library(gapminder)
-# theme_set(theme_bw())
-# p <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, color = continent, frame = year)) +
-#   geom_point() +
-#   scale_x_log10()
-# gg_animate(p)
-
-lm_m_1 <- lm(Load ~ 0 + ., data = matrix_train)
-lm_m_2 <- lm(frmla, data = matrix_train)
-
-summary(lm_m_1)
-summary(lm_m_2)
-lm_m_2$terms
-lm_m_2$coefficients
-pred_week_2 <- predict(lm_m_2, matrix_train[1:(7*period), -1])
-
-library(car)
-ncvTest(lm_m_2) # Homoscedasticity test
-qqnorm(residuals(lm_m_2), ylab="Residuals")
-qqline(residuals(lm_m_2), col = "red", lwd = 2, lty = 2)
-shapiro.test(residuals(lm_m_2))
-plot(fitted(lm_m_2), residuals(lm_m_2))
-abline(h = 0, col = "red") # Heteroscedasticity
-plot(fitted(lm_m_2), abs(residuals(lm_m_2)))
-
-# Heteroscedasticity, nonnormal variance => box-cox transform
-boxcox(lm_m_2, plotit = TRUE)
-lambda.y <- which.max(boxCox(lm_m_2, family="yjPower", plotit = F)$y)
-lambda <- boxCox(lm_m_2, family="yjPower", plotit = F)$x[lambda.y]
-depvar.transformed <- yjPower(matrix_train$Load, lambda)
-plot(ts(matrix_train$Load, freq = period))
-plot(ts(depvar.transformed, freq = period))
-
-# fit model with transformed dependent variable
-matrix_train$Load <- depvar.transformed
-lm_m_3 <- lm(frmla, data = matrix_train)
-summary(lm_m_3)
-
-reverseYJ <- function(Y, lambda){
-  return(exp(log((lambda*Y) + 1)/lambda) - 1)
-}
-
-# Diagnostics
-ncvTest(lm_m_3) # Homoscedasticity test
-qqnorm(residuals(lm_m_3), ylab="Residuals")
-qqline(residuals(lm_m_3), col = "red", lwd = 2, lty = 2)
-shapiro.test(residuals(lm_m_3))
-plot(fitted(lm_m_3), residuals(lm_m_3))
-abline(h = 0, col = "red") # Heteroscedasticity
-plot(fitted(lm_m_3), abs(residuals(lm_m_3)))
-layout(matrix(1:2, nrow = 2))
-layout(1)
-
-plot(ts(matrix_train$Load, freq = period, start = 0))
-lines(ts(lm_m_3$fitted.values, freq = period, start = 0), col = "red")
-
-pred_week_2 <- predict(lm_m_2, matrix_train[1:(7*period), -1])
-pred_week_3 <- predict(lm_m_3, matrix_train[1:(7*period), -1])
-plot(ts(data[, value], freq = period, start = 0), xlim = c(0, 28+7))
-lines(ts(pred_week_2, freq = period, start = 28), col = "blue")
-lines(ts(reverseYJ(pred_week_3, lambda), freq = period, start = 28), col = "red")
-
-plot(ts(matrix_train$Load, freq = period, start = 0), xlim = c(0, 28+7))
-lines(ts(pred_week_3, freq = period, start = 28), col = "blue")
-
-rlm_m <- rlm(frmla, data = matrix_train, method="M", psi=psi.huber, k = 1)
-summary(rlm_m)
-pred_week_4 <- predict(rlm_m, matrix_train[1:(7*period), -1])
-lines(ts(reverseYJ(pred_week_4, lambda), freq = period, start = 28), col = "green")
-
-# library(kernlab)
-# svr_m <- ksvm(Load ~ ., data = matrix_train, type = "eps-svr", kernel = "rbfdot", eps = 0.1, C = 10)
-# plot(ts(data[, value], freq = period, start = 0))
-# plot(ts(attributes(svr_m)$fitted, freq = period, start = 0), col = "red")
-# 
-# pred_week <- predict(svr_m, matrix_train[1:(7*period), -1])
-# plot(ts(data[, value], freq = period, start = 0), xlim = c(0, 28+7))
-# lines(ts(pred_week, freq = period, start = 28), col = "red")
-
-## GAM
-library(mgcv)
-matrix_gam <- data.frame(Load = data[, value], Season1 = rep(1:period, window), Season2 = data[, week_num])
-mod_gam <- gamm(Load ~ s(Season1, bs = "cc", k = period) + s(Season2, bs = "cc", k = 7), data = matrix_gam)
-mod_gam_2 <- gamm(Load ~ s(Season1, bs = "cc", k = period) + s(Season2, bs = "cc", k = 7) +
-                  s(Season1, bs = "cc", by = Season2, k = period, m = 1), data = matrix_gam)
-mod_gam_3 <- gamm(Load ~ s(Season1, bs = "cc", k = period) + s(Season2, bs = "cc", k = 7) +
-                    s(Season1, bs = "cc", by = Season2, k = period, m = 1) +
-                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1), data = matrix_gam)
-mod_gam_4 <- gamm(Load ~ s(Season1, bs = "cc", k = period) +
-                    s(Season2, bs = "cc", k = 7) +
-                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1) +
-                    te(Season1, Season2, bs = rep("cc",2)), data = matrix_gam)
-
-mod_gam_4$gam$model
-
-summary(mod_gam$gam)
-summary(mod_gam_2$gam)
-summary(mod_gam_3$gam)
-summary(mod_gam_4$gam)
-
-plot(ts(matrix_gam$Load, freq = period, start = 0))
-lines(ts(mod_gam$gam$fitted.values, freq = period, start = 0), col = "blue")
-lines(ts(mod_gam_3$gam$fitted.values, freq = period, start = 0), col = "green")
-lines(ts(mod_gam_4$gam$fitted.values, freq = period, start = 0), col = "red")
-
-layout(matrix(1:2, ncol = 2))
-acf(resid(mod_gam_4$lme), lag.max = 48*7, main = "ACF")
-pacf(resid(mod_gam_4$lme), lag.max = 48*7, main = "pACF")
-layout(1)
-
-ctrl <- list(niterEM = 0, msVerbose = TRUE, optimMethod="L-BFGS-B")
-mod_gam_5 <- gamm(Load ~ s(Season1, bs = "cc", k = period) +
-                    s(Season2, bs = "cc", k = 7) +
-                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1) +
-                    te(Season1, Season2, bs = rep("cc",2)),
-                  data = matrix_gam,
-                  correlation = corARMA(form = ~ 1|Season2, p = 1),
-                  control = ctrl)
-
-# Comparison of GAMs
-anova(mod_gam$lme, mod_gam_3$lme, mod_gam_4$lme, mod_gam_5$lme)
-
-summary(mod_gam_5$gam)
-layout(matrix(1:2, ncol = 2))
-res <- resid(mod_gam_5$lme, type = "normalized")
-acf(res, lag.max = 48*7, main = "ACF - AR(1) errors")
-pacf(res, lag.max = 48*7, main = "pACF- AR(1) errors")
-
-qqnorm(resid(mod_gam_5$lme, type = "normalized"), ylab="Residuals")
-qqline(resid(mod_gam_5$lme, type = "normalized"), col = "red", lwd = 2, lty = 2)
-shapiro.test(resid(mod_gam_5$lme, type = "normalized"))
-plot(mod_gam_5$gam$fitted.values, resid(mod_gam_5$lme, type = "normalized"))
-abline(h = 0, col = "red") # Heteroscedasticity
-
-layout(matrix(1:2, ncol = 2))
-plot(mod_gam_5$gam, scale = 0)
-layout(1)
-
-plot(ts(data[, value], freq = period, start = 0))
-lines(ts(mod_gam_4$gam$fitted.values, freq = period, start = 0), col = "blue")
-lines(ts(mod_gam_5$gam$fitted.values, freq = period, start = 0), col = "green")
-lines(ts(reverseYJ(mod_gam_6$gam$fitted.values, lambda), freq = period, start = 0), col = "red")
-
-new.data <- matrix_gam[1:(48*7), -1]
-pred <- predict(mod_gam_4$gam,  newdata = new.data, type = "response", se.fit = FALSE)
-lines(ts(as.vector(pred), freq= period))
-plot(ts(reverseYJ(as.vector(pred),lambda), freq= period), col = "red")
-lines(ts(as.vector(pred), freq= period), col = "blue")
-
-plot(ts(data[, value], freq = period, start = 0), xlim = c(0, 28+7))
-lines(ts(as.vector(pred), freq = period, start = 28), col = "blue")
-
-# Box-Cox (YJ) with GAM
-matrix_gam$Load <- depvar.transformed
-mod_gam_6 <- gamm(Load ~ s(Season1, bs = "cc", k = period) +
-                    s(Season2, bs = "cc", k = 7) +
-                    s(Season2, bs = "cc", by = Season1, k = 7, m = 1) +
-                    te(Season1, Season2, bs = rep("cc",2)),
-                  data = matrix_gam,
-                  correlation = corARMA(form = ~ 1|Season2, p = 1),
-                  control = ctrl)
-
-summary(mod_gam_6$gam)
-layout(matrix(1:2, ncol = 1))
-plot(mod_gam_6$gam$fitted.values, resid(mod_gam_6$lme, type = "normalized"))
-abline(h = 0, col = "red") # Heteroscedasticity
-layout(1)
-
-qqnorm(resid(mod_gam_6$lme, type = "normalized"), ylab="Residuals")
-qqline(resid(mod_gam_6$lme, type = "normalized"), col = "red", lwd = 2, lty = 2)
-shapiro.test(resid(mod_gam_6$lme, type = "normalized"))
