@@ -159,7 +159,8 @@ You can see a nice summary of the linear model, but I will omit them now because
 Let's look at the fitted values.
 
 {% highlight r %}
-datas <- rbindlist(list(data_r[, .(value, date_time)], data.table(value = lm_m_1$fitted.values, data_time = data_r[, date_time])))
+datas <- rbindlist(list(data_r[, .(value, date_time)],
+                        data.table(value = lm_m_1$fitted.values, data_time = data_r[, date_time])))
 datas[, type := rep(c("Real", "Fitted"), each = nrow(data_r))]
  
 ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
@@ -176,7 +177,8 @@ That's horrible! We are missing something here.
 Look at the fitted values vs. residuals now.
 
 {% highlight r %}
-ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals = lm_m_1$residuals),
+ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values,
+                         Residuals = lm_m_1$residuals),
        aes(Fitted_values, Residuals)) +
   geom_point(size = 1.7) +
   geom_smooth() +
@@ -220,7 +222,7 @@ ggQQ(lm_m_1)
  
 Of course, it is absolutely not normal (points must be close the red line).
  
-What can we do now? Use other regression methods (especially nonlinear ones)? No. Let's think about why this happened. We have seen on fitted values, that measurements during the day were moved constantly by the estimated coefficient of week variable, but the behavior during the day wasn't captured. We need to capture this behavior because especially weekends behave absolutely different. It can be handled by defining **interactions** between day and week dummy variables to the regression model. So we multiply every daily variable with every weekly one. Again, be careful with collinearity and singularity of the model matrix, so we must omit one day variable (for example $d_{48}$).
+What can we do now? Use other regression methods (especially nonlinear ones)? No. Let's think about why this happened. We have seen on fitted values, that measurements during the day were moved constantly by the estimated coefficient of week variable, but the behavior during the day wasn't captured. We need to capture this behavior because especially weekends behave absolutely different. It can be handled by defining **interactions** between day and week dummy variables to the regression model. So we multiply every daily variable with every weekly one. Again, be careful with collinearity and singularity of the model matrix, so we must omit one day variable (for example \\( d_{48} \\)).
  
 In **R** interactions can be defined in the formula, simply this way: `(d1+d2+...+d47):w1 + (d1+d2+...+d47):w2 + ... + (d1+d2+...+d47):w6`.
  
@@ -281,7 +283,8 @@ This is much better than the previous model, it seems that interactions are work
 Prove it with a sequence of three plots - fitted values, fit vs. residuals and Q-Q plot.
 
 {% highlight r %}
-datas <- rbindlist(list(data_r[, .(value, date_time)], data.table(value = lm_m_2$fitted.values, data_time = data_r[, date_time])))
+datas <- rbindlist(list(data_r[, .(value, date_time)],
+                        data.table(value = lm_m_2$fitted.values, data_time = data_r[, date_time])))
 datas[, type := rep(c("Real", "Fitted"), each = nrow(data_r))]
  
 ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
