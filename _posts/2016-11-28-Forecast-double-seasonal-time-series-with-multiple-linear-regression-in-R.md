@@ -10,7 +10,7 @@ draft: false
  
 I will continue in describing forecast methods, which are suitable to seasonal (or multi-seasonal) time series. In the previous [post](https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/) **smart meter** data of electricity consumption were introduced and a forecast method using **similar day approach** was proposed. ARIMA and exponential smoothing (common methods of time series analysis) were used as forecast methods. The biggest disadvantage of this approach was that we created multiple models at once for different days in the week, which is computationally expensive and it can be a little bit unclear. Regression methods are more suitable for multi-seasonal times series. They can handle multiple seasonalities through independent variables (inputs of a model), so just one model is needed. In this post, I will introduce the most basic regression method - **multiple linear regression** (MLR).
  
-I have prepared a file with four aggregated time series for analysis and forecast. It can be found [here](https://github.com/PetoLau/petolau.github.io/tree/master/_rmd), the name of the file is *DT_4_ind*. Of course, I'm using EnerNOC smart meter data again and time series were aggregated by four located industries. The file was created easily by the package `feather` ([CRAN link](https://CRAN.R-project.org/package=feather)), so only by this package, you can read this file again. The `feather` is a useful tool to share data for **R** and Python users.
+I have prepared a file with four aggregated time series for analysis and forecast. It can be found [on my github repo](https://github.com/PetoLau/petolau.github.io/tree/master/_rmd), the name of the file is *DT_4_ind*. Of course, I'm using EnerNOC smart meter data again and time series were aggregated by four located industries. The file was created easily by the package `feather` ([CRAN link](https://CRAN.R-project.org/package=feather)), so only by this package, you can read this file again. The `feather` is a useful tool to share data for **R** and Python users.
  
 Data manipulation will be done by `data.table` package, visualizations by `ggplot2`, `plotly` and `animation` packages.
  
@@ -190,7 +190,7 @@ ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values,
  
 This is the typical example of [**heteroskedasticity**](https://en.wikipedia.org/wiki/Heteroscedasticity) - occurrence of nonconstant residuals (variance) in a regression model. The linear regression has an assumption that residuals must be from \\( N(0,~\sigma^2) \\) distribution and they are i.i.d. In the other words, the residuals must be symmetrically around zero.
  
-Let's look at the next proof that our residuals are not normal. We can use normal Q-Q plot here. I'm using the function from this [link](http://stackoverflow.com/questions/4357031/qqnorm-and-qqline-in-ggplot2/) to plot it by `ggplot2`.
+Let's look at the next proof that our residuals are not normal. We can use normal Q-Q plot here. I'm using the function from this [stackoverflow question](http://stackoverflow.com/questions/4357031/qqnorm-and-qqline-in-ggplot2/) to plot it by `ggplot2`.
 
 {% highlight r %}
 ggQQ <- function(lm){
@@ -457,3 +457,5 @@ Here are the created GIFs:
 In these animations we can see that the behavior of the electricity consumption can be very stochastic and many external factors influence it (holidays, weather etc.), so it's a challenging task.
  
 In my next post, I will continue with the introduction of regression methods, this time with GAM (Generalized Additive Model).
+ 
+Script for the creation of this whole post can be found on [my github repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).

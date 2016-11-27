@@ -1,13 +1,5 @@
-library(knitr)
-library(markdown)
-knit('2016-11-16-Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R.Rmd')
-markdownToHTML("2016-11-16-Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R.md", "r-knitr-markdown.html", fragment.only = TRUE)
-
 rm(list=ls())
 gc()
-
-Sys.setenv("plotly_username"="PetoLau")
-Sys.setenv("plotly_api_key"="g0opxjqh1d")
 
 ## Prepare DT ----
 library(lubridate)
@@ -456,7 +448,6 @@ err_days <- sapply(0:6, function(j)
 
 colMeans(err_days)
 
-
 datas <- data.table(value = c(as.vector(lm_pred_weeks),
                               DT[(type == n_type[2]) & (date %in% n_date[-c(1:14,365)]), value]),
                     date = c(rep(DT[-c(1:(14*48), (17473:nrow(DT))), date_time], 2)),
@@ -464,7 +455,6 @@ datas <- data.table(value = c(as.vector(lm_pred_weeks),
                              rep("Real", nrow(lm_pred_weeks)*ncol(lm_pred_weeks))),
                     week = c(rep(1:50, each = 336), rep(1:50, each = 336)))
 
-nrow(DT[type == n_type[1]])-48
 
 ggplot(data = datas[week == 1], aes(date, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
@@ -514,6 +504,6 @@ saveGIF({
   }}, movie.name = "test_1.gif")
 setwd(temp_wd)
 
-
-theme_set(theme_bw())
-gg_animate(p, pause = .4, filename = "test1.gif")
+# 
+# theme_set(theme_bw())
+# gg_animate(p, pause = .4, filename = "test1.gif")
