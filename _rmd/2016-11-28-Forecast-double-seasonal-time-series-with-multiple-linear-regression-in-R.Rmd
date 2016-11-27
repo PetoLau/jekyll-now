@@ -65,7 +65,7 @@ Estimation of regression coefficients is done by ordinary least squares (OLS). S
 
 $$Y = \beta\mathbf{X} + \varepsilon,$$
 
-where \\( Y \\) is a vector of the length \\( N \\), \\( \beta \\) is a vector of the length \\( p \\) and \\( \mathbf{X} \\) is a matrix of the size \\( N\times p \\), then OLS estimation of \\( \beta \\) is:
+where \\( Y \\) is a vector of the length \\( N \\), \\( \beta \\) is a vector of the length \\( p \\) and \\( \mathbf{X} \\) is a matrix of the size \\( N\times p,\\) then OLS estimation of \\( \beta \\) is:
 
 $$\hat{\beta} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^TY.$$
 
@@ -392,13 +392,13 @@ saveGIF({
 
 Here are the created GIFs:
 
-![GIF1](images/industry_1.gif)
+![](/images/industry_1.gif)
 
-![GIF2](images/industry_2.gif)
+![](/images/industry_2.gif)
 
-![GIF3](images/industry_3.gif)
+![](/images/industry_3.gif)
 
-![GIF4](images/industry_4.gif)
+![](/images/industry_4.gif)
 
 In these animations we can see that the behavior of the electricity consumption can be very stochastic and many external factors influence it (holidays, weather etc.), so it's a challenging task.
 
