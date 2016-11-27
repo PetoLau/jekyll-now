@@ -53,23 +53,23 @@ An interesting fact is that the consumption of the industry *Food Sales & Storag
 
 ### Multiple linear regression model for double seasonal time series
 
-The aim of the multiple linear regression is to model dependent variable (output) by independent variables (inputs). Another target can be to analyze influence (correlation) of independent variables to the dependent variable. Like in the previous post, we want to forecast consumption one week ahead, so regression model must be constructed that way. Variables (inputs) will be of two types of seasonal dummy variables - daily (\\( d_1, \dots, d_{48} \\)) and weekly ($w_1, \dots, w_6$). In the case of the daily variable, there will be $1$, when the consumption during the day will be measured at the particular time, otherwise $0$. In the case of the week variable there will be $1$, when the consumption is measured at the particular day of the week, otherwise $0$.
+The aim of the multiple linear regression is to model dependent variable (output) by independent variables (inputs). Another target can be to analyze influence (correlation) of independent variables to the dependent variable. Like in the previous post, we want to forecast consumption one week ahead, so regression model must be constructed that way. Variables (inputs) will be of two types of seasonal dummy variables - daily (\\( d_1, \dots, d_{48} \\)) and weekly (\\( w_1, \dots, w_6 \\)). In the case of the daily variable, there will be \\( 1 \\), when the consumption during the day will be measured at the particular time, otherwise \\( 0 \\). In the case of the week variable there will be \\( 1 \\), when the consumption is measured at the particular day of the week, otherwise \\( 0 \\).
 
 The regression model can be formally written as:
 
 $$y_i = \beta_1d_{i1} + \beta_2d_{i2} + \dots + \beta_{48}d_{i48} + \beta_{49}w_{i1} + \dots + \beta_{54}w_{i6} + \varepsilon_i,$$
 
-where $y_i$ is the electricity consumption at the time $i$, where $i = 1, \dots, N$. $\beta_1, \dots, \beta_{54}$ are regression coefficients, which we want to estimate. $d_1, \dots, d_{48}$ and $w_1, \dots, w_6$ are dummy independent variables. $\varepsilon_i$ is a random error. Assumption for the errors are that they are independently identical distributed (i.i.d.) with distribution $\varepsilon \sim N(0,~\sigma^2)$.
+where \\( y_i \\) is the electricity consumption at the time \\( i \\), where \\( i = 1, \dots, N \\). \\( \beta_1, \dots, \beta_{54} \\) are regression coefficients, which we want to estimate. \\( d_1, \dots, d_{48} \\) and \\( w_1, \dots, w_6 \\) are dummy independent variables. \\( \varepsilon_i \\) is a random error. Assumption for the errors are that they are independently identical distributed (i.i.d.) with distribution \\( \varepsilon \sim N(0,~\sigma^2) \\).
 
 Estimation of regression coefficients is done by ordinary least squares (OLS). So if we wrote our model as:
 
 $$Y = \beta\mathbf{X} + \varepsilon,$$
 
-where $Y$ is a vector of the length $N$, $\beta$ is a vector of the length $p$ and $\mathbf{X}$ is a matrix of the size $N\times p$, then OLS estimation of $\beta$ is:
+where \\( Y \\) is a vector of the length \\( N \\), \\( \beta \\) is a vector of the length \\( p \\) and \\( \mathbf{X} \\) is a matrix of the size \\( N\times p \\), then OLS estimation of \\( \beta \\) is:
 
 $$\hat{\beta} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^TY.$$
 
-You are maybe asking, where is independent variable $w_7$ or intercept $\beta_0$. We must omit them due to collinearity of independent variables. The model matrix $\mathbf{X}$ must be a regular matrix, not singular. Thereto, intercept has no sense in the time series regression model, because we do not usually consider time 0.
+You are maybe asking, where is independent variable \\( w_7 \\) or intercept \\( \beta_0 \\). We must omit them due to collinearity of independent variables. The model matrix \\( \mathbf{X} \\) must be a regular matrix, not singular. Thereto, intercept has no sense in the time series regression model, because we do not usually consider time 0.
 
 ### Regression analysis of time series
 
@@ -164,7 +164,7 @@ ggplot(data = data.table(Fitted_values = lm_m_1$fitted.values, Residuals = lm_m_
   labs(title = "Fitted values vs Residuals")
 ```
 
-This is the typical example of [**heteroskedasticity**](https://en.wikipedia.org/wiki/Heteroscedasticity) - occurrence of nonconstant residuals (variance) in a regression model. The linear regression has an assumption that residuals must be from $N(0,~\sigma^2)$ distribution and they are i.i.d. In the other words, the residuals must be symmetrically around zero.
+This is the typical example of [**heteroskedasticity**](https://en.wikipedia.org/wiki/Heteroscedasticity) - occurrence of nonconstant residuals (variance) in a regression model. The linear regression has an assumption that residuals must be from \\( N(0,~\sigma^2) \\) distribution and they are i.i.d. In the other words, the residuals must be symmetrically around zero.
 
 Let's look at the next proof that our residuals are not normal. We can use normal Q-Q plot here. I'm using the function from this [link](http://stackoverflow.com/questions/4357031/qqnorm-and-qqline-in-ggplot2/) to plot it by `ggplot2`.
 ```{r}
