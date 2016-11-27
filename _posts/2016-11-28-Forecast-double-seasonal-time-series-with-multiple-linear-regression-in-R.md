@@ -1,9 +1,9 @@
 ---
 layout: post
-title:    | 
-    | Forecast double seasonal time series
-    | with multiple linear regression in R
-        
+title: |
+       | Forecast double seasonal time series
+       | with multiple linear regression in R
+ 
 author: Peter Laurinec
 published: true
 status: publish
