@@ -122,21 +122,12 @@ ggplot(data_r, aes(date_time, value)) +
 # Compute features to model and store it in matrix_train.
 N <- nrow(data_r)
 
-matrix_train <- matrix(0, nrow = N, ncol = period + 6)
-for(j in 1:period){
-  matrix_train[seq(j, N, by = period), j] <- 1
-}
-
-# using feature week_num
-for(j in 1:6){
-  matrix_train[data_r[, week_num] == j, period + j] <- 1
-}
-
-matrix_train <- as.data.frame(cbind(data_r[, value], matrix_train))
-
-colnames(matrix_train) <- c("Load",
-                            sapply(1:period, function(i) paste("d", i, sep = "")),
-                            sapply(1:6, function(i) paste("w", i, sep = "")))
+window <- N / period # number of days in the train set
+# 1, ..., period, 1, ..., period - and so on for the daily season 
+# using feature "week_num" for the weekly season
+matrix_train <- data.table(Load = data_r[, value],
+                           Daily = as.factor(rep(1:period, window)),
+                           Weekly = as.factor(data_r[, week_num]))
 
 # Collinearity and singularity, so w7 isn't constructed. Names of features are needed due to clarity and class of object `lm`.
 # Lets create our first multiple linear model (I will refer it as MLR) with function `lm`. Intercept is inappropiate in this sceniario, again due to collinearity and meaningfulness.
@@ -203,18 +194,7 @@ ggQQ(lm_m_1)
 # This could solve problem, what we have seen in the plot of fitted values.
 # Define new formula to linear model:
 
-# First interactions
-m_interactions <- sapply(50:55, function(x) paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
-                                                  colnames(matrix_train)[x], sep = ""))
-m_interactions <- paste(m_interactions, collapse = " + ")
-
-# Whole formula together:
-frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
-                          paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "", collapse = " + "),
-                          "+", m_interactions))
-frmla
-
-lm_m_2 <- lm(frmla, data = matrix_train)
+lm_m_2 <- lm(Load ~ 0 + Daily + Weekly + Daily:Weekly, data = matrix_train)
 
 # Because of long lenght of summary I will not print it, just quick view on most important values. First R^2^:
 c(Previous = summary(lm_m_1)$r.squared, New = summary(lm_m_2)$r.squared)
@@ -253,36 +233,20 @@ ggQQ(lm_m_2)
 
 predWeekReg <- function(data, set_of_date){
   
+  # subsetting the dataset by dates
   data_train <- data[date %in% set_of_date]
   
   N <- nrow(data_train)
+  window <- N / period # number of days in the train set
+  # 1, ..., period, 1, ..., period - and so on for the daily season 
+  # using feature "week_num" for the weekly season
+  matrix_train <- data.table(Load = data_train[, value],
+                             Daily = as.factor(rep(1:period, window)),
+                             Weekly = as.factor(data_train[, week_num]))
   
-  matrix_train <- matrix(0, nrow = N, ncol = period + 6)
-  for(j in 1:period){
-    matrix_train[seq(j, N, by = period), j] <- 1
-  }
+  lm_m <- lm(Load ~ 0 + Daily + Weekly + Daily:Weekly, data = matrix_train)
   
-  for(j in 1:6){
-    matrix_train[data_train[, week_num] == j, period + j] <- 1
-  }
-  
-  matrix_train <- as.data.frame(cbind(data_train[, value], matrix_train))
-  
-  colnames(matrix_train) <- c("Load",
-                              sapply(1:period, function(i) paste("d", i, sep = "")),
-                              sapply(1:6, function(i) paste("w", i, sep = "")))
-  
-  # Interactions
-  m_interactions <- sapply(50:55, function(x) paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
-                                                    colnames(matrix_train)[x], sep = ""))
-  m_interactions <- paste(m_interactions, collapse = " + ")
-  frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
-                            paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "", collapse = " + "),
-                            "+", m_interactions))
-  
-  lm_m <- lm(frmla, data = matrix_train)
-  
-  pred_week <- predict(lm_m, matrix_train[1:(7*period), -1])
+  pred_week <- predict(lm_m, matrix_train[1:(7*period), -1, with = FALSE])
   
   return(as.vector(pred_week))
 }

@@ -55,7 +55,7 @@ An interesting fact is that the consumption of the industry *Food Sales & Storag
  
 ### Multiple linear regression model for double seasonal time series
  
-The aim of the multiple linear regression is to model dependent variable (output) by independent variables (inputs). Another target can be to analyze influence (correlation) of independent variables to the dependent variable. Like in the previous post, we want to forecast consumption one week ahead, so regression model must be constructed that way. Variables (inputs) will be of two types of seasonal dummy variables - daily (\\( d_1, \dots, d_{48} \\)) and weekly (\\( w_1, \dots, w_6 \\)). In the case of the daily variable, there will be \\( 1 \\), when the consumption during the day will be measured at the particular time, otherwise \\( 0 \\). In the case of the week variable there will be \\( 1 \\), when the consumption is measured at the particular day of the week, otherwise \\( 0 \\).
+The aim of the multiple linear regression is to model dependent variable (output) by independent variables (inputs). Another target can be to analyze influence (correlation) of independent variables to the dependent variable. Like in the previous post, we want to forecast consumption one week ahead, so regression model must capture weekly pattern (seasonality). Variables (inputs) will be of two types of seasonal dummy variables - daily (\\( d_1, \dots, d_{48} \\)) and weekly (\\( w_1, \dots, w_6 \\)). In the case of the daily variable, there will be \\( 1 \\), when the consumption during the day will be measured at the particular time, otherwise \\( 0 \\). In the case of the week variable there will be \\( 1 \\), when the consumption is measured at the particular day of the week, otherwise \\( 0 \\).
  
 The regression model can be formally written as:
  
@@ -109,31 +109,19 @@ ggplot(data_r, aes(date_time, value)) +
 
 ![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
  
-Let's now create the mentioned independent dummy variables and store them in `matrix_train`.
+Let's now create the mentioned independent dummy variables and store all of them in the `matrix_train`. When we are using the method `lm` in **R**, it's simple to define dummy variables in one vector. Just use `as.factor` for some vector of classes. We don't need to create 48 vectors for daily dummy variables and 6 vectors for weekly dummy variables.
 
 {% highlight r %}
 N <- nrow(data_r)
- 
-matrix_train <- matrix(0, nrow = N, ncol = period + 6)
-for(j in 1:period){
-  matrix_train[seq(j, N, by = period), j] <- 1
-}
- 
-# using feature week_num
-for(j in 1:6){
-  matrix_train[data_r[, week_num] == j, period + j] <- 1
-}
- 
-matrix_train <- as.data.frame(cbind(data_r[, value], matrix_train))
- 
-colnames(matrix_train) <- c("Load",
-                            sapply(1:period, function(i) paste("d", i, sep = "")),
-                            sapply(1:6, function(i) paste("w", i, sep = "")))
+window <- N / period # number of days in the train set
+# 1, ..., period, 1, ..., period - and so on for the daily season 
+# using feature "week_num" for the weekly season
+matrix_train <- data.table(Load = data_r[, value],
+                           Daily = as.factor(rep(1:period, window)),
+                           Weekly = as.factor(data_r[, week_num]))
 {% endhighlight %}
  
-Names of the variables are needed due to the clarity of the class of the object `lm` (linear model).
- 
-Let's create our first multiple linear model with the function `lm`.
+Let's create our first multiple linear model with the function `lm`. `lm` automatically add to the linear model intercept, so we must define it now `0`. Also, we can simply put all the variables to the model just by the dot - `.`.
 
 {% highlight r %}
 lm_m_1 <- lm(Load ~ 0 + ., data = matrix_train)
@@ -154,7 +142,7 @@ paste("R-squared: ",
 ## [1] "R-squared:  0.955 , p-value of F test:  0"
 {% endhighlight %}
  
-You can see a nice summary of the linear model, but I will omit them now because of its long length (we have 54 variables). So I will show you only the two most important statistics: R-squared and p-value of F-statistic of the goodness of fit. They seem pretty good.
+You can see a nice summary of the linear model, but I will omit them now because of its long length (we have 54 variables). So I'm showing you only the two most important statistics: R-squared and p-value of F-statistic of the goodness of fit. They seem pretty good.
  
 Let's look at the fitted values.
 
@@ -222,32 +210,13 @@ ggQQ(lm_m_1)
  
 Of course, it is absolutely not normal (points must be close the red line).
  
-What can we do now? Use other regression methods (especially nonlinear ones)? No. Let's think about why this happened. We have seen on fitted values, that measurements during the day were moved constantly by the estimated coefficient of week variable, but the behavior during the day wasn't captured. We need to capture this behavior because especially weekends behave absolutely different. It can be handled by defining **interactions** between day and week dummy variables to the regression model. So we multiply every daily variable with every weekly one. Again, be careful with collinearity and singularity of the model matrix, so we must omit one day variable (for example \\( d_{48} \\)).
+What can we do now? Use other regression methods (especially nonlinear ones)? No. Let's think about why this happened. We have seen on fitted values, that measurements during the day were moved constantly by the estimated coefficient of week variable, but the behavior during the day wasn't captured. We need to capture this behavior because especially weekends behave absolutely different. It can be handled by defining **interactions** between day and week dummy variables to the regression model. So we multiply every daily variable with every weekly one. Again, be careful with collinearity and singularity of the model matrix, so we must omit one daily dummy variable (for example \\( d_{1} \\)). Fortunately, this is done in method `lm` automatically, when we use factors as variables.
  
-In **R** interactions can be defined in the formula, simply this way: `(d1+d2+...+d47):w1 + (d1+d2+...+d47):w2 + ... + (d1+d2+...+d47):w6`.
- 
-Define new formula to our **multiple linear model**, it's now a little bit more complicated:
+Let’s train a second linear model. Interactions should solve the problem, that we saw in the plot of fitted values.
 
 {% highlight r %}
-# First just interactions
-m_interactions <- sapply(50:55, function(x) 
-  paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
-        colnames(matrix_train)[x], sep = ""))
-m_interactions <- paste(m_interactions, collapse = " + ")
-{% endhighlight %}
- 
-
-{% highlight r %}
-# Whole formula
-frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
-                          paste(colnames(matrix_train)[2:ncol(matrix_train)], sep = "",
-                                collapse = " + "), "+", m_interactions))
-{% endhighlight %}
- 
-Let’s train a second linear model. This should solve the problem, that we saw in the plot of fitted values.
-
-{% highlight r %}
-lm_m_2 <- lm(frmla, data = matrix_train)
+lm_m_2 <- lm(Load ~ 0 + Daily + Weekly + Daily:Weekly,
+             data = matrix_train)
 {% endhighlight %}
  
 Look at R-squared of previous model and the new one with interactions:
@@ -269,14 +238,15 @@ Look at the comparison of residuals of two fitted models. Using the interactive 
 
 {% highlight r %}
 ggplot(data.table(Residuals = c(lm_m_1$residuals, lm_m_2$residuals),
-                  Type = rep(c("Previous", "New"), each = nrow(data_r))), 
+                  Type = c(rep("MLR - simple", nrow(data_r)),
+                           rep("MLR with interactions", nrow(data_r)))), 
        aes(Type, Residuals, fill = Type)) +
   geom_boxplot()
  
 ggplotly()
 {% endhighlight %}
  
-<iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/4.embed"></iframe>
+<iframe width="750" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/4.embed"></iframe>
  
 This is much better than the previous model, it seems that interactions are working.
  
@@ -294,7 +264,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from MLR")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-20](/images/unnamed-chunk-20-1.png)
+![plot of chunk unnamed-chunk-18](/images/unnamed-chunk-18-1.png)
  
 
 {% highlight r %}
@@ -306,14 +276,14 @@ ggplot(data = data.table(Fitted_values = lm_m_2$fitted.values,
   labs(title = "Fitted values vs Residuals")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-21](/images/unnamed-chunk-21-1.png)
+![plot of chunk unnamed-chunk-19](/images/unnamed-chunk-19-1.png)
  
 
 {% highlight r %}
 ggQQ(lm_m_2)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-22](/images/unnamed-chunk-22-1.png)
+![plot of chunk unnamed-chunk-20](/images/unnamed-chunk-20-1.png)
  
 Everything seems much better than in the previous model. The fitted values seem almost perfect.
  
@@ -326,38 +296,22 @@ Again, I build function (as in the previous [post](https://petolau.github.io/For
 {% highlight r %}
 predWeekReg <- function(data, set_of_date){
   
+  # Subsetting the dataset by dates
   data_train <- data[date %in% set_of_date]
   
   N <- nrow(data_train)
+  window <- N / period # number of days in the train set
+  # 1, ..., period, 1, ..., period - and so on for the daily season 
+  # Using feature "week_num" for the weekly season
+  matrix_train <- data.table(Load = data_train[, value],
+                           Daily = as.factor(rep(1:period, window)),
+                           Weekly = as.factor(data_train[, week_num]))
   
-  matrix_train <- matrix(0, nrow = N, ncol = period + 6)
-  for(j in 1:period){
-    matrix_train[seq(j, N, by = period), j] <- 1
-  }
+  # Creation of the model
+  lm_m <- lm(Load ~ 0 + Daily + Weekly + Daily:Weekly, data = matrix_train)
   
-  for(j in 1:6){
-    matrix_train[data_train[, week_num] == j, period + j] <- 1
-  }
-  
-  matrix_train <- as.data.frame(cbind(data_train[, value], matrix_train))
-  
-  colnames(matrix_train) <- c("Load",
-                              sapply(1:period, function(i) paste("d", i, sep = "")),
-                              sapply(1:6, function(i) paste("w", i, sep = "")))
-  
-  # Interactions
-  m_interactions <- sapply(50:55, function(x) 
-    paste("(", paste(colnames(matrix_train)[2:48], sep = "", collapse = " + "), "):",
-                              colnames(matrix_train)[x], sep = ""))
-  m_interactions <- paste(m_interactions, collapse = " + ")
-  frmla <- as.formula(paste(colnames(matrix_train)[1], "~", "0 +",
-                            paste(colnames(matrix_train)[2:ncol(matrix_train)],
-                                  sep = "", collapse = " + "),
-                            "+", m_interactions))
-  
-  lm_m <- lm(frmla, data = matrix_train)
-  
-  pred_week <- predict(lm_m, matrix_train[1:(7*period), -1])
+  # Creation of the forecast for one week ahead
+  pred_week <- predict(lm_m, matrix_train[1:(7*period), -1, with = FALSE])
   
   return(as.vector(pred_week))
 }
@@ -372,7 +326,7 @@ mape <- function(real, pred){
 {% endhighlight %}
  
 Now we are ready to produce forecasts. I set training set of the length of two weeks - experimentally proved. In experiments, a whole data set of the length of one year is used, so a forecast for 50 weeks will be produced. A sliding window approach for training is used.
-Produce (compute) forecast for every type of industry (4), to see differences between them:
+Let's produce (compute) forecast for every type of industry (4), to see differences between them:
 
 {% highlight r %}
 n_weeks <- floor(length(n_date)/7) - 2
@@ -408,7 +362,7 @@ lm_err_mape_4 <- sapply(0:(n_weeks-1), function(i)
        lm_pred_weeks_4[, i+1]))
 {% endhighlight %}
  
-Similarly you can do this with the function `predWeek` from the previous post. I used STL+ARIMA method to compare MLR with interactions. Here is the `plotly` of MAPE:
+Similarly, you can do this with the function `predWeek` from the previous post. I used STL+ARIMA method to compare with the MLR with interactions. Here is the `plotly` of MAPEs:
  
 <iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/2.embed"></iframe>
  
