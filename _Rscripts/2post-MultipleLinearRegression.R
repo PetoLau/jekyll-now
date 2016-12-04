@@ -1,6 +1,9 @@
 rm(list=ls())
 gc()
 
+Sys.setenv("plotly_username"="PetoLau2")
+Sys.setenv("plotly_api_key"="3MUjxRRURMVWerlYhx95")
+
 ## Prepare DT ----
 library(lubridate)
 
@@ -354,6 +357,7 @@ predictWeek <- function(data, set_of_date, FUN, train_win = 6){
 }
 
 n_weeks <- floor(length(n_date)/7) - 3
+
 
 arima_pred_weeks_1 <- sapply(0:(n_weeks-1), function(i)
   predictWeek(DT[type == n_type[1]], n_date[((i*7)+1):((i*7)+7*3)], stlARIMAPred))

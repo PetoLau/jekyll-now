@@ -246,7 +246,7 @@ ggplot(data.table(Residuals = c(lm_m_1$residuals, lm_m_2$residuals),
 ggplotly()
 {% endhighlight %}
  
-<iframe width="750" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/4.embed"></iframe>
+<iframe width="750" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/0.embed"></iframe>
  
 This is much better than the previous model, it seems that interactions are working.
  
@@ -364,7 +364,7 @@ lm_err_mape_4 <- sapply(0:(n_weeks-1), function(i)
  
 Similarly, you can do this with the function `predWeek` from the previous post. I used STL+ARIMA method to compare with the MLR with interactions. Here is the `plotly` of MAPEs:
  
-<iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau/2.embed"></iframe>
+<iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/2.embed"></iframe>
  
 For every industry **MLR** was more accurate than STL+ARIMA, so our basic regression method is working very well for double seasonal time series.
  
