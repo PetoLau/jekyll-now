@@ -1,9 +1,6 @@
 rm(list=ls())
 gc()
 
-Sys.setenv("plotly_username"="PetoLau2")
-Sys.setenv("plotly_api_key"="3MUjxRRURMVWerlYhx95")
-
 ## Prepare DT ----
 library(lubridate)
 
