@@ -409,66 +409,6 @@ plotly_POST(x = last_plot(), filename = "mlr_vs_arima", fileopt = "overwrite",
 err_days <- sapply(0:6, function(j)
         sapply(0:(n_weeks-1), function(i)
           mape(DT[(type == n_type[2] & date %in% n_date[(15+(i*7)):(21+(i*7))] & week == n_weekdays[j+1]), value],
-               lm_pred_weeks[((period*j)+1):(period*(j+1)), i+1])))
+               lm_pred_weeks_2[((period*j)+1):(period*(j+1)), i+1])))
 
 colMeans(err_days)
-
-datas <- data.table(value = c(as.vector(lm_pred_weeks),
-                              DT[(type == n_type[2]) & (date %in% n_date[-c(1:14,365)]), value]),
-                    date = c(rep(DT[-c(1:(14*48), (17473:nrow(DT))), date_time], 2)),
-                    type = c(rep("MLR", nrow(lm_pred_weeks)*ncol(lm_pred_weeks)),
-                             rep("Real", nrow(lm_pred_weeks)*ncol(lm_pred_weeks))),
-                    week = c(rep(1:50, each = 336), rep(1:50, each = 336)))
-
-
-ggplot(data = datas[week == 1], aes(date, value, group = type, colour = type)) +
-  geom_line(size = 0.8) +
-  theme(panel.border = element_blank(), panel.background = element_blank(),
-        panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"),
-        panel.grid.major.x = element_line(colour = "grey90"),
-        title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12, face = "bold")) +
-  labs(x = "Time", y = "Load (kW)",
-       title = "Forecast from MLR")
-
-ggplot(data = datas[week == 1], aes(date, value, group = type, colour = type)) +
-  geom_line(size = 0.8) +
-  theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-        panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
-        title = element_text(size = 14),
-        axis.text = element_text(size = 10),
-        axis.title = element_text(size = 12, face = "bold")) +
-  labs(x = "Time", y = "Load (kW)",
-       title = "Comparison of forecasts from two models",
-       caption = paste("MAPE: ", round(lm_err_mape_3[1],3), "%", sep = ""))
-
-plot(ts(datas[week == 1, value], freq = 48))
-
-p <- ggplot(data = datas, aes(date, value, group = type, colour = type, frame = week, cumulative = TRUE)) +
-      geom_line(size = 0.8) +
-      labs(x = "Time", y = "Load (kW)",
-           title = "Forecast from MLR, week: ")
-
-temp_wd <- getwd()
-theme_set(theme_bw())
-saveGIF({
-  oopt = ani.options(interval = 0.9, nmax = 50)
-  for(i in 1:ani.options("nmax")){
-    print(ggplot(data = datas[week == i], aes(date, value, group = type, colour = type)) +
-      geom_line(size = 0.8) +
-      theme(panel.border = element_blank(), panel.background = element_blank(), panel.grid.minor = element_line(colour = "grey90"),
-            panel.grid.major = element_line(colour = "grey90"), panel.grid.major.x = element_line(colour = "grey90"),
-            title = element_text(size = 14),
-            axis.text = element_text(size = 10),
-            axis.title = element_text(size = 12, face = "bold")) +
-      labs(x = "Time", y = "Load (kW)",
-           title = paste("Forecast of MLR, week: ", i, "; MAPE: ", round(lm_err_mape_3[i], 2), "%", sep = "")))
-    ani.pause()
-  }}, movie.name = "test_1.gif")
-setwd(temp_wd)
-
-# 
-# theme_set(theme_bw())
-# gg_animate(p, pause = .4, filename = "test1.gif")
