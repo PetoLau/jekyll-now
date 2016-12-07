@@ -55,7 +55,7 @@ An interesting fact is that the consumption of the industry *Food Sales & Storag
  
 ### Multiple linear regression model for double seasonal time series
  
-The aim of the multiple linear regression is to model dependent variable (output) by independent variables (inputs). Another target can be to analyze influence (correlation) of independent variables to the dependent variable. Like in the previous post, we want to forecast consumption one week ahead, so regression model must capture weekly pattern (seasonality). Variables (inputs) will be of two types of seasonal dummy variables - daily (\\( d_1, \dots, d_{48} \\)) and weekly (\\( w_1, \dots, w_6 \\)). In the case of the daily variable, there will be \\( 1 \\), when the consumption during the day will be measured at the particular time, otherwise \\( 0 \\). In the case of the week variable there will be \\( 1 \\), when the consumption is measured at the particular day of the week, otherwise \\( 0 \\).
+First, let's define formally multiple linear regression model. The aim of the multiple linear regression is to model dependent variable (output) by independent variables (inputs). Another target can be to analyze influence (correlation) of independent variables to the dependent variable. Like in the previous post, we want to forecast consumption one week ahead, so regression model must capture weekly pattern (seasonality). Variables (inputs) will be of two types of seasonal dummy variables - daily (\\( d_1, \dots, d_{48} \\)) and weekly (\\( w_1, \dots, w_6 \\)). In the case of the daily variable, there will be \\( 1 \\), when the consumption during the day will be measured at the particular time, otherwise \\( 0 \\). In the case of the week variable there will be \\( 1 \\), when the consumption is measured at the particular day of the week, otherwise \\( 0 \\).
  
 The regression model can be formally written as:
  
@@ -142,7 +142,7 @@ paste("R-squared: ",
 ## [1] "R-squared:  0.955 , p-value of F test:  0"
 {% endhighlight %}
  
-You can see a nice summary of the linear model, but I will omit them now because of its long length (we have 54 variables). So I'm showing you only the two most important statistics: R-squared and p-value of F-statistic of the goodness of fit. They seem pretty good.
+You can see a nice summary of the linear model, stored in the variable `lm_m_1`, but I will omit them now because of its long length (we have 54 variables). So I'm showing you only the two most important statistics: R-squared and p-value of F-statistic of the goodness of fit. They seem pretty good.
  
 Let's look at the fitted values.
 
@@ -160,7 +160,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 
 ![plot of chunk unnamed-chunk-11](/images/post_2/unnamed-chunk-11-1.png)
  
-That's horrible! We are missing something here.
+That's horrible! Do you see that bad fit around 5th March (weekend)? We are missing something here.
  
 Look at the fitted values vs. residuals now.
 
@@ -210,7 +210,7 @@ ggQQ(lm_m_1)
  
 Of course, it is absolutely not normal (points must be close the red line).
  
-What can we do now? Use other regression methods (especially nonlinear ones)? No. Let's think about why this happened. We have seen on fitted values, that measurements during the day were moved constantly by the estimated coefficient of week variable, but the behavior during the day wasn't captured. We need to capture this behavior because especially weekends behave absolutely different. It can be handled by defining **interactions** between day and week dummy variables to the regression model. So we multiply every daily variable with every weekly one. Again, be careful with collinearity and singularity of the model matrix, so we must omit one daily dummy variable (for example \\( d_{1} \\)). Fortunately, this is done in method `lm` automatically, when we use factors as variables.
+What can we do now? Use other regression methods (especially nonlinear ones)? No. Let's think about why this happened. We have seen on fitted values, that measurements during the day were moved constantly by the estimated coefficient of week variable, but the behavior during the day wasn't captured. We need to capture this behavior because especially weekends behave absolutely different. It can be handled by defining **interactions** between day and week dummy variables to the regression model. So we multiply every daily variable with every weekly one. Again, be careful with [collinearity](https://en.wikipedia.org/wiki/Collinearity) and [singularity](http://mathworld.wolfram.com/SingularMatrix.html) of the model matrix, so we must omit one daily dummy variable (for example \\( d_{1} \\)). Fortunately, this is done in method `lm` automatically, when we use factors as variables.
  
 Let’s train a second linear model. Interactions should solve the problem, that we saw in the plot of fitted values.
 
@@ -409,6 +409,8 @@ Here are the created GIFs:
 ![](/images/post_2/industry_4.gif)
  
 In these animations we can see that the behavior of the electricity consumption can be very stochastic and many external factors influence it (holidays, weather etc.), so it's a challenging task.
+ 
+The aim of this post was to introduce most basic regression method, MLR, for forecasting double seasonal time series. By use of the regression analysis, we showed that inclusion of interactions of independent variables to the model can be very effective. This analysis then implies that the forecast accuracy of MLR was much better than with STL+ARIMA method.
  
 In my next post, I will continue with the introduction of regression methods, this time with GAM (Generalized Additive Model).
  
