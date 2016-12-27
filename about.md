@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-I am a PhD. student at the Faculty of Informatics and Information Technologies, Slovak University of Technology in Bratislava. My current research scopes and ineterests include:
+I am a PhD. student at the Faculty of Informatics and Information Technologies, Slovak University of Technology in Bratislava. My current research scopes and interests include:
 
  * Big Data
  * Data Mining
@@ -13,7 +13,7 @@ I am a PhD. student at the Faculty of Informatics and Information Technologies, 
  * Data Streams
  * Forecast of Time Series
 
-I am a fan of the programming language **R**.
+I am a fan of the programming language **R** and generally in **Data Science**, **Statistics** and **Data Visualizations**.
 
 My [CV](/images/CV.pdf).
 
