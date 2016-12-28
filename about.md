@@ -17,7 +17,7 @@ I am a fan of the programming language **R** and generally in **Data Science**, 
 
 My [CV](/images/CV.pdf).
 
-My publications are on:
+My **publications** are on:
 
  * [Google Scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en) <a href="https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en"><img src="/images/avatars/avatarscholar.png" width="37" height="36" border="0"/></a>
  * [Research Gate](https://www.researchgate.net/profile/Peter_Laurinec) <a href="https://www.researchgate.net/profile/Peter_Laurinec"><img src="/images/avatars/avatarRG.png" width="36" height="36" border="0"/></a>
