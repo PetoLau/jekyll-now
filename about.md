@@ -25,6 +25,6 @@ I am a fan of the programming language **R** and of **Data Science**, **Statisti
 
 Read my [**CV**](/images/CV.pdf).
 
-### Contact me
+### Contact me at:
 
 [laurinec.peter@gmail.com](mailto:laurinec.peter@gmail.com)
