@@ -21,10 +21,10 @@ My **publications** are on:
  * [ORCID](http://orcid.org/0000-0002-3501-8783)  <a href="http://orcid.org/0000-0002-3501-8783"><img src="/images/avatars/avatarorcid.png" width="76" height="30" border="0"/></a>
  * [Impactstory](https://impactstory.org/u/0000-0002-3501-8783/publications)  <a href="https://impactstory.org/u/0000-0002-3501-8783/publications"><img src="/images/avatars/avatarimpact.png" width="98" height="26" border="0"/></a>
 
-I am a fan of the programming language **R** and generally in **Data Science**, **Statistics** and **Data Visualizations**.
+I am a fan of the programming language **R** and of **Data Science**, **Statistics** and **Data Visualizations** in general.
 
-My [CV](/images/CV.pdf).
+Read my [**CV**](/images/CV.pdf).
 
-### Contact
+### Contact me
 
 [laurinec.peter@gmail.com](mailto:laurinec.peter@gmail.com)
