@@ -19,7 +19,7 @@ My [CV](/images/CV.pdf).
 
 My publications are on:
 
- * <a href="https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en" rel="some text">![Google Scholar]("images/Avatars/avatar_scholar.png?raw=true")]</a> [Google Scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en)
+ * [![Foo](images/Avatars/avatar_scholar.png)](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en) [Google Scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en)
  * [Research Gate](https://www.researchgate.net/profile/Peter_Laurinec)
  * [Scopus](http://www.researcherid.com/rid/Q-2356-2016)
  * [ORCID](http://orcid.org/0000-0002-3501-8783)
