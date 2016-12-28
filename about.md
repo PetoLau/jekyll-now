@@ -23,7 +23,7 @@ My **publications** are on:
  * [Research Gate](https://www.researchgate.net/profile/Peter_Laurinec) <a href="https://www.researchgate.net/profile/Peter_Laurinec"><img src="/images/avatars/avatarRG.png" width="36" height="36" border="0"/></a>
  * [Scopus](http://www.researcherid.com/rid/Q-2356-2016) <a href="http://www.researcherid.com/rid/Q-2356-2016"><img src="/images/avatars/avatarscopus.png" width="80" height="34" border="0"/></a>
  * [ORCID](http://orcid.org/0000-0002-3501-8783) <a href="http://orcid.org/0000-0002-3501-8783"><img src="/images/avatars/avatarorcid.png" width="78" height="32" border="0"/></a>
- * [Impactstory](https://impactstory.org/u/0000-0002-3501-8783/publications) <a href="https://impactstory.org/u/0000-0002-3501-8783/publications"><img src="/images/avatars/avatarimpact.png" width="96" height="32" border="0"/></a>
+ * [Impactstory](https://impactstory.org/u/0000-0002-3501-8783/publications) <a href="https://impactstory.org/u/0000-0002-3501-8783/publications"><img src="/images/avatars/avatarimpact.png" width="96" height="28" border="0"/></a>
 
 ### Contact
 
