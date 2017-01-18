@@ -16,7 +16,7 @@ Now I have to warn you that this blog post is very long. **GAM** is a very compl
 
 So, let's look under the roof of the **GAM** regression method. I think you need some motivation to it, here it is!
 
-![](images\motivate.png)
+![](\images\motivate.png)
 
 ### Theory behind Generalized Additive Model (GAM) 
 
@@ -25,45 +25,57 @@ What these three words (or letters) in the name of this method mean and where it
 The GAM can be formally written as:
 
 $$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
+
 where \\( i = 1, \dots, N \\), \\(g\\) is a link function (identical, logarithmic or inverse), \\(y\\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
 
 The smooth function \\( f \\) is composed by sum of basis functions \\( b\\) and theirs corresponding regression coefficients \\( \beta \\), formally written:
 
 $$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
+
 Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
 
 It follows that model can be written in a linear way like this:
+
 $$g(E(y)) = \beta\mathbf{X} + \varepsilon,$$
 where \\( \mathbf{X} \\) is a model matrix and \\( \beta \\) is a vector of regression coefficients.
 
 Than objective function to be minimized is:
 $$\parallel y - \beta\mathbf{X}\parallel^2 + \lambda\int_0^1 [f^{''}(x)]^2dx,$$
+
 where \\( \lambda \\) is smoothing parameter and the integral of squares of second derivatives can be written as:
+
 $$\int_0^1 [f^{''}(x)]^2dx = \beta^T\mathbf{S}\beta,$$
+
 where \\( \mathbf{S} \\) is matrix of known coefficients.
 
 All this mathematical madness then implies that regression coefficients can be obtained (estimated) by the equation:
+
 $$\hat{\beta} = (\mathbf{X}^T\mathbf{X} + \lambda\mathbf{S})^{-1}\mathbf{X}^Ty.$$
+
 \\( \hat{\beta} \\) is called penalized least squares estimator in this case.
 The method of obtaining the estimate of the \\( \beta\\) is called Penalized Iteratively Re-weighted Least Squares (P-IRLS).
 
 Have you already enough of this post? I would no wonder...you can skip this section whenever you want, but there are next important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose optimally smoothing parameter \\( \lambda\\)? How is set basis dimensions (or a number of knots)?
 
 There are several smoothing bases (splines) which are suitable for regression:
- * thin plate regression splines
- * cubic regression spline
- * cyclic cubic regression spline
- * P-splines
+    * thin plate regression splines
+    * cubic regression spline
+    * cyclic cubic regression spline
+    * P-splines
 You can then read more about them in references, which I will write up. In this post, for daily seasonality cubic regression spline, and for weekly seasonality P-splines will be used. Both types of splines are knot-based, so choosing a right number of knots will be important.
 
 Next, an important procedure is to choose (estimate) optimal smoothing parameter \\( \lambda \\) and the number of basis dimensions (i.e. degrees of freedom). This can be done in **GAM** by Generalized Cross Validation score (GCV). It minimizes an equation:
+
 $$\nu_g = \frac{n\sum_{i=1}^n (y_i - \hat{f}_i)^2}{[tr(\mathbf{I} - \mathbf{A})]^2},$$
+
 where \\( \mathbf{A}\\) is the influence or hat matrix. It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized so the method behaves like classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
 
 #### Interactions
 
 We are near the end of the explanation of **GAMs** theory, one more thing. As I showed in the previous blog post, **interactions** are very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\(f(x_1, x_2) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\(f_1(x_1)\otimes f_2(x_2) \\). More nicely, tensor product interactions can be written as:
+
 $$f_{12}(x_1, x_2) = \sum_{i=1}^I \sum_{j=1}^J \delta_{ij}b_{1i}(x_1)b_{2j}(x_2),$$
+
 where \\(b_1 \\) and \\(b_2 \\) are basis functions, \\(I \\) and \\(J \\) are corresponding basis dimensions and \\(\delta \\) is vector of unknown coefficients.
 
 This allows for an overall [anisotropic](https://en.wikipedia.org/wiki/Anisotropy) (different in each direction) penalty, so the overall shape of a tensor product smooth is invariant to a rescaling of its independent variables. This is a huge advantage in the comparison to usage of one smoothing function. Simply said, we have theoretically supported that it's allowed to use different metrics of variables in the interactions term.
@@ -71,10 +83,10 @@ This allows for an overall [anisotropic](https://en.wikipedia.org/wiki/Anisotrop
 #### Resources (references)
 
 Phuuu...that's almost all of the difficult theory behind **GAM** method. I will add some more things in analytical part of this post. Honestly, it was difficult to me to find this information on the web. So if you want to read more about **GAM**, here is the list of useful links which were used in my post:
-  * Amazing book: Simon N. Wood: [Generalized Additive Models: an introduction with R](https://www.crcpress.com/Generalized-Additive-Models-An-Introduction-with-R/Wood/p/book/9781584884743), CRC Press, 2006.
-  * Great blog post by Gavin Simpson: [Modelling seasonal data with GAMs](http://www.fromthebottomoftheheap.net/2014/05/09/modelling-seasonal-data-with-gam/)
-  * Very helpful StackExchange (Cross Validated) [question about the intuition behind tensor product interactions](http://stats.stackexchange.com/questions/45446/intuition-behind-tensor-product-interactions-in-gams-mgcv-package-in-r)
-  * This [tutorial about mixed GAMs](http://www.sfs.uni-tuebingen.de/~jvanrij/Tutorial/GAMM.html) can be helpful too.
+    * Amazing book: Simon N. Wood: [Generalized Additive Models: an introduction with R](https://www.crcpress.com/Generalized-Additive-Models-An-Introduction-with-R/Wood/p/book/9781584884743), CRC Press, 2006.
+    * Great blog post by Gavin Simpson: [Modelling seasonal data with GAMs](http://www.fromthebottomoftheheap.net/2014/05/09/modelling-seasonal-data-with-gam/)
+    * Very helpful StackExchange (Cross Validated) [question about the intuition behind tensor product interactions](http://stats.stackexchange.com/questions/45446/intuition-behind-tensor-product-interactions-in-gams-mgcv-package-in-r)
+    * This [tutorial about mixed GAMs](http://www.sfs.uni-tuebingen.de/~jvanrij/Tutorial/GAMM.html) can be helpful too.
 
 Go ahead to modeling and analyzing time series with **GAMs**
 
@@ -476,9 +488,9 @@ I will end this post with a visualization analysis of the model `gam_6`. I will 
  3. Forecast for one week ahead vs. real consumption plus forecast accuracy in MAPE.
 Animations were created by functions from package `grid` to layout ggplots to one figure, and function `saveGIF` from package `animation` to create final GIF. Here there are:
 
-![](images\industry_1_dashboard.gif)
+![](\images\industry_1_dashboard.gif)
 
-![](images\industry_4_dashboard.gif)
+![](\images\industry_4_dashboard.gif)
 
 We can see the behavior of **GAMs** on two times series from two different types of industries: commercial property and light industrial. Notice (look), that fitted values and forecasts are smoother than where were with [Multiple linear regression from the previous post](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/). It's good information to know, it implies that our model isn't overfitted. On the other hand, I also compared forecast performance of **GAM** and **MLR**, but GAM was slightly worse than MLR, which can be a little bit surprising for somebody. Seems that usage of penalized least squares (GAM) for forecasting time series doesn't bring improvement against classical OLS (MLR). But there are other advantages, which I will point out in the end.
 
