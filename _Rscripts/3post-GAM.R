@@ -11,23 +11,14 @@ library(car)
 library(ggplot2)
 library(grid)
 library(animation)
-library(fitdistrplus)
 
 # Use feather (fast to share data) to read data.table
 DT <- as.data.table(read_feather("DT_4_ind"))
-DT2 <- DT
-
-write_feather(DT2, "DT_4_ind_2")
-DT <- as.data.table(read_feather("DT_4_ind"))
-
-sessionInfo()
-install.packages("feather", repos = "https://cran.r-project.org/")
-
 
 # prepare DT to work with a regression model
 # tranform charactres of weekdays to integers
 DT[, week_num := as.integer(as.factor(DT[, week]))]
-DT[, week_num := recode(week_num, "1=5;2=1;3=6;4=7;5=4;6=2;7=3")]
+DT[, week_num := recode(week_num, "1=5;2=1;3=6;4=7;5=4;6=2;7=3")] #recode
 
 # store information of the type of consumer, date, weekday and period
 n_type <- unique(DT[, type])
@@ -35,7 +26,7 @@ n_weekdays <- unique(DT[, week])
 n_date <- unique(DT[, date])
 period <- 48
 
-# Let's look at some data chunk of consumption and try do some regression analysis. Pick aggregate consumption of education (schools) buildings.
+# Let's look at some data chunk of consumption and try do some regression analysis.
 data_r <- DT[(type == n_type[1] & date %in% n_date[57:70])]
 
 ggplot(data_r, aes(date_time, value)) +
@@ -52,10 +43,10 @@ ggplot(data_r, aes(date_time, value)) +
 # k -> (knots) is upper boundery for EDF...how smooth fitted value will be (more knots more overfit (under smoothed), less more smooth) 
 # bs -> basis function..type of smoothing function
 # dimension can be fixed by fx = TRUE
-# EDF (trace of  influence matrix) and lambda (smoothing factor) is estimated (tuned) by GCV, UBRE or REML, we will use the default GCV (Generalized Cross Validation) (more in Woods)
+# EDF (trace of influence matrix) and lambda (smoothing factor) is estimated (tuned) by GCV, UBRE or REML, we will use the default GCV (Generalized Cross Validation) (more in Woods)
 # basis function: I will use "cr" - cubic regression spline or "ps", which is P-spline (more in Woods).
 # More options: "cc" cyclic cubic regression spline (good too with our problem), default is "tp" thin plane spline
-# family - how rersponse is fitted -> gaussian, log_norm, gamma, log_gamma is our possibilities, but gaussian is most variable in practice because gamma distibution must have only positive values
+# family - how response is fitted -> gaussian, log_norm, gamma, log_gamma is our possibilities, but gaussian is most variable in practice because gamma distibution must have only positive values
 # gamm - possibility to add autocorrelation for errors
 
 N <- nrow(data_r)
@@ -69,9 +60,11 @@ gam_1 <- gam(Load ~ s(Daily, bs = "cr", k = period) +
                s(Weekly, bs = "ps", k = 7),
              data = matrix_gam,
              family = gaussian)
+
 layout(matrix(1:2, nrow = 1))
 plot(gam_1)
 dev.off()
+
 # what to look at: summary: EDF, p-values, R^2, GCV; AIC, magic
 summary(gam_1)
 # Parametric coefficients:
@@ -120,8 +113,6 @@ gam_3 <- gam(Load ~ te(Daily, Weekly,
              data = matrix_gam,
              family = gaussian)
 
-# layout(matrix(1:2, nrow = 1, byrow = TRUE))
-# plot(gam_3, se = FALSE, rug = FALSE)
 summary(gam_3)
 
 datas <- rbindlist(list(data_r[, .(value, date_time)],
@@ -135,7 +126,6 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.3")
 
 AIC(gam_2, gam_3)
-BIC(gam_2, gam_3)
 
 gam_4 <- gam(Load ~ te(Daily, Weekly,
                         k = c(period, 7),
@@ -143,13 +133,10 @@ gam_4 <- gam(Load ~ te(Daily, Weekly,
               data = matrix_gam,
               family = gaussian)
 
-
 plot(gam_4, se = FALSE, rug = FALSE)
 summary(gam_4)
 # default number of knots makes fit more smoother,
 # manual set of knots makes fit more overfit
-BIC(gam_3, gam_4) # quick look of performance of models
-# BIC = ln(n)*k - 2*ln(L)
 # AIC = 2*k - 2*ln(L)
 
 datas <- rbindlist(list(data_r[, .(value, date_time)],
@@ -189,7 +176,8 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 
 gam_6 <- gam(Load ~ t2(Daily, Weekly,
                        k = c(period, 7),
-                       bs = c("cr", "ps")),
+                       bs = c("cr", "ps"),
+                       full = TRUE),
              data = matrix_gam,
              family = gaussian)
 
@@ -209,7 +197,7 @@ AIC(gam_4, gam_5, gam_6)
 BIC(gam_4, gam_5, gam_6)
 
 # Seems gam_6 with t2 is best
-# Look at autocorrelation of residuals. What is autocorrelation.
+# Look at autocorrelation of residuals
 
 layout(matrix(1:2, ncol = 2))
 acf(resid(gam_6), lag.max = 48, main = "ACF")
@@ -217,16 +205,19 @@ pacf(resid(gam_6), lag.max = 48, main = "pACF")
 dev.off()
 
 # within-group correlation structure
+
 gam_6_ar0 <- gamm(Load ~ t2(Daily, Weekly,
                             k = c(period, 7),
-                            bs = c("cr", "ps")),
+                            bs = c("cr", "ps"),
+                            full = TRUE),
                   data = matrix_gam,
                   family = gaussian,
                   method = "REML")
 
 gam_6_ar1 <- gamm(Load ~ t2(Daily, Weekly,
                             k = c(period, 7),
-                            bs = c("cr", "ps")),
+                            bs = c("cr", "ps"),
+                            full = TRUE),
              data = matrix_gam,
              family = gaussian,
              correlation = corARMA(form = ~ 1|Weekly, p = 1),
@@ -241,13 +232,13 @@ gam_6_ar2 <- gamm(Load ~ t2(Daily, Weekly,
                   method = "REML")
 
 anova(gam_6_ar0$lme, gam_6_ar1$lme, gam_6_ar2$lme)
+anova(gam_6_ar0$lme, gam_6_ar1$lme)
 # gam_6 with AR(1) correlated errors seems better than simple model, but AR(2) is not better than AR(1).
 
 # Different method of estimation of parameters
-gam_6_ar0$gam$method
 summary(gam_6_ar1$gam)
-summary(gam_6)
 summary(gam_6_ar0$gam)
+summary(gam_6)
 
 layout(matrix(1:2, ncol = 2))
 acf(resid(gam_6_ar1$lme), lag.max = 48, main = "ACF")
@@ -255,11 +246,10 @@ pacf(resid(gam_6_ar1$lme), lag.max = 48, main = "pACF")
 dev.off()
 
 # seems it helped little bit
-
 plot(gam_6_ar1$gam)
 plot(gam_6_ar0$gam)
 
-# Estimated \phi coeffcient of AR(1) process
+# Estimated \phi coefficient of AR(1) process
 intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 datas <- rbindlist(list(data_r[, .(value, date_time)],
@@ -276,14 +266,11 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 
 ## Visualizations ----
 
-# gam.check makes output to console and four graphs
-gam.check(gam_6)
-gam.check(gam_6_ar1$gam)
 # looks gam_6 is better than gam_6_ar1
 # lets make more detailed view of residuals of these two models
 
-datas <- data.table(Fitted_values = c(gam_6$fitted.values, gam_6_ar1$gam$fitted.values),
-                    Residuals = c(gam_6$residuals, gam_6_ar1$gam$residuals),
+datas <- data.table(Fitted_values = c(gam_6_ar0$gam$fitted.values, gam_6_ar1$gam$fitted.values),
+                    Residuals = c(gam_6_ar0$gam$residuals, gam_6_ar1$gam$residuals),
                     Model = rep(c("Gam n.6", "Gam n.6 with AR(1)"), each = nrow(data_r)))
 
 ggplot(data = datas,
@@ -300,24 +287,20 @@ ggplot(data = datas,
         strip.background = element_rect(color = "black")) +
   labs(title = "Fitted values vs Residuals of two models")
 
-# We can see some bias in gam_6_ar1 model at begging of plot, it is not homoscedastic
-# AIC is not good model selection criterion when degrees of freedom vary (changes)
-# Anova can be tricky too
+# We can see some bias in gam_6_ar1 model at begging of the plot, it is not homoscedastic
 # So we will stay in gam_6 model in further analysis
 
 # two types of view on fitted surface, we can see that highets peak is when Day variable has values near 30 and Week variable has value 1 (it is monday)
 vis.gam(gam_6, n.grid = 50, theta = 35, phi = 32, zlab = "",
         ticktype = "detailed", color = "topo", main = "t2(D, W)")
 
-# 2D - topological view (vrstevnice), again highest value of electricity load is monday at 3:00 pm, it is very similar till thursday, than load changes alot
+# 2D - topological view (contour lines), again highest value of electricity load is monday at 3:00 pm, it is very similar till thursday, than load changes alot
 vis.gam(gam_6, main = "t2(D, W)", plot.type = "contour",
         color = "terrain", contour.col = "black", lwd = 2)
 
 # plot option does very similar job, but this time is ploted effects (estimated coeffcients) of variables Daily and Weekly
 plot(gam_6, rug=FALSE, se = F, n2 = 80)
 
-# so...I will not do any predictions (forecasts) in this post becasuse experiments shows that MLR is better than GAM.
-# Nevermind, I will again try to do some animation of performence of proposed model.
 # I will try to do some animated dashboard of main characteristics of model thru time.
 # It should be very interesting how electricity load changes and how model can adapte to these changes.
 
@@ -336,7 +319,8 @@ predWeekGAM <- function(data, set_of_date){
   # model fit
   gam_m <- gam(Load ~ t2(Daily, Weekly,
                          k = c(period, 7),
-                         bs = c("cr", "ps")),
+                         bs = c("cr", "ps"),
+                         full = TRUE),
                data = matrix_train,
                family = gaussian)
   
@@ -347,72 +331,79 @@ predWeekGAM <- function(data, set_of_date){
   return(list(GAMobj = gam_m, Pred = as.vector(pred_week)))
 }
 
+mape <- function(real, pred){
+  return(100 * mean(abs((real - pred)/real))) # MAPE - Mean Absolute Percentage Error
+}
+
 n_weeks <- floor(length(n_date)/7) - 2
 
 saveGIF({
   oopt = ani.options(interval = 1.6, nmax = 50)
-    for(i in 0:(n_weeks-1)){
-      
-      gam_pred_weeks <- predWeekGAM(DT[type == n_type[4]], n_date[((i*7)+1):((i*7)+7*2)])
-      
-      gam_err_mape <- mape(DT[(type == n_type[4] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
-                           gam_pred_weeks$Pred)
-      
-      g1 <- ggplot(data = data.table(value = c(gam_pred_weeks$GAMobj$fitted.values,
-                                               DT[(type == n_type[4]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), value]),
-                                     date_time = rep(DT[(type == n_type[4]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), date_time], 2),
-                                     type = rep(c("Fit", "Real"), each = length(gam_pred_weeks$GAMobj$fitted.values))),
-                   aes(date_time, value, group = type, colour = type)) +
-        geom_line(size = 0.8) +
-        theme(panel.border = element_blank(), panel.background = element_blank(),
-              panel.grid.minor = element_line(colour = "grey90"),
-              panel.grid.major = element_line(colour = "grey90"),
-              panel.grid.major.x = element_line(colour = "grey90"),
-              title = element_text(size = 15),
-              axis.text = element_text(size = 10),
-              axis.title = element_text(size = 12, face = "bold"),
-              legend.text = element_text(size = 12, face = "bold")) +
-        labs(x = "Time", y = "Load (kW)",
-             title = paste("Fit from GAM (", n_type[4], "); ", "week: ", i+1, "-", i+2, sep = ""))
-      
-      g2 <- ggplot(data = data.table(Fitted_values = gam_pred_weeks$GAMobj$fitted.values,
-                                     Residuals = gam_pred_weeks$GAMobj$residuals),
-                   aes(Fitted_values, Residuals)) +
-        geom_point(size = 1.7) +
-        geom_smooth(method = "loess") +
-        geom_hline(yintercept = 0, color = "red", size = 1) +
-        theme(title = element_text(size = 14),
-              axis.text = element_text(size = 10),
-              axis.title = element_text(size = 12, face = "bold"),
-              legend.text = element_text(size = 12, face = "bold")) +
-        labs(title = "Fitted values vs Residuals")
-      
-      g3 <- ggplot(data = data.table(value = c(gam_pred_weeks$Pred,
-                                               DT[(type == n_type[4]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), value]),
-                                     date_time = rep(DT[(type == n_type[4]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), date_time], 2),
-                                     type = rep(c("GAM", "Real"), each = length(gam_pred_weeks$Pred))),
-                   aes(date_time, value, group = type, colour = type)) +
-        geom_line(size = 0.8) +
-        theme(panel.border = element_blank(), panel.background = element_blank(),
-              panel.grid.minor = element_line(colour = "grey90"),
-              panel.grid.major = element_line(colour = "grey90"),
-              panel.grid.major.x = element_line(colour = "grey90"),
-              title = element_text(size = 15),
-              axis.text = element_text(size = 10),
-              axis.title = element_text(size = 12, face = "bold"),
-              legend.text = element_text(size = 12, face = "bold")) +
-        labs(x = "Time", y = "Load (kW)",
-             title = paste("Forecast of GAM; ", "week: ", i+3, "; MAPE: ",
-                           round(gam_err_mape, 2), "%", sep = ""))
-      
-      grid.newpage()
-      # Create layout : nrow = 2, ncol = 2
-      pushViewport(viewport(layout = grid.layout(2, 2)))
-      # Arrange the plots
-      print(g1, vp=define_region(1, 1:2))
-      print(g2, vp = define_region(2, 1))
-      print(g3, vp = define_region(2, 2))
-      
+  for(i in 0:(n_weeks-1)){
+    
+    gam_pred_weeks <- predWeekGAM(DT[type == n_type[4]], n_date[((i*7)+1):((i*7)+7*2)])
+    
+    gam_err_mape <- mape(DT[(type == n_type[4] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
+                         gam_pred_weeks$Pred)
+    
+    # 1. plot of fitted values
+    g1 <- ggplot(data = data.table(value = c(gam_pred_weeks$GAMobj$fitted.values,
+                                             DT[(type == n_type[4]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), value]),
+                                   date_time = rep(DT[(type == n_type[4]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), date_time], 2),
+                                   type = rep(c("Fit", "Real"), each = length(gam_pred_weeks$GAMobj$fitted.values))),
+                 aes(date_time, value, group = type, colour = type)) +
+      geom_line(size = 0.8) +
+      theme(panel.border = element_blank(), panel.background = element_blank(),
+            panel.grid.minor = element_line(colour = "grey90"),
+            panel.grid.major = element_line(colour = "grey90"),
+            panel.grid.major.x = element_line(colour = "grey90"),
+            title = element_text(size = 15),
+            axis.text = element_text(size = 10),
+            axis.title = element_text(size = 12, face = "bold"),
+            legend.text = element_text(size = 12, face = "bold")) +
+      labs(x = "Time", y = "Load (kW)",
+           title = paste("Fit from GAM (", n_type[4], "); ", "week: ", i+1, "-", i+2, sep = ""))
+    
+    # 2. plot of fitted values vs. residuals
+    g2 <- ggplot(data = data.table(Fitted_values = gam_pred_weeks$GAMobj$fitted.values,
+                                   Residuals = gam_pred_weeks$GAMobj$residuals),
+                 aes(Fitted_values, Residuals)) +
+      geom_point(size = 1.7) +
+      geom_smooth(method = "loess") +
+      geom_hline(yintercept = 0, color = "red", size = 1) +
+      theme(title = element_text(size = 14),
+            axis.text = element_text(size = 10),
+            axis.title = element_text(size = 12, face = "bold"),
+            legend.text = element_text(size = 12, face = "bold")) +
+      labs(title = "Fitted values vs Residuals")
+    
+    # 3. plot of forecasts
+    g3 <- ggplot(data = data.table(value = c(gam_pred_weeks$Pred,
+                                             DT[(type == n_type[4]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), value]),
+                                   date_time = rep(DT[(type == n_type[4]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), date_time], 2),
+                                   type = rep(c("GAM", "Real"), each = length(gam_pred_weeks$Pred))),
+                 aes(date_time, value, group = type, colour = type)) +
+      geom_line(size = 0.8) +
+      theme(panel.border = element_blank(), panel.background = element_blank(),
+            panel.grid.minor = element_line(colour = "grey90"),
+            panel.grid.major = element_line(colour = "grey90"),
+            panel.grid.major.x = element_line(colour = "grey90"),
+            title = element_text(size = 15),
+            axis.text = element_text(size = 10),
+            axis.title = element_text(size = 12, face = "bold"),
+            legend.text = element_text(size = 12, face = "bold")) +
+      labs(x = "Time", y = "Load (kW)",
+           title = paste("Forecast of GAM; ", "week: ", i+3, "; MAPE: ",
+                         round(gam_err_mape, 2), "%", sep = ""))
+    
+    grid.newpage()
+    # Create layout : nrow = 2, ncol = 2
+    pushViewport(viewport(layout = grid.layout(2, 2)))
+    # Arrange the plots
+    print(g1, vp=define_region(1, 1:2))
+    print(g2, vp = define_region(2, 1))
+    print(g3, vp = define_region(2, 2))
+    
     ani.pause()
   }}, movie.name = "industry_4_dashboard.gif", ani.height = 750, ani.width = 950)
 
@@ -432,7 +423,8 @@ saveGIF({
     
     gam_m <- gam(Load ~ t2(Daily, Weekly,
                            k = c(period, 7),
-                           bs = c("cr", "ps")),
+                           bs = c("cr", "ps"),
+                           full  = TRUE),
                  data = matrix_train,
                  family = gaussian)
     
@@ -450,6 +442,41 @@ saveGIF({
     ani.pause()
   }}, movie.name = "industry_1_vis.gif", ani.height = 450, ani.width = 550)
 
+saveGIF({
+  oopt = ani.options(interval = 1.1, nmax = 50)
+  for(i in 0:(n_weeks-1)){
+    
+    data_train <- DT[type == n_type[1] & date %in% n_date[((i*7)+1):((i*7)+7*2)]]
+    
+    # creation of training dataset
+    N <- nrow(data_train)
+    window <- N / period # number of days in the train set
+    matrix_train <- data.table(Load = data_train[, value],
+                               Daily = rep(1:period, window),
+                               Weekly = data_train[, week_num])
+    
+    gam_m <- gam(Load ~ t2(Daily, Weekly,
+                           k = c(period, 7),
+                           bs = c("cr", "ps"),
+                           full  = TRUE),
+                 data = matrix_train,
+                 family = gaussian)
+    
+    sum_gam <- summary(gam_m)
+    
+    par(bg="white", mar=c(5, 4, 3, 2), oma=c(0,0,0,0), xpd=FALSE,
+        xaxs="r", yaxs="r", mgp=c(2.8,0.3,0.5), col.lab="black", col.axis="black",
+        col.main="black", cex.main=1.3, cex.axis=1.2, cex.lab=1.1,
+        font.main=7, font.lab=7, font.axis=7, lend=1, tck=0)
+    
+    vis.gam(gam_m, main = paste(n_type[1], "; t2(D, W); EDF = ", round(sum_gam$edf, 2),
+                                "; Week:", i+1, "-", i+2, sep = ""), ticktype = "detailed", 
+            color = "topo", contour.col = "black", n.grid = 50, theta = 35, phi = 32, zlab = "",
+            zlim = c(min(DT[type == n_type[1], value]) - 100, max(DT[type == n_type[1], value])-1000))
+    
+    ani.pause()
+  }}, movie.name = "industry_1_vis_3D_v3.gif", ani.height = 520, ani.width = 550)
+
 # interpretation of plot.gam - effect (estimated coefficients) of variables on target variable
 # interpretation of vis.gam - response in values of selected variables
 
@@ -459,40 +486,8 @@ saveGIF({
 # http://www.sfs.uni-tuebingen.de/~jvanrij/Tutorial/GAMM.html
 # Wood, S.N. (2006) Generalized Additive Models: an introduction with R, CRC
 
-## Other Distributions ----
-gamma_arg <- fitdist(data_r$value, "gamma")
-gamma_arg$estimate
-
-ggplot(data_r, aes(x = value)) +
-  geom_density(aes(colour = "olivedrab4"), fill = "olivedrab3",
-               alpha = 0.7,
-               lwd = 0.6) +
-  geom_path(aes(colour = 'firebrick2'),
-            fun = dnorm, stat = "function",
-            args = list(mean = mean(data_r$value), sd = sd(data_r$value)), 
-            lwd = 1.6,
-            alpha = 0.8) +
-  geom_path(aes(colour = "dodgerblue3"),
-            fun = dgamma, stat = "function",
-            args = list(shape = gamma_arg$estimate[1], rate = gamma_arg$estimate[2]), 
-            lwd = 1.6, 
-            alpha = 0.8) +
-  geom_path(aes(colour = 'black'),
-            fun = dlnorm, stat = "function",
-            args = list(mean = mean(log(data_r$value)), sd = sd(log(data_r$value))), 
-            lwd = 1.6,
-            alpha = 0.8) +
-  scale_colour_identity("Density",
-                        guide = "legend",
-                        breaks = c("olivedrab4", "firebrick2", "dodgerblue3", "black"),
-                        labels = c("Empirical", "Normal", "Gamma", "Log-Norm"))
-
-# You can try other distribution families like Gamma, but I not recommend it because of you need all the time to have positive values.
-# You can try all families as in GLM.
-
 # You can see that with GAM you have many possibilities to model your target variable. This was purpose of this post to fully introduce this complex method.
-# Main advantage is that you can model target variable with non linear function, even though you dont know the predpis of function
+# Main advantage is that you can model target variable with non linear function.
 # You can statistically test significance of independent variable to target variable, which is modeled not linearly (like in MLR), so test if ind. variable has significant non linear behaviour. (Big advantage)
 # Tensor product interactions - another big advantage - so you can make interactions of two variables with two differnt smoothing functions.
 # For monitoring behavior thru time, for me, GAM is perfect method. Monitor significance, EDF etc.
-
