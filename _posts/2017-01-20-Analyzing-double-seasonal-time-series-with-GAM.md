@@ -16,7 +16,7 @@ Now I have to warn you that this blog post is very long. **GAM** is a very compl
  
 So, let's look under the roof of the **GAM** regression method. I think you need some motivation to it, here it is!
  
-![](\images\motivate.png)
+![](/images/motivate.png)
  
 ### Theory behind Generalized Additive Model (GAM) 
  
@@ -26,9 +26,9 @@ The GAM can be formally written as:
  
 $$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
  
-where \\( i = 1, \dots, N \\), \\(g\\) is a link function (identical, logarithmic or inverse), \\(y\\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
+where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarithmic or inverse), \\( y \\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
  
-The smooth function \\( f \\) is composed by sum of basis functions \\( b\\) and theirs corresponding regression coefficients \\( \beta \\), formally written:
+The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and theirs corresponding regression coefficients \\( \beta \\), formally written:
  
 $$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
  
@@ -53,9 +53,9 @@ All this mathematical madness then implies that regression coefficients can be o
 $$\hat{\beta} = (\mathbf{X}^T\mathbf{X} + \lambda\mathbf{S})^{-1}\mathbf{X}^Ty.$$
  
 \\( \hat{\beta} \\) is called penalized least squares estimator in this case.
-The method of obtaining the estimate of the \\( \beta\\) is called Penalized Iteratively Re-weighted Least Squares (P-IRLS).
+The method of obtaining the estimate of the \\( \beta \\) is called Penalized Iteratively Re-weighted Least Squares (P-IRLS).
  
-Have you already enough of this post? I would no wonder...you can skip this section whenever you want, but there are next important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose optimally smoothing parameter \\( \lambda\\)? How is set basis dimensions (or a number of knots)?
+Have you already enough of this post? I would no wonder...you can skip this section whenever you want, but there are next important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose optimally smoothing parameter \\( \lambda \\)? How is set basis dimensions (or a number of knots)?
  
 There are several smoothing bases (splines) which are suitable for regression:
     * thin plate regression splines
@@ -68,15 +68,15 @@ Next, an important procedure is to choose (estimate) optimal smoothing parameter
  
 $$\nu_g = \frac{n\sum_{i=1}^n (y_i - \hat{f}_i)^2}{[tr(\mathbf{I} - \mathbf{A})]^2},$$
  
-where \\( \mathbf{A}\\) is the influence or hat matrix. It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized so the method behaves like classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
+where \\( \mathbf{A} \\) is the influence or hat matrix. It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized so the method behaves like classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
  
 #### Interactions
  
-We are near the end of the explanation of **GAMs** theory, one more thing. As I showed in the previous blog post, **interactions** are very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\(f(x_1, x_2) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\(f_1(x_1)\otimes f_2(x_2) \\). More nicely, tensor product interactions can be written as:
+We are near the end of the explanation of **GAMs** theory, one more thing. As I showed in the previous blog post, **interactions** are very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\( f(x_1, x_2) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
  
 $$f_{12}(x_1, x_2) = \sum_{i=1}^I \sum_{j=1}^J \delta_{ij}b_{1i}(x_1)b_{2j}(x_2),$$
  
-where \\(b_1 \\) and \\(b_2 \\) are basis functions, \\(I \\) and \\(J \\) are corresponding basis dimensions and \\(\delta \\) is vector of unknown coefficients.
+where \\( b_1 \\) and \\( b_2 \\) are basis functions, \\( I \\) and \\( J \\) are corresponding basis dimensions and \\( \delta \\) is vector of unknown coefficients.
  
 This allows for an overall [anisotropic](https://en.wikipedia.org/wiki/Anisotropy) (different in each direction) penalty, so the overall shape of a tensor product smooth is invariant to a rescaling of its independent variables. This is a huge advantage in the comparison to usage of one smoothing function. Simply said, we have theoretically supported that it's allowed to use different metrics of variables in the interactions term.
  
@@ -217,7 +217,7 @@ summary(gam_1)
 ## GCV = 2.4554e+05  Scale est. = 2.3953e+05  n = 672
 {% endhighlight %}
  
-What to look at here? EDF: estimated degrees of freedom - can be interpreted like how much given variable is smoothed (higher EDF value implies more complex splines). P-values: statistical significance of given variable to response variable, tested by F-test (lower is better). \\(R^2 \\) - adjusted R-squared (higher is better). GCV: GCV score (mentioned above).
+What to look at here? EDF: estimated degrees of freedom - can be interpreted like how much given variable is smoothed (higher EDF value implies more complex splines). P-values: statistical significance of given variable to response variable, tested by F-test (lower is better). \\( R^2 \\) - adjusted R-squared (higher is better). GCV: GCV score (mentioned above).
 In the summary, we can see that the R-sq. (adj) value is a little bit low...
  
 Let's plot fitted values:
@@ -280,7 +280,7 @@ summary(gam_2)$s.table
 
 {% highlight text %}
 ##                     edf   Ref.df        F p-value
-## s(Daily,Weekly) 28.7008 28.99423 334.2963       0
+## s(Daily,Weekly) 28.7008 28.99423 334.4754       0
 {% endhighlight %}
  
 Seems good too. Plot of fitted values:
@@ -347,7 +347,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 
 ![plot of chunk unnamed-chunk-18](/images/unnamed-chunk-18-1.png)
  
-Just a little differences in comparison to the `gam_2` model, looks like with `te` fit is more smoothed. Are we something missing? Of course! Function `te` has a default for a number of knots \\( 5^d\\), where d is a number of dimensions (variables), which is in our case little bit small. Now, I will set a number of knots to the maximal possible value `k = c(period, 7)`, what means that upper boundary for EDF (Estimated Degrees of Freedom) will be 48*7 - 1 = 335.
+Just a little differences in comparison to the `gam_2` model, looks like with `te` fit is more smoothed. Are we something missing? Of course! Function `te` has a default for a number of knots \\( 5^d \\), where d is a number of dimensions (variables), which is in our case little bit small. Now, I will set a number of knots to the maximal possible value `k = c(period, 7)`, what means that upper boundary for EDF (Estimated Degrees of Freedom) will be 48*7 - 1 = 335.
 
 {% highlight r %}
 gam_4 <- gam(Load ~ te(Daily, Weekly,
@@ -439,8 +439,8 @@ summary(gam_4_fx)$s.table
 
 
 {% highlight text %}
-##                  edf Ref.df        F       p-value
-## te(Daily,Weekly) 335    335 57.25389 5.289648e-199
+##                  edf Ref.df        F p-value
+## te(Daily,Weekly) 335    335 57.25389       0
 {% endhighlight %}
  
 EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
@@ -542,7 +542,7 @@ summary(gam_6)$s.table
  
 I printed also the GCV score value for the last three models, which is also a good criterion to choose optimal model among a set of fitted models. We can see that with `t2` term and corresponding model `gam_6` is GCV value lowest. It may be indicating that `gam_6` is our best model so far.
  
-Other model selection criterion, which is widely used in statistics, is AIC ([Akaike Information Criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion)). Criterion has equation \\( AIC = 2k - 2\ln (\hat{L})\\), where k is the number of parameters to be estimated and \\(\hat{L}\\) is the maximized value of the likelihood function of the model. So lower values are better for AIC. Let's look at them for our three models:
+Other model selection criterion, which is widely used in statistics, is AIC ([Akaike Information Criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion)). Criterion has equation \\( AIC = 2k - 2\ln (\hat{L}) \\), where k is the number of parameters to be estimated and \\(\hat{L}\\) is the maximized value of the likelihood function of the model. So lower values are better for AIC. Let's look at them for our three models:
 
 {% highlight r %}
 AIC(gam_4, gam_5, gam_6)
@@ -597,7 +597,7 @@ gam.check(gam_4)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## te(Daily,Weekly) 335.00 119.41    1.22       1
+## te(Daily,Weekly) 335.00 119.41    1.19       1
 {% endhighlight %}
  
 
@@ -620,7 +620,7 @@ gam.check(gam_6)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## t2(Daily,Weekly) 335.00  98.12    1.15       1
+## t2(Daily,Weekly) 335.00  98.12    1.18       1
 {% endhighlight %}
  
 The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also unsignificant.
@@ -667,8 +667,10 @@ Another interesting contribution to the **time series regression model** can be 
  
 How can be this situation handled? By inclusion of autoregressive model (AR) for errors in our model. So we have the
 model with the term for errors like this:
+ 
 $$y_i = \beta\mathbf{X} + \varepsilon_i, \hspace{0.2cm} \varepsilon_i = \phi\varepsilon_{i-1} + v_i,$$
-where the second equation is a classical AR(1) process and \\(\phi \\) is an unknown autoregressive coefficient to be estimated. Errors can be also nested within a week, which is in our case more appropriate, because of the double seasonal character of our time series. You can read more about estimation and modeling of this kind of models in an excellent book by [Box, Jenkins, and Reinsel: Time Series Analysis](http://onlinelibrary.wiley.com/book/10.1002/9781118619193).
+ 
+where the second equation is a classical AR(1) process and \\( \phi \\) is an unknown autoregressive coefficient to be estimated. Errors can be also nested within a week, which is in our case more appropriate, because of the double seasonal character of our time series. You can read more about estimation and modeling of this kind of models in an excellent book by [Box, Jenkins, and Reinsel: Time Series Analysis](http://onlinelibrary.wiley.com/book/10.1002/9781118619193).
  
 It's possible to add correlation term for errors with function `gamm`, which stands for **GAM** mixture models. It calls `lme` function from package `nlme`. Now, train basic model with function `gamm` and a another model with AR(1) process nested within a week - just add this argument to `gamm` function: `correlation = corARMA(form = ~ 1|Weekly, p = 1)`.
  
@@ -709,7 +711,7 @@ anova(gam_6_ar0$lme, gam_6_ar1$lme)
  
 AIC value of the model with AR(1) term is lower, so seems better, also p-value is very low which indicates that second model is better to choose.
  
-Estimated \\(\phi \\) coefficient of AR(1) process can be seen here:
+Estimated \\( \phi \\) coefficient of AR(1) process can be seen here:
 
 {% highlight r %}
 intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
@@ -719,7 +721,7 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 {% highlight text %}
 ##         lower      est.     upper
-## Phi 0.6362936 0.7107914 0.7721546
+## Phi 0.6362866 0.7107914 0.7721593
 ## attr(,"label")
 ## [1] "Correlation structure:"
 {% endhighlight %}
@@ -774,15 +776,15 @@ I will end this post with a visualization analysis of the model `gam_6`. I will 
  3. Forecast for one week ahead vs. real consumption plus forecast accuracy in MAPE.
 Animations were created by functions from package `grid` to layout ggplots to one figure, and function `saveGIF` from package `animation` to create final GIF. Here there are:
  
-![](\images\industry_1_dashboard.gif)
+![](/images/industry_1_dashboard.gif)
  
-![](\images\industry_4_dashboard.gif)
+![](/images/industry_4_dashboard.gif)
  
 We can see the behavior of **GAMs** on two times series from two different types of industries: commercial property and light industrial. Notice (look), that fitted values and forecasts are smoother than where were with [Multiple linear regression from the previous post](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/). It's good information to know, it implies that our model isn't overfitted. On the other hand, I also compared forecast performance of **GAM** and **MLR**, but GAM was slightly worse than MLR, which can be a little bit surprising for somebody. Seems that usage of penalized least squares (GAM) for forecasting time series doesn't bring improvement against classical OLS (MLR). But there are other advantages, which I will point out in the end.
  
 Another animation, which I created, is a 3D visualization of fitted values like a surface. As I showed you before, it can be done very easily by function `vis.gam`.
  
-![](images\industry_1_vis_3D.gif)
+![](/images/industry_1_vis_3D.gif)
  
 We can compare it with the first dashboard because again it's time series from commercial properties. EDF is also printed to the title of GIF for reasons to see how it changes depending on the behavior of electricity consumption.
  
