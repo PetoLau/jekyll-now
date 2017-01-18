@@ -37,9 +37,11 @@ Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_
 It follows that model can be written in a linear way like this:
  
 $$g(E(y)) = \beta\mathbf{X} + \varepsilon,$$
+ 
 where \\( \mathbf{X} \\) is a model matrix and \\( \beta \\) is a vector of regression coefficients.
  
 Than objective function to be minimized is:
+ 
 $$\parallel y - \beta\mathbf{X}\parallel^2 + \lambda\int_0^1 [f^{''}(x)]^2dx,$$
  
 where \\( \lambda \\) is smoothing parameter and the integral of squares of second derivatives can be written as:
@@ -58,10 +60,12 @@ The method of obtaining the estimate of the \\( \beta \\) is called Penalized It
 Have you already enough of this post? I would no wonder...you can skip this section whenever you want, but there are next important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose optimally smoothing parameter \\( \lambda \\)? How is set basis dimensions (or a number of knots)?
  
 There are several smoothing bases (splines) which are suitable for regression:
-    * thin plate regression splines
-    * cubic regression spline
-    * cyclic cubic regression spline
-    * P-splines
+ 
+* thin plate regression splines
+* cubic regression spline
+* cyclic cubic regression spline
+* P-splines
+ 
 You can then read more about them in references, which I will write up. In this post, for daily seasonality cubic regression spline, and for weekly seasonality P-splines will be used. Both types of splines are knot-based, so choosing a right number of knots will be important.
  
 Next, an important procedure is to choose (estimate) optimal smoothing parameter \\( \lambda \\) and the number of basis dimensions (i.e. degrees of freedom). This can be done in **GAM** by Generalized Cross Validation score (GCV). It minimizes an equation:
@@ -83,10 +87,11 @@ This allows for an overall [anisotropic](https://en.wikipedia.org/wiki/Anisotrop
 #### Resources (references)
  
 Phuuu...that's almost all of the difficult theory behind **GAM** method. I will add some more things in analytical part of this post. Honestly, it was difficult to me to find this information on the web. So if you want to read more about **GAM**, here is the list of useful links which were used in my post:
-    * Amazing book: Simon N. Wood: [Generalized Additive Models: an introduction with R](https://www.crcpress.com/Generalized-Additive-Models-An-Introduction-with-R/Wood/p/book/9781584884743), CRC Press, 2006.
-    * Great blog post by Gavin Simpson: [Modelling seasonal data with GAMs](http://www.fromthebottomoftheheap.net/2014/05/09/modelling-seasonal-data-with-gam/)
-    * Very helpful StackExchange (Cross Validated) [question about the intuition behind tensor product interactions](http://stats.stackexchange.com/questions/45446/intuition-behind-tensor-product-interactions-in-gams-mgcv-package-in-r)
-    * This [tutorial about mixed GAMs](http://www.sfs.uni-tuebingen.de/~jvanrij/Tutorial/GAMM.html) can be helpful too.
+ 
+* Amazing book: Simon N. Wood: [Generalized Additive Models: an introduction with R](https://www.crcpress.com/Generalized-Additive-Models-An-Introduction-with-R/Wood/p/book/9781584884743), CRC Press, 2006.
+* Great blog post by Gavin Simpson: [Modelling seasonal data with GAMs](http://www.fromthebottomoftheheap.net/2014/05/09/modelling-seasonal-data-with-gam/)
+* Very helpful StackExchange (Cross Validated) [question about the intuition behind tensor product interactions](http://stats.stackexchange.com/questions/45446/intuition-behind-tensor-product-interactions-in-gams-mgcv-package-in-r)
+* This [tutorial about mixed GAMs](http://www.sfs.uni-tuebingen.de/~jvanrij/Tutorial/GAMM.html) can be helpful too.
  
 Go ahead to modeling and analyzing time series with **GAMs**
  
@@ -439,8 +444,8 @@ summary(gam_4_fx)$s.table
 
 
 {% highlight text %}
-##                  edf Ref.df        F p-value
-## te(Daily,Weekly) 335    335 57.25389       0
+##                  edf Ref.df        F       p-value
+## te(Daily,Weekly) 335    335 57.25389 5.289648e-199
 {% endhighlight %}
  
 EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
@@ -536,8 +541,8 @@ summary(gam_6)$s.table
 
 
 {% highlight text %}
-##                       edf   Ref.df        F p-value
-## t2(Daily,Weekly) 98.12005 120.2345 86.70754       0
+##                       edf   Ref.df       F p-value
+## t2(Daily,Weekly) 98.12005 120.2345 84.4022       0
 {% endhighlight %}
  
 I printed also the GCV score value for the last three models, which is also a good criterion to choose optimal model among a set of fitted models. We can see that with `t2` term and corresponding model `gam_6` is GCV value lowest. It may be indicating that `gam_6` is our best model so far.
@@ -597,7 +602,7 @@ gam.check(gam_4)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## te(Daily,Weekly) 335.00 119.41    1.19       1
+## te(Daily,Weekly) 335.00 119.41    1.23       1
 {% endhighlight %}
  
 
@@ -619,8 +624,8 @@ gam.check(gam_6)
 ## Basis dimension (k) checking results. Low p-value (k-index<1) may
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
-##                      k'    edf k-index p-value
-## t2(Daily,Weekly) 335.00  98.12    1.18       1
+##                     k'   edf k-index p-value
+## t2(Daily,Weekly) 335.0  98.1     1.2       1
 {% endhighlight %}
  
 The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also unsignificant.
@@ -720,8 +725,8 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 
 {% highlight text %}
-##         lower      est.     upper
-## Phi 0.6362866 0.7107914 0.7721593
+##        lower      est.     upper
+## Phi 0.636289 0.7107914 0.7721577
 ## attr(,"label")
 ## [1] "Correlation structure:"
 {% endhighlight %}
@@ -771,9 +776,11 @@ Here we are. The model with an AR(1) process has residuals at low fitted values 
 ### Animations and conclutions
  
 I will end this post with a visualization analysis of the model `gam_6`. I will try to do some animated dashboards of main characteristics of the model thru time. It should be very interesting how electricity load changes and how the model can adapt to these changes. In the first two animations you can see three plots on the one figure:
- 1. Fitted values by GAM and real response values of electricity consumption.
- 2. Fitted values vs. residuals of GAM.
- 3. Forecast for one week ahead vs. real consumption plus forecast accuracy in MAPE.
+ 
+1. Fitted values by GAM and real response values of electricity consumption.
+2. Fitted values vs. residuals of GAM.
+3. Forecast for one week ahead vs. real consumption plus forecast accuracy in MAPE.
+ 
 Animations were created by functions from package `grid` to layout ggplots to one figure, and function `saveGIF` from package `animation` to create final GIF. Here there are:
  
 ![](/images/industry_1_dashboard.gif)
@@ -795,15 +802,17 @@ In the begging of the post, motivation and the theory behind GAM method was intr
 Everything that was said implies these advantages and disadvantages of using **GAM** for your problem:
  
 Advantages:
- * Many possibilities how to model your independent variables (many types of smooth functions).
- * Model response variable by all known distribution families (Normal, Gamma, Poisson etc.).
- * Define interactions by tensor product, which means usage of different basis functions for interacted variables.
- * Test statistical significance of a non-linear relationship of the independent variable to dependent.
+ 
+* Many possibilities how to model your independent variables (many types of smooth functions).
+* Model response variable by all known distribution families (Normal, Gamma, Poisson etc.).
+* Define interactions by tensor product, which means usage of different basis functions for interacted variables.
+* Test statistical significance of a non-linear relationship of the independent variable to dependent.
  
 Disadvantages:
- * Complex method, difficult to learn.
- * It's sometimes difficult to interpret results.
- * Several parameters to tune, which have to be set carefully.
+ 
+* Complex method, difficult to learn.
+* It's sometimes difficult to interpret results.
+* Several parameters to tune, which have to be set carefully.
  
 In the future post, I want to focus on some machine learning method like Support Vector Regression or Regression Trees with alongside of grid search for tuning parameters.
  
