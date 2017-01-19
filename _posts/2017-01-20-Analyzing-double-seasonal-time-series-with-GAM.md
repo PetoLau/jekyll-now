@@ -24,13 +24,15 @@ What these three words (or letters) in the name of this method mean and where it
  
 The GAM can be formally written as:
  
-$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
+$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i,$$
+$$y_i \sim \mbox{some exponential family distribution,}$$
  
 where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarithmic or inverse), \\( y \\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
  
 The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and theirs corresponding regression coefficients \\( \beta \\), formally written:
  
-$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
+$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i,$$
+$$\mbox{ where } q \mbox{ is basis dimension.}$$
  
 Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
  
@@ -101,7 +103,7 @@ I have prepared a file with four aggregated time series of electricity consumpti
  
 GAM methods are implemented in **R** in the awesome package `mgcv` by Simon Wood ([link to `mgcv`](https://CRAN.R-project.org/package=mgcv)).
  
-For visualizations packages `ggplot2`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
+For visualizations packages `ggplot2`, `dygraphs`, `xts`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
  
 Let's scan all of the needed packages.
 
@@ -111,6 +113,8 @@ library(data.table)
 library(mgcv)
 library(car)
 library(ggplot2)
+library(dygraphs)
+library(xts)
 library(grid)
 library(animation)
 {% endhighlight %}
@@ -158,6 +162,19 @@ ggplot(data_r, aes(date_time, value)) +
 
 ![plot of chunk unnamed-chunk-6](/images/unnamed-chunk-6-1.png)
  
+As a big fan of a data visualizations, I'm thinking about to move from `ggplot2` graphs of time series to [`dygraphs`](https://rstudio.github.io/dygraphs/index.html). Biggest advantage of `dygraphs` its their rich interactivity and little bit simplier syntax than with `ggplot2`. Let's do a `dygraph` version of previous plot.
+
+{% highlight r %}
+dygraph(data_r[, .(date_time, value)]) %>%
+  dyOptions(fillGraph = TRUE, fillAlpha = 0.5,
+            strokeWidth = 2) %>%
+  dyRangeSelector()
+{% endhighlight %}
+
+![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
+ 
+We have two nice interactive options here: on the graph itself and panel under it for zooming. Ok, let's do now some more serious analysis.
+ 
 There are possible to see two main seasonalities in plotted time series: daily and weekly. We have 48 measurements during the day and 7 days during the week so that will be our independent variables to model response variable - electricity load. Let's construct it:
 
 {% highlight r %}
@@ -184,7 +201,7 @@ layout(matrix(1:2, nrow = 1))
 plot(gam_1, shade = TRUE)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-9](/images/unnamed-chunk-9-1.png)
+![plot of chunk unnamed-chunk-10](/images/unnamed-chunk-10-1.png)
  
 That looks nice, right? We can see here the influence of variables to electricity load. In the left plot, the peak of the load is around 3 p.m. during the day. In the right plot, we can see that during weekends consumption logically decreases.
  
@@ -240,7 +257,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.1")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-11](/images/unnamed-chunk-11-1.png)
+![plot of chunk unnamed-chunk-12](/images/unnamed-chunk-12-1.png)
  
 That's, of course, horrible result. We need to include interactions of two independent variables to the model.
  
@@ -285,7 +302,7 @@ summary(gam_2)$s.table
 
 {% highlight text %}
 ##                     edf   Ref.df        F p-value
-## s(Daily,Weekly) 28.7008 28.99423 334.4754       0
+## s(Daily,Weekly) 28.7008 28.99423 334.2963       0
 {% endhighlight %}
  
 Seems good too. Plot of fitted values:
@@ -303,7 +320,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.2")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-15](/images/unnamed-chunk-15-1.png)
+![plot of chunk unnamed-chunk-16](/images/unnamed-chunk-16-1.png)
  
 It's not bad, but it can be better. Now, let's try above mentioned tensor product interactions. That can be done by function `te`, basis functions can be defined as well.
 
@@ -350,7 +367,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.3")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-18](/images/unnamed-chunk-18-1.png)
+![plot of chunk unnamed-chunk-19](/images/unnamed-chunk-19-1.png)
  
 Just a little differences in comparison to the `gam_2` model, looks like with `te` fit is more smoothed. Are we something missing? Of course! Function `te` has a default for a number of knots \\( 5^d \\), where d is a number of dimensions (variables), which is in our case little bit small. Now, I will set a number of knots to the maximal possible value `k = c(period, 7)`, what means that upper boundary for EDF (Estimated Degrees of Freedom) will be 48*7 - 1 = 335.
 
@@ -412,7 +429,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.4")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-20](/images/unnamed-chunk-20-1.png)
+![plot of chunk unnamed-chunk-21](/images/unnamed-chunk-21-1.png)
  
 This seems much better than it was with model `gam_3`.
  
@@ -444,8 +461,8 @@ summary(gam_4_fx)$s.table
 
 
 {% highlight text %}
-##                  edf Ref.df        F       p-value
-## te(Daily,Weekly) 335    335 57.25389 5.289648e-199
+##                  edf Ref.df        F p-value
+## te(Daily,Weekly) 335    335 57.25389       0
 {% endhighlight %}
  
 EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
@@ -577,7 +594,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.6")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-25](/images/unnamed-chunk-25-1.png)
+![plot of chunk unnamed-chunk-26](/images/unnamed-chunk-26-1.png)
  
 Seems OK. We can see that fitted values for models `gam_4` and `gam_6` are very similar. It's very difficult to choose which model is better. It's possible to use more visualization and model diagnostic capabilities of package `mgcv` to compare these two models.
  
@@ -587,7 +604,7 @@ The first one is function `gam.check`, which makes four plots: QQ-plot of residu
 gam.check(gam_4)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-26](/images/unnamed-chunk-26-1.png)
+![plot of chunk unnamed-chunk-27](/images/unnamed-chunk-27-1.png)
 
 {% highlight text %}
 ## 
@@ -610,7 +627,7 @@ gam.check(gam_4)
 gam.check(gam_6)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-27](/images/unnamed-chunk-27-1.png)
+![plot of chunk unnamed-chunk-28](/images/unnamed-chunk-28-1.png)
 
 {% highlight text %}
 ## 
@@ -624,11 +641,11 @@ gam.check(gam_6)
 ## Basis dimension (k) checking results. Low p-value (k-index<1) may
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
-##                     k'   edf k-index p-value
-## t2(Daily,Weekly) 335.0  98.1     1.2       1
+##                      k'    edf k-index p-value
+## t2(Daily,Weekly) 335.00  98.12    1.16       1
 {% endhighlight %}
  
-The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also unsignificant.
+The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also insignificant.
  
 We didn't use so far default `plot` function to `gam` object for models with tensor product interactions. Let's use it and explore what it brings us.
 
@@ -638,29 +655,29 @@ plot(gam_4, rug = FALSE, se = FALSE, n2 = 80, main = "gam n.4 with te()")
 plot(gam_6, rug = FALSE, se = FALSE, n2 = 80, main = "gam n.6 with t2()")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-28](/images/unnamed-chunk-28-1.png)
+![plot of chunk unnamed-chunk-29](/images/unnamed-chunk-29-1.png)
  
 It's nice contour line plot. On axes are our independent variables, contour lines and corresponding numbers on them represents effects of ind. variables to the response variable. Now is possible to see some little differences. The model `gam_6` with `t2` have more "wavy" contours. So it implies that it more adapts to response variable and smoothing factor is lower. In the next parts of the post, the model `gam_6` will be used for the analysis.
  
 Another great feature of the package `mgcv` is the plotting function `vis.gam`. It makes 3D view (or 2D) of surface of fitted values according to independent variables. Let's look at it.
 
 {% highlight r %}
-vis.gam(gam_6, n.grid = 50, theta = 35, phi = 32, zlab = "",
-        ticktype = "detailed", color = "topo", main = "t2(D, W)")
+vis.gam(gam_6, theta = 35, phi = 32, ticktype = "detailed",
+        color = "topo", n.grid = 50, main = "t2(D, W)", zlab = "")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-29](/images/unnamed-chunk-29-1.png)
+![plot of chunk unnamed-chunk-30](/images/unnamed-chunk-30-1.png)
  
 We can see that highest peak is when the Daily variable has values near 30 and the Weekly variable has value 1 (it is a Monday).
  
 2D view, contour lines type of plot, can be visualized too. Just set argument `plot.type = "contour"`.
 
 {% highlight r %}
-vis.gam(gam_6, main = "t2(D, W)", plot.type = "contour",
-        color = "terrain", contour.col = "black", lwd = 2)
+vis.gam(gam_6, plot.type = "contour", color = "terrain",
+        lwd = 2, main = "t2(D, W)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-30](/images/unnamed-chunk-30-1.png)
+![plot of chunk unnamed-chunk-31](/images/unnamed-chunk-31-1.png)
  
 Again we can see that highest value of electricity load is on Monday at 3:00 pm, it is very similar till Thursday, then load decreasing (weekends).
  
@@ -725,8 +742,8 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 
 {% highlight text %}
-##        lower      est.     upper
-## Phi 0.636289 0.7107914 0.7721577
+##         lower      est.     upper
+## Phi 0.6363059 0.7107914 0.7721463
 ## attr(,"label")
 ## [1] "Correlation structure:"
 {% endhighlight %}
@@ -741,7 +758,7 @@ pacf(resid(gam_6_ar0$lme), lag.max = 48, main = "pACF of gam n.6")
 pacf(resid(gam_6_ar1$lme), lag.max = 48, main = "pACF of gam n.6 with AR(1)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-34](/images/unnamed-chunk-34-1.png)
+![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
  
 Am I blind, or I can't see a significant difference between these two plots and corresponding values of pACF. Optimal values of pACF should be under dashed blue lines, so it isn't this scenario.
  
@@ -769,11 +786,11 @@ ggplot(data = datas,
   labs(title = "Fitted values vs Residuals of two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
+![plot of chunk unnamed-chunk-36](/images/unnamed-chunk-36-1.png)
  
 Here we are. The model with an AR(1) process has residuals at low fitted values somehow correlated, which is not good. What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of AR(1) model to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without AR(1). 
  
-### Animations and conclutions
+### Animations and conclusions
  
 I will end this post with a visualization analysis of the model `gam_6`. I will try to do some animated dashboards of main characteristics of the model thru time. It should be very interesting how electricity load changes and how the model can adapt to these changes. In the first two animations you can see three plots on the one figure:
  
@@ -797,7 +814,7 @@ We can compare it with the first dashboard because again it's time series from c
  
 With this, I would like to end main part of this tutorial and conclude it with some remarks.
  
-In the begging of the post, motivation and the theory behind GAM method was introduced. Next, the analytical (**magical**) part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed. Next, consideration about the correctness of an autoregressive model for errors was discussed. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
+In the beginning of the post, motivation and the theory behind GAM method was introduced. Next, the analytical (**magical**) part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed. Next, consideration about the correctness of an autoregressive model for errors was discussed. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
  
 Everything that was said implies these advantages and disadvantages of using **GAM** for your problem:
  

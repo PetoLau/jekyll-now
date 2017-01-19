@@ -24,13 +24,15 @@ What these three words (or letters) in the name of this method mean and where it
 
 The GAM can be formally written as:
 
-$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
+$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i,$$
+$$y_i \sim \mbox{some exponential family distribution,}$$
 
 where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarithmic or inverse), \\( y \\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
 
 The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and theirs corresponding regression coefficients \\( \beta \\), formally written:
 
-$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
+$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i,$$
+$$\mbox{ where } q \mbox{ is basis dimension.}$$
 
 Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
 
@@ -101,7 +103,7 @@ I have prepared a file with four aggregated time series of electricity consumpti
 
 GAM methods are implemented in **R** in the awesome package `mgcv` by Simon Wood ([link to `mgcv`](https://CRAN.R-project.org/package=mgcv)).
 
-For visualizations packages `ggplot2`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
+For visualizations packages `ggplot2`, `dygraphs`, `xts`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
 
 Let's scan all of the needed packages.
 ```{r, message=FALSE, warning=FALSE}
@@ -110,6 +112,8 @@ library(data.table)
 library(mgcv)
 library(car)
 library(ggplot2)
+library(dygraphs)
+library(xts)
 library(grid)
 library(animation)
 ```
@@ -153,6 +157,16 @@ ggplot(data_r, aes(date_time, value)) +
         axis.title = element_text(size = 12, face = "bold")) +
   labs(x = "Date", y = "Load (kW)")
 ```
+
+As a big fan of a data visualizations, I'm thinking about to move from `ggplot2` graphs of time series to [`dygraphs`](https://rstudio.github.io/dygraphs/index.html). Biggest advantage of `dygraphs` its their rich interactivity and little bit simplier syntax than with `ggplot2`. Let's do a `dygraph` version of previous plot.
+```{r, fig.width = 8.5, fig.height=3.8}
+dygraph(data_r[, .(date_time, value)]) %>%
+  dyOptions(fillGraph = TRUE, fillAlpha = 0.5,
+            strokeWidth = 2) %>%
+  dyRangeSelector()
+```
+
+We have two nice interactive options here: on the graph itself and panel under it for zooming. Ok, let's do now some more serious analysis.
 
 There are possible to see two main seasonalities in plotted time series: daily and weekly. We have 48 measurements during the day and 7 days during the week so that will be our independent variables to model response variable - electricity load. Let's construct it:
 ```{r}
@@ -376,7 +390,7 @@ gam.check(gam_4)
 gam.check(gam_6)
 ```
 
-The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also unsignificant.
+The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also insignificant.
 
 We didn't use so far default `plot` function to `gam` object for models with tensor product interactions. Let's use it and explore what it brings us.
 ```{r, fig.height=5, fig.width=9.5}
@@ -389,16 +403,16 @@ It's nice contour line plot. On axes are our independent variables, contour line
 
 Another great feature of the package `mgcv` is the plotting function `vis.gam`. It makes 3D view (or 2D) of surface of fitted values according to independent variables. Let's look at it.
 ```{r, fig.height=6, fig.width=6}
-vis.gam(gam_6, n.grid = 50, theta = 35, phi = 32, zlab = "",
-        ticktype = "detailed", color = "topo", main = "t2(D, W)")
+vis.gam(gam_6, theta = 35, phi = 32, ticktype = "detailed",
+        color = "topo", n.grid = 50, main = "t2(D, W)", zlab = "")
 ```
 
 We can see that highest peak is when the Daily variable has values near 30 and the Weekly variable has value 1 (it is a Monday).
 
 2D view, contour lines type of plot, can be visualized too. Just set argument `plot.type = "contour"`.
 ```{r, fig.height=5, fig.width=6}
-vis.gam(gam_6, main = "t2(D, W)", plot.type = "contour",
-        color = "terrain", contour.col = "black", lwd = 2)
+vis.gam(gam_6, plot.type = "contour", color = "terrain",
+        lwd = 2, main = "t2(D, W)")
 ```
 
 Again we can see that highest value of electricity load is on Monday at 3:00 pm, it is very similar till Thursday, then load decreasing (weekends).
@@ -487,7 +501,7 @@ ggplot(data = datas,
 
 Here we are. The model with an AR(1) process has residuals at low fitted values somehow correlated, which is not good. What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of AR(1) model to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without AR(1). 
 
-### Animations and conclutions
+### Animations and conclusions
 
 I will end this post with a visualization analysis of the model `gam_6`. I will try to do some animated dashboards of main characteristics of the model thru time. It should be very interesting how electricity load changes and how the model can adapt to these changes. In the first two animations you can see three plots on the one figure:
 
@@ -511,7 +525,7 @@ We can compare it with the first dashboard because again it's time series from c
 
 With this, I would like to end main part of this tutorial and conclude it with some remarks.
 
-In the begging of the post, motivation and the theory behind GAM method was introduced. Next, the analytical (**magical**) part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed. Next, consideration about the correctness of an autoregressive model for errors was discussed. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
+In the beginning of the post, motivation and the theory behind GAM method was introduced. Next, the analytical (**magical**) part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed. Next, consideration about the correctness of an autoregressive model for errors was discussed. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
 
 Everything that was said implies these advantages and disadvantages of using **GAM** for your problem:
 
