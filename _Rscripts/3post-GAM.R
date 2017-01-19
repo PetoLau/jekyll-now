@@ -3,14 +3,13 @@ gc()
 
 ## Post from here ----
 setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+# setwd("C:\\Users\\Peter\\Downloads\\Dizertacka\\Blog\\BlogPetoLau\\petolau.github.io\\")
 
 library(feather)
 library(data.table)
 library(mgcv)
 library(car)
 library(ggplot2)
-library(dygraphs)
-library(xts)
 library(grid)
 library(animation)
 
@@ -38,11 +37,6 @@ ggplot(data_r, aes(date_time, value)) +
         axis.text = element_text(size = 10),
         axis.title = element_text(size = 12, face = "bold")) +
   labs(x = "Date", y = "Load (kW)")
-
-dygraph(data_r[, .(date_time, value)]) %>%
-  dyOptions(fillGraph = TRUE, fillAlpha = 0.5,
-            strokeWidth = 2) %>%
-  dyRangeSelector()
 
 # theory: GLM: Iteratively Re-weighted Least Squares (IRLS)
 # theory: GAM: Penalized Iteratively Re-weighted Least Squares (P-IRLS)

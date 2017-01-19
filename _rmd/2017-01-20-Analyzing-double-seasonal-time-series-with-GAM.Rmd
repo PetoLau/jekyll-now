@@ -1,11 +1,12 @@
 ---
+title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized
+  Additive Model) in R
+author: "Peter Laurinec"
 layout: post
-title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized Additive Model) in R
-author: Peter Laurinec
-published: false
+published: no
 status: process
 tags: test
-draft: false
+draft: no
 ---
 
 As I wrote in the previous post, I will continue in describing **regression** methods, which are suitable to double seasonal (or multi-seasonal) **time series**. In the previous post about [Multiple Linear Regression](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/), I showed how to use "simple" [**OLS**](https://en.wikipedia.org/wiki/Ordinary_least_squares) regression method to model **double seasonal time series** of electricity consumption and use it for accurate forecasting. Interactions between two seasonal variables were successfully used to achieve this goal. The issue of [forecasting time series from smart meters](https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/) was discussed in my first post.
@@ -103,7 +104,7 @@ I have prepared a file with four aggregated time series of electricity consumpti
 
 GAM methods are implemented in **R** in the awesome package `mgcv` by Simon Wood ([link to `mgcv`](https://CRAN.R-project.org/package=mgcv)).
 
-For visualizations packages `ggplot2`, `dygraphs`, `xts`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
+For visualizations packages `ggplot2`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
 
 Let's scan all of the needed packages.
 ```{r, message=FALSE, warning=FALSE}
@@ -112,8 +113,6 @@ library(data.table)
 library(mgcv)
 library(car)
 library(ggplot2)
-library(dygraphs)
-library(xts)
 library(grid)
 library(animation)
 ```
@@ -157,16 +156,6 @@ ggplot(data_r, aes(date_time, value)) +
         axis.title = element_text(size = 12, face = "bold")) +
   labs(x = "Date", y = "Load (kW)")
 ```
-
-As a big fan of a data visualizations, I'm thinking about to move from `ggplot2` graphs of time series to [`dygraphs`](https://rstudio.github.io/dygraphs/index.html). Biggest advantage of `dygraphs` its their rich interactivity and little bit simplier syntax than with `ggplot2`. Let's do a `dygraph` version of previous plot.
-```{r, fig.width = 8.5, fig.height=3.8}
-dygraph(data_r[, .(date_time, value)]) %>%
-  dyOptions(fillGraph = TRUE, fillAlpha = 0.5,
-            strokeWidth = 2) %>%
-  dyRangeSelector()
-```
-
-We have two nice interactive options here: on the graph itself and panel under it for zooming. Ok, let's do now some more serious analysis.
 
 There are possible to see two main seasonalities in plotted time series: daily and weekly. We have 48 measurements during the day and 7 days during the week so that will be our independent variables to model response variable - electricity load. Let's construct it:
 ```{r}

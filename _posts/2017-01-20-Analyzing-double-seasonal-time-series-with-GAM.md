@@ -1,11 +1,12 @@
 ---
+title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized
+  Additive Model) in R
+author: "Peter Laurinec"
 layout: post
-title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized Additive Model) in R
-author: Peter Laurinec
 published: true
 status: publish
 tags: test
-draft: false
+draft: no
 ---
  
 As I wrote in the previous post, I will continue in describing **regression** methods, which are suitable to double seasonal (or multi-seasonal) **time series**. In the previous post about [Multiple Linear Regression](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/), I showed how to use "simple" [**OLS**](https://en.wikipedia.org/wiki/Ordinary_least_squares) regression method to model **double seasonal time series** of electricity consumption and use it for accurate forecasting. Interactions between two seasonal variables were successfully used to achieve this goal. The issue of [forecasting time series from smart meters](https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/) was discussed in my first post.
@@ -103,7 +104,7 @@ I have prepared a file with four aggregated time series of electricity consumpti
  
 GAM methods are implemented in **R** in the awesome package `mgcv` by Simon Wood ([link to `mgcv`](https://CRAN.R-project.org/package=mgcv)).
  
-For visualizations packages `ggplot2`, `dygraphs`, `xts`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
+For visualizations packages `ggplot2`, `grid` and `animation` will be used. One useful function from package `car` will be used too.
  
 Let's scan all of the needed packages.
 
@@ -113,8 +114,6 @@ library(data.table)
 library(mgcv)
 library(car)
 library(ggplot2)
-library(dygraphs)
-library(xts)
 library(grid)
 library(animation)
 {% endhighlight %}
@@ -162,22 +161,6 @@ ggplot(data_r, aes(date_time, value)) +
 
 ![plot of chunk unnamed-chunk-6](/images/unnamed-chunk-6-1.png)
  
-As a big fan of a data visualizations, I'm thinking about to move from `ggplot2` graphs of time series to [`dygraphs`](https://rstudio.github.io/dygraphs/index.html). Biggest advantage of `dygraphs` its their rich interactivity and little bit simplier syntax than with `ggplot2`. Let's do a `dygraph` version of previous plot.
-
-{% highlight r %}
-dygraph(data_r[, .(date_time, value)]) %>%
-  dyOptions(fillGraph = TRUE, fillAlpha = 0.5,
-            strokeWidth = 2) %>%
-  dyRangeSelector()
-{% endhighlight %}
-
-![plot of chunk unnamed-chunk-7](/images/unnamed-chunk-7-1.png)
-
-<div id="htmlwidget-9252" style="width:864px;height:432px;" class="dygraphs html-widget"></div>
-<script type="application/json" data-for="htmlwidget-9252">{"x":{"attrs":{"labels":["minute","value"],"legend":"auto","retainDateWindow":false,"axes":{"x":{"pixelsPerLabel":60,"drawAxis":true},"y":{"drawAxis":true}},"stackedGraph":false,"fillGraph":true,"fillAlpha":0.5,"stepPlot":false,"drawPoints":false,"pointSize":1,"drawGapEdgePoints":false,"connectSeparatedPoints":false,"strokeWidth":2,"strokeBorderColor":"white","colorValue":0.5,"colorSaturation":1,"includeZero":false,"drawAxesAtZero":false,"logscale":false,"axisTickSize":3,"axisLineColor":"black","axisLineWidth":0.3,"axisLabelColor":"black","axisLabelFontSize":14,"axisLabelWidth":60,"drawGrid":true,"gridLineWidth":0.3,"rightGap":5,"digitsAfterDecimal":2,"labelsKMB":false,"labelsKMG2":false,"labelsUTC":false,"maxNumberWidth":6,"animatedZooms":false,"mobileDisableYTouch":true,"showRangeSelector":true,"rangeSelectorHeight":40,"rangeSelectorPlotFillColor":" #A7B1C4","rangeSelectorPlotStrokeColor":"#808FAB","interactionModel":"Dygraph.Interaction.defaultModel"},"scale":"minute","annotations":[],"shadings":[],"events":[],"format":"date","data":[["2012-02-27T00:00:00Z","2012-02-27T00:30:00Z","2012-02-27T01:00:00Z","2012-02-27T01:30:00Z","2012-02-27T02:00:00Z","2012-02-27T02:30:00Z","2012-02-27T03:00:00Z","2012-02-27T03:30:00Z","2012-02-27T04:00:00Z","2012-02-27T04:30:00Z","2012-02-27T05:00:00Z","2012-02-27T05:30:00Z","2012-02-27T06:00:00Z","2012-02-27T06:30:00Z","2012-02-27T07:00:00Z","2012-02-27T07:30:00Z","2012-02-27T08:00:00Z","2012-02-27T08:30:00Z","2012-02-27T09:00:00Z","2012-02-27T09:30:00Z","2012-02-27T10:00:00Z","2012-02-27T10:30:00Z","2012-02-27T11:00:00Z","2012-02-27T11:30:00Z","2012-02-27T12:00:00Z","2012-02-27T12:30:00Z","2012-02-27T13:00:00Z","2012-02-27T13:30:00Z","2012-02-27T14:00:00Z","2012-02-27T14:30:00Z","2012-02-27T15:00:00Z","2012-02-27T15:30:00Z","2012-02-27T16:00:00Z","2012-02-27T16:30:00Z","2012-02-27T17:00:00Z","2012-02-27T17:30:00Z","2012-02-27T18:00:00Z","2012-02-27T18:30:00Z","2012-02-27T19:00:00Z","2012-02-27T19:30:00Z","2012-02-27T20:00:00Z","2012-02-27T20:30:00Z","2012-02-27T21:00:00Z","2012-02-27T21:30:00Z","2012-02-27T22:00:00Z","2012-02-27T22:30:00Z","2012-02-27T23:00:00Z","2012-02-27T23:30:00Z","2012-02-28T00:00:00Z","2012-02-28T00:30:00Z","2012-02-28T01:00:00Z","2012-02-28T01:30:00Z","2012-02-28T02:00:00Z","2012-02-28T02:30:00Z","2012-02-28T03:00:00Z","2012-02-28T03:30:00Z","2012-02-28T04:00:00Z","2012-02-28T04:30:00Z","2012-02-28T05:00:00Z","2012-02-28T05:30:00Z","2012-02-28T06:00:00Z","2012-02-28T06:30:00Z","2012-02-28T07:00:00Z","2012-02-28T07:30:00Z","2012-02-28T08:00:00Z","2012-02-28T08:30:00Z","2012-02-28T09:00:00Z","2012-02-28T09:30:00Z","2012-02-28T10:00:00Z","2012-02-28T10:30:00Z","2012-02-28T11:00:00Z","2012-02-28T11:30:00Z","2012-02-28T12:00:00Z","2012-02-28T12:30:00Z","2012-02-28T13:00:00Z","2012-02-28T13:30:00Z","2012-02-28T14:00:00Z","2012-02-28T14:30:00Z","2012-02-28T15:00:00Z","2012-02-28T15:30:00Z","2012-02-28T16:00:00Z","2012-02-28T16:30:00Z","2012-02-28T17:00:00Z","2012-02-28T17:30:00Z","2012-02-28T18:00:00Z","2012-02-28T18:30:00Z","2012-02-28T19:00:00Z","2012-02-28T19:30:00Z","2012-02-28T20:00:00Z","2012-02-28T20:30:00Z","2012-02-28T21:00:00Z","2012-02-28T21:30:00Z","2012-02-28T22:00:00Z","2012-02-28T22:30:00Z","2012-02-28T23:00:00Z","2012-02-28T23:30:00Z","2012-02-29T00:00:00Z","2012-02-29T00:30:00Z","2012-02-29T01:00:00Z","2012-02-29T01:30:00Z","2012-02-29T02:00:00Z","2012-02-29T02:30:00Z","2012-02-29T03:00:00Z","2012-02-29T03:30:00Z","2012-02-29T04:00:00Z","2012-02-29T04:30:00Z","2012-02-29T05:00:00Z","2012-02-29T05:30:00Z","2012-02-29T06:00:00Z","2012-02-29T06:30:00Z","2012-02-29T07:00:00Z","2012-02-29T07:30:00Z","2012-02-29T08:00:00Z","2012-02-29T08:30:00Z","2012-02-29T09:00:00Z","2012-02-29T09:30:00Z","2012-02-29T10:00:00Z","2012-02-29T10:30:00Z","2012-02-29T11:00:00Z","2012-02-29T11:30:00Z","2012-02-29T12:00:00Z","2012-02-29T12:30:00Z","2012-02-29T13:00:00Z","2012-02-29T13:30:00Z","2012-02-29T14:00:00Z","2012-02-29T14:30:00Z","2012-02-29T15:00:00Z","2012-02-29T15:30:00Z","2012-02-29T16:00:00Z","2012-02-29T16:30:00Z","2012-02-29T17:00:00Z","2012-02-29T17:30:00Z","2012-02-29T18:00:00Z","2012-02-29T18:30:00Z","2012-02-29T19:00:00Z","2012-02-29T19:30:00Z","2012-02-29T20:00:00Z","2012-02-29T20:30:00Z","2012-02-29T21:00:00Z","2012-02-29T21:30:00Z","2012-02-29T22:00:00Z","2012-02-29T22:30:00Z","2012-02-29T23:00:00Z","2012-02-29T23:30:00Z","2012-03-01T00:00:00Z","2012-03-01T00:30:00Z","2012-03-01T01:00:00Z","2012-03-01T01:30:00Z","2012-03-01T02:00:00Z","2012-03-01T02:30:00Z","2012-03-01T03:00:00Z","2012-03-01T03:30:00Z","2012-03-01T04:00:00Z","2012-03-01T04:30:00Z","2012-03-01T05:00:00Z","2012-03-01T05:30:00Z","2012-03-01T06:00:00Z","2012-03-01T06:30:00Z","2012-03-01T07:00:00Z","2012-03-01T07:30:00Z","2012-03-01T08:00:00Z","2012-03-01T08:30:00Z","2012-03-01T09:00:00Z","2012-03-01T09:30:00Z","2012-03-01T10:00:00Z","2012-03-01T10:30:00Z","2012-03-01T11:00:00Z","2012-03-01T11:30:00Z","2012-03-01T12:00:00Z","2012-03-01T12:30:00Z","2012-03-01T13:00:00Z","2012-03-01T13:30:00Z","2012-03-01T14:00:00Z","2012-03-01T14:30:00Z","2012-03-01T15:00:00Z","2012-03-01T15:30:00Z","2012-03-01T16:00:00Z","2012-03-01T16:30:00Z","2012-03-01T17:00:00Z","2012-03-01T17:30:00Z","2012-03-01T18:00:00Z","2012-03-01T18:30:00Z","2012-03-01T19:00:00Z","2012-03-01T19:30:00Z","2012-03-01T20:00:00Z","2012-03-01T20:30:00Z","2012-03-01T21:00:00Z","2012-03-01T21:30:00Z","2012-03-01T22:00:00Z","2012-03-01T22:30:00Z","2012-03-01T23:00:00Z","2012-03-01T23:30:00Z","2012-03-02T00:00:00Z","2012-03-02T00:30:00Z","2012-03-02T01:00:00Z","2012-03-02T01:30:00Z","2012-03-02T02:00:00Z","2012-03-02T02:30:00Z","2012-03-02T03:00:00Z","2012-03-02T03:30:00Z","2012-03-02T04:00:00Z","2012-03-02T04:30:00Z","2012-03-02T05:00:00Z","2012-03-02T05:30:00Z","2012-03-02T06:00:00Z","2012-03-02T06:30:00Z","2012-03-02T07:00:00Z","2012-03-02T07:30:00Z","2012-03-02T08:00:00Z","2012-03-02T08:30:00Z","2012-03-02T09:00:00Z","2012-03-02T09:30:00Z","2012-03-02T10:00:00Z","2012-03-02T10:30:00Z","2012-03-02T11:00:00Z","2012-03-02T11:30:00Z","2012-03-02T12:00:00Z","2012-03-02T12:30:00Z","2012-03-02T13:00:00Z","2012-03-02T13:30:00Z","2012-03-02T14:00:00Z","2012-03-02T14:30:00Z","2012-03-02T15:00:00Z","2012-03-02T15:30:00Z","2012-03-02T16:00:00Z","2012-03-02T16:30:00Z","2012-03-02T17:00:00Z","2012-03-02T17:30:00Z","2012-03-02T18:00:00Z","2012-03-02T18:30:00Z","2012-03-02T19:00:00Z","2012-03-02T19:30:00Z","2012-03-02T20:00:00Z","2012-03-02T20:30:00Z","2012-03-02T21:00:00Z","2012-03-02T21:30:00Z","2012-03-02T22:00:00Z","2012-03-02T22:30:00Z","2012-03-02T23:00:00Z","2012-03-02T23:30:00Z","2012-03-03T00:00:00Z","2012-03-03T00:30:00Z","2012-03-03T01:00:00Z","2012-03-03T01:30:00Z","2012-03-03T02:00:00Z","2012-03-03T02:30:00Z","2012-03-03T03:00:00Z","2012-03-03T03:30:00Z","2012-03-03T04:00:00Z","2012-03-03T04:30:00Z","2012-03-03T05:00:00Z","2012-03-03T05:30:00Z","2012-03-03T06:00:00Z","2012-03-03T06:30:00Z","2012-03-03T07:00:00Z","2012-03-03T07:30:00Z","2012-03-03T08:00:00Z","2012-03-03T08:30:00Z","2012-03-03T09:00:00Z","2012-03-03T09:30:00Z","2012-03-03T10:00:00Z","2012-03-03T10:30:00Z","2012-03-03T11:00:00Z","2012-03-03T11:30:00Z","2012-03-03T12:00:00Z","2012-03-03T12:30:00Z","2012-03-03T13:00:00Z","2012-03-03T13:30:00Z","2012-03-03T14:00:00Z","2012-03-03T14:30:00Z","2012-03-03T15:00:00Z","2012-03-03T15:30:00Z","2012-03-03T16:00:00Z","2012-03-03T16:30:00Z","2012-03-03T17:00:00Z","2012-03-03T17:30:00Z","2012-03-03T18:00:00Z","2012-03-03T18:30:00Z","2012-03-03T19:00:00Z","2012-03-03T19:30:00Z","2012-03-03T20:00:00Z","2012-03-03T20:30:00Z","2012-03-03T21:00:00Z","2012-03-03T21:30:00Z","2012-03-03T22:00:00Z","2012-03-03T22:30:00Z","2012-03-03T23:00:00Z","2012-03-03T23:30:00Z","2012-03-04T00:00:00Z","2012-03-04T00:30:00Z","2012-03-04T01:00:00Z","2012-03-04T01:30:00Z","2012-03-04T02:00:00Z","2012-03-04T02:30:00Z","2012-03-04T03:00:00Z","2012-03-04T03:30:00Z","2012-03-04T04:00:00Z","2012-03-04T04:30:00Z","2012-03-04T05:00:00Z","2012-03-04T05:30:00Z","2012-03-04T06:00:00Z","2012-03-04T06:30:00Z","2012-03-04T07:00:00Z","2012-03-04T07:30:00Z","2012-03-04T08:00:00Z","2012-03-04T08:30:00Z","2012-03-04T09:00:00Z","2012-03-04T09:30:00Z","2012-03-04T10:00:00Z","2012-03-04T10:30:00Z","2012-03-04T11:00:00Z","2012-03-04T11:30:00Z","2012-03-04T12:00:00Z","2012-03-04T12:30:00Z","2012-03-04T13:00:00Z","2012-03-04T13:30:00Z","2012-03-04T14:00:00Z","2012-03-04T14:30:00Z","2012-03-04T15:00:00Z","2012-03-04T15:30:00Z","2012-03-04T16:00:00Z","2012-03-04T16:30:00Z","2012-03-04T17:00:00Z","2012-03-04T17:30:00Z","2012-03-04T18:00:00Z","2012-03-04T18:30:00Z","2012-03-04T19:00:00Z","2012-03-04T19:30:00Z","2012-03-04T20:00:00Z","2012-03-04T20:30:00Z","2012-03-04T21:00:00Z","2012-03-04T21:30:00Z","2012-03-04T22:00:00Z","2012-03-04T22:30:00Z","2012-03-04T23:00:00Z","2012-03-04T23:30:00Z","2012-03-05T00:00:00Z","2012-03-05T00:30:00Z","2012-03-05T01:00:00Z","2012-03-05T01:30:00Z","2012-03-05T02:00:00Z","2012-03-05T02:30:00Z","2012-03-05T03:00:00Z","2012-03-05T03:30:00Z","2012-03-05T04:00:00Z","2012-03-05T04:30:00Z","2012-03-05T05:00:00Z","2012-03-05T05:30:00Z","2012-03-05T06:00:00Z","2012-03-05T06:30:00Z","2012-03-05T07:00:00Z","2012-03-05T07:30:00Z","2012-03-05T08:00:00Z","2012-03-05T08:30:00Z","2012-03-05T09:00:00Z","2012-03-05T09:30:00Z","2012-03-05T10:00:00Z","2012-03-05T10:30:00Z","2012-03-05T11:00:00Z","2012-03-05T11:30:00Z","2012-03-05T12:00:00Z","2012-03-05T12:30:00Z","2012-03-05T13:00:00Z","2012-03-05T13:30:00Z","2012-03-05T14:00:00Z","2012-03-05T14:30:00Z","2012-03-05T15:00:00Z","2012-03-05T15:30:00Z","2012-03-05T16:00:00Z","2012-03-05T16:30:00Z","2012-03-05T17:00:00Z","2012-03-05T17:30:00Z","2012-03-05T18:00:00Z","2012-03-05T18:30:00Z","2012-03-05T19:00:00Z","2012-03-05T19:30:00Z","2012-03-05T20:00:00Z","2012-03-05T20:30:00Z","2012-03-05T21:00:00Z","2012-03-05T21:30:00Z","2012-03-05T22:00:00Z","2012-03-05T22:30:00Z","2012-03-05T23:00:00Z","2012-03-05T23:30:00Z","2012-03-06T00:00:00Z","2012-03-06T00:30:00Z","2012-03-06T01:00:00Z","2012-03-06T01:30:00Z","2012-03-06T02:00:00Z","2012-03-06T02:30:00Z","2012-03-06T03:00:00Z","2012-03-06T03:30:00Z","2012-03-06T04:00:00Z","2012-03-06T04:30:00Z","2012-03-06T05:00:00Z","2012-03-06T05:30:00Z","2012-03-06T06:00:00Z","2012-03-06T06:30:00Z","2012-03-06T07:00:00Z","2012-03-06T07:30:00Z","2012-03-06T08:00:00Z","2012-03-06T08:30:00Z","2012-03-06T09:00:00Z","2012-03-06T09:30:00Z","2012-03-06T10:00:00Z","2012-03-06T10:30:00Z","2012-03-06T11:00:00Z","2012-03-06T11:30:00Z","2012-03-06T12:00:00Z","2012-03-06T12:30:00Z","2012-03-06T13:00:00Z","2012-03-06T13:30:00Z","2012-03-06T14:00:00Z","2012-03-06T14:30:00Z","2012-03-06T15:00:00Z","2012-03-06T15:30:00Z","2012-03-06T16:00:00Z","2012-03-06T16:30:00Z","2012-03-06T17:00:00Z","2012-03-06T17:30:00Z","2012-03-06T18:00:00Z","2012-03-06T18:30:00Z","2012-03-06T19:00:00Z","2012-03-06T19:30:00Z","2012-03-06T20:00:00Z","2012-03-06T20:30:00Z","2012-03-06T21:00:00Z","2012-03-06T21:30:00Z","2012-03-06T22:00:00Z","2012-03-06T22:30:00Z","2012-03-06T23:00:00Z","2012-03-06T23:30:00Z","2012-03-07T00:00:00Z","2012-03-07T00:30:00Z","2012-03-07T01:00:00Z","2012-03-07T01:30:00Z","2012-03-07T02:00:00Z","2012-03-07T02:30:00Z","2012-03-07T03:00:00Z","2012-03-07T03:30:00Z","2012-03-07T04:00:00Z","2012-03-07T04:30:00Z","2012-03-07T05:00:00Z","2012-03-07T05:30:00Z","2012-03-07T06:00:00Z","2012-03-07T06:30:00Z","2012-03-07T07:00:00Z","2012-03-07T07:30:00Z","2012-03-07T08:00:00Z","2012-03-07T08:30:00Z","2012-03-07T09:00:00Z","2012-03-07T09:30:00Z","2012-03-07T10:00:00Z","2012-03-07T10:30:00Z","2012-03-07T11:00:00Z","2012-03-07T11:30:00Z","2012-03-07T12:00:00Z","2012-03-07T12:30:00Z","2012-03-07T13:00:00Z","2012-03-07T13:30:00Z","2012-03-07T14:00:00Z","2012-03-07T14:30:00Z","2012-03-07T15:00:00Z","2012-03-07T15:30:00Z","2012-03-07T16:00:00Z","2012-03-07T16:30:00Z","2012-03-07T17:00:00Z","2012-03-07T17:30:00Z","2012-03-07T18:00:00Z","2012-03-07T18:30:00Z","2012-03-07T19:00:00Z","2012-03-07T19:30:00Z","2012-03-07T20:00:00Z","2012-03-07T20:30:00Z","2012-03-07T21:00:00Z","2012-03-07T21:30:00Z","2012-03-07T22:00:00Z","2012-03-07T22:30:00Z","2012-03-07T23:00:00Z","2012-03-07T23:30:00Z","2012-03-08T00:00:00Z","2012-03-08T00:30:00Z","2012-03-08T01:00:00Z","2012-03-08T01:30:00Z","2012-03-08T02:00:00Z","2012-03-08T02:30:00Z","2012-03-08T03:00:00Z","2012-03-08T03:30:00Z","2012-03-08T04:00:00Z","2012-03-08T04:30:00Z","2012-03-08T05:00:00Z","2012-03-08T05:30:00Z","2012-03-08T06:00:00Z","2012-03-08T06:30:00Z","2012-03-08T07:00:00Z","2012-03-08T07:30:00Z","2012-03-08T08:00:00Z","2012-03-08T08:30:00Z","2012-03-08T09:00:00Z","2012-03-08T09:30:00Z","2012-03-08T10:00:00Z","2012-03-08T10:30:00Z","2012-03-08T11:00:00Z","2012-03-08T11:30:00Z","2012-03-08T12:00:00Z","2012-03-08T12:30:00Z","2012-03-08T13:00:00Z","2012-03-08T13:30:00Z","2012-03-08T14:00:00Z","2012-03-08T14:30:00Z","2012-03-08T15:00:00Z","2012-03-08T15:30:00Z","2012-03-08T16:00:00Z","2012-03-08T16:30:00Z","2012-03-08T17:00:00Z","2012-03-08T17:30:00Z","2012-03-08T18:00:00Z","2012-03-08T18:30:00Z","2012-03-08T19:00:00Z","2012-03-08T19:30:00Z","2012-03-08T20:00:00Z","2012-03-08T20:30:00Z","2012-03-08T21:00:00Z","2012-03-08T21:30:00Z","2012-03-08T22:00:00Z","2012-03-08T22:30:00Z","2012-03-08T23:00:00Z","2012-03-08T23:30:00Z","2012-03-09T00:00:00Z","2012-03-09T00:30:00Z","2012-03-09T01:00:00Z","2012-03-09T01:30:00Z","2012-03-09T02:00:00Z","2012-03-09T02:30:00Z","2012-03-09T03:00:00Z","2012-03-09T03:30:00Z","2012-03-09T04:00:00Z","2012-03-09T04:30:00Z","2012-03-09T05:00:00Z","2012-03-09T05:30:00Z","2012-03-09T06:00:00Z","2012-03-09T06:30:00Z","2012-03-09T07:00:00Z","2012-03-09T07:30:00Z","2012-03-09T08:00:00Z","2012-03-09T08:30:00Z","2012-03-09T09:00:00Z","2012-03-09T09:30:00Z","2012-03-09T10:00:00Z","2012-03-09T10:30:00Z","2012-03-09T11:00:00Z","2012-03-09T11:30:00Z","2012-03-09T12:00:00Z","2012-03-09T12:30:00Z","2012-03-09T13:00:00Z","2012-03-09T13:30:00Z","2012-03-09T14:00:00Z","2012-03-09T14:30:00Z","2012-03-09T15:00:00Z","2012-03-09T15:30:00Z","2012-03-09T16:00:00Z","2012-03-09T16:30:00Z","2012-03-09T17:00:00Z","2012-03-09T17:30:00Z","2012-03-09T18:00:00Z","2012-03-09T18:30:00Z","2012-03-09T19:00:00Z","2012-03-09T19:30:00Z","2012-03-09T20:00:00Z","2012-03-09T20:30:00Z","2012-03-09T21:00:00Z","2012-03-09T21:30:00Z","2012-03-09T22:00:00Z","2012-03-09T22:30:00Z","2012-03-09T23:00:00Z","2012-03-09T23:30:00Z","2012-03-10T00:00:00Z","2012-03-10T00:30:00Z","2012-03-10T01:00:00Z","2012-03-10T01:30:00Z","2012-03-10T02:00:00Z","2012-03-10T02:30:00Z","2012-03-10T03:00:00Z","2012-03-10T03:30:00Z","2012-03-10T04:00:00Z","2012-03-10T04:30:00Z","2012-03-10T05:00:00Z","2012-03-10T05:30:00Z","2012-03-10T06:00:00Z","2012-03-10T06:30:00Z","2012-03-10T07:00:00Z","2012-03-10T07:30:00Z","2012-03-10T08:00:00Z","2012-03-10T08:30:00Z","2012-03-10T09:00:00Z","2012-03-10T09:30:00Z","2012-03-10T10:00:00Z","2012-03-10T10:30:00Z","2012-03-10T11:00:00Z","2012-03-10T11:30:00Z","2012-03-10T12:00:00Z","2012-03-10T12:30:00Z","2012-03-10T13:00:00Z","2012-03-10T13:30:00Z","2012-03-10T14:00:00Z","2012-03-10T14:30:00Z","2012-03-10T15:00:00Z","2012-03-10T15:30:00Z","2012-03-10T16:00:00Z","2012-03-10T16:30:00Z","2012-03-10T17:00:00Z","2012-03-10T17:30:00Z","2012-03-10T18:00:00Z","2012-03-10T18:30:00Z","2012-03-10T19:00:00Z","2012-03-10T19:30:00Z","2012-03-10T20:00:00Z","2012-03-10T20:30:00Z","2012-03-10T21:00:00Z","2012-03-10T21:30:00Z","2012-03-10T22:00:00Z","2012-03-10T22:30:00Z","2012-03-10T23:00:00Z","2012-03-10T23:30:00Z","2012-03-11T00:00:00Z","2012-03-11T00:30:00Z","2012-03-11T01:00:00Z","2012-03-11T01:30:00Z","2012-03-11T02:00:00Z","2012-03-11T02:30:00Z","2012-03-11T03:00:00Z","2012-03-11T03:30:00Z","2012-03-11T04:00:00Z","2012-03-11T04:30:00Z","2012-03-11T05:00:00Z","2012-03-11T05:30:00Z","2012-03-11T06:00:00Z","2012-03-11T06:30:00Z","2012-03-11T07:00:00Z","2012-03-11T07:30:00Z","2012-03-11T08:00:00Z","2012-03-11T08:30:00Z","2012-03-11T09:00:00Z","2012-03-11T09:30:00Z","2012-03-11T10:00:00Z","2012-03-11T10:30:00Z","2012-03-11T11:00:00Z","2012-03-11T11:30:00Z","2012-03-11T12:00:00Z","2012-03-11T12:30:00Z","2012-03-11T13:00:00Z","2012-03-11T13:30:00Z","2012-03-11T14:00:00Z","2012-03-11T14:30:00Z","2012-03-11T15:00:00Z","2012-03-11T15:30:00Z","2012-03-11T16:00:00Z","2012-03-11T16:30:00Z","2012-03-11T17:00:00Z","2012-03-11T17:30:00Z","2012-03-11T18:00:00Z","2012-03-11T18:30:00Z","2012-03-11T19:00:00Z","2012-03-11T19:30:00Z","2012-03-11T20:00:00Z","2012-03-11T20:30:00Z","2012-03-11T21:00:00Z","2012-03-11T21:30:00Z","2012-03-11T22:00:00Z","2012-03-11T22:30:00Z","2012-03-11T23:00:00Z","2012-03-11T23:30:00Z"],[1630.8752,1611.201,1657.1605,1653.0418,1702.3163,1648.4114,1645.5635,1698.4048,1743.0209,1695.5348,1707.3264,1705.9747,1743.1928,1716.1124,1695.0281,1716.8066,2348.9557,2474.5494,2716.5215,3448.259,2546.1375,2530.432,2920.7967,3612.3866,4340.5284,4507.1623,4633.7347,4706.3007,5158.577,5834.8887,4999.1508,5207.0161,4919.2831,4048.3027,4004.4922,3999.3961,3961.7111,3981.1979,3916.753,3973.4146,3997.1501,3955.6261,3960.8076,3906.081,3943.0109,3853.0698,3849.4963,3856.5072,3598.0664,3355.0794,2924.0033,2704.0346,2352.8494,2037.3473,1868.1192,1860.1816,1748.3676,1677.2737,1665.6009,1660.6378,1638.2591,1597.3354,1614.1049,1627.1606,1855.8744,2096.977,2082.1541,2264.2344,2324.2237,2475.8319,2478.879,3010.7483,3595.3856,3631.129,3432.7116,3834.1277,5076.3031,5592.3986,5274.024,4101.1732,3981.4822,3863.7599,3908.764,3947.3492,3942.1136,3810.4087,3845.4132,3859.635,3836.6911,3832.4501,3832.9676,3770.7882,3777.7938,3785.924,3713.1144,3680.6326,3552.3065,3105.22,2838.6917,2748.313,2394.9011,2149.3138,1962.4761,1851.6471,1786.5705,1741.0032,1699.3002,1724.7199,1655.7074,1652.2491,1730.2691,1731.5488,1852.556,2078.6337,2063.0313,2267.4713,2474.6717,2458.4805,2437.0928,2780.8493,3161.0278,3332.4802,3646.328,4449.7544,5245.0773,5425.2277,4319.762,4175.8418,4083.2191,4234.2906,4487.1249,4368.9253,4105.1608,4092.3061,4065.393,4223.0757,4133.9317,3929.4067,3930.5325,3930.8454,3905.9702,3849.9307,3813.7583,3718.1376,3456.9582,3175.3209,2895.5818,2777.1645,2636.1814,2550.6003,2241.2415,2061.9732,1782.4095,1920.9028,1762.4113,1730.1298,1696.1096,1653.0432,1682.1637,1684.8595,1908.4396,2088.5618,2380.2413,2392.7694,2247.677,2147.7398,2410.5703,2936.8138,3308.2186,3225.164,3509.0473,4374.7118,4206.6611,4483.6888,4588.0586,4505.7937,4434.5029,4361.4116,4340.9519,3933.756,3857.2679,3866.3665,3927.6512,3879.6892,3878.6336,3878.367,3906.2862,3940.7518,3868.8018,3788.8904,3726.0784,3610.2391,3411.0805,3149.8439,2811.1865,2689.6654,2421.111,2147.5688,1952.7157,1860.4215,1762.029,1724.6089,1721.7869,1716.5386,1695.6569,1633.2642,1658.3656,1651.3275,1810.5157,2033.4281,2127.4466,2146.892,2197.9924,2167.1197,2557.0698,2778.0764,2866.0369,3148.4971,3470.1839,3903.6258,3660.2657,4130.2718,3872.4977,3787.4021,3778.7982,3789.4866,3763.3064,3738.5668,3757.9212,3866.7041,3894.4752,3879.7599,3861.659,3881.37,3838.2127,3838.7326,3803.969,3767.9221,3689.8099,3635.335,3436.6781,3170.816,2746.0458,2637.922,2277.9401,2061.8414,1874.739,1800.37,1747.7552,1709.6637,1705.3777,1679.2485,1640.294,1643.3287,1650.7238,1626.5306,1806.9316,2029.2869,2121.6502,1581.41,1597.7524,2128.4169,2189.2551,2215.8331,2471.9959,2360.7618,2322.4399,2501.8526,2487.5391,2506.9568,2553.6802,2648.7735,2732.7232,2708.8979,2716.4896,2634.4557,2562.4152,2522.1519,2514.5181,2469.3136,2315.413,2223.4028,2072.9167,2057.6423,1936.7585,1738.3341,1691.7642,1671.8481,1700.6828,1650.8691,1677.9687,1660.2098,1650.0049,1665.2813,1652.7523,1634.2725,1633.7894,1611.1241,1598.3108,1607.3703,1576.2298,1560.4282,1566.5573,1559.0205,1702.9941,1984.8842,1838.1206,1562.188,1547.4921,1557.6075,1827.6983,1892.6698,1631.7523,1677.0426,1844.2166,1737.5257,1645.7986,1640.5369,1689.68,1728.5907,1696.7742,1669.9428,1671.1818,1690.6003,1725.3105,1666.9524,1673.1529,1672.0271,1718.1362,1626.0605,1616.969,1632.653,1604.7288,1588.5076,1640.5632,1639.5844,1615.55,1647.8858,1611.5975,1610.6009,1603.9048,1661.4874,1641.6899,1608.0317,1618.1619,1590.6766,1573.7938,1620.7177,1603.1866,1602.6278,1618.7809,1607.846,1829.3338,2108.4396,2321.5189,2281.6328,2444.5642,2648.9187,2582.0779,2887.9131,3269.7823,3398.963,3651.6184,4228.78,4077.0953,4978.2472,5045.0481,4176.792,4139.6792,4175.9052,4135.8135,4105.4895,4069.56,3997.4117,3946.3082,3907.3841,3943.045,3988.4379,4027.1852,4012.3096,4026.8768,3895.8485,3860.44,3782.4791,3548.74,3360.8763,2969.0948,2841.0881,2524.037,2158.2145,1995.8978,1916.5209,1833.783,1767.8779,1756.9488,1769.366,1731.983,1709.2056,1725.217,1732.9856,1929.6783,2190.4567,2433.0876,2643.1685,2500.4248,2401.2138,2732.522,3002.7629,3240.4545,3518.7985,3775.3051,4394.5922,4260.2256,5038.3176,4566.3284,4177.3376,4077.1837,4010.3748,3992.7904,3982.1423,3938.9589,3967.2815,3987.7543,3960.6394,3971.7212,3971.5548,3982.9459,3963.6043,3981.6572,3926.2192,3984.7768,3963.7997,3664.1221,3302.3995,2895.4707,2711.5817,2370.4208,2090.7572,1934.7665,1890.1622,1791.8606,1760.7503,1782.3542,1765.5407,1709.6361,1698.4601,1729.0317,1671.1174,1798.1186,2064.4228,1973.4321,2296.0324,2597.5509,2414.2691,2575.4875,2827.2113,3269.0973,3319.7481,3576.5598,4213.1617,4076.6753,4360.7554,4060.9716,3880.5216,3863.6823,3895.1449,3903.7878,3940.813,4071.0436,4094.9967,4181.8841,4096.7977,4089.6703,4032.1765,4018.0864,3991.8118,3974.1014,3878.8856,3857.4423,3579.0926,3506.5457,3260.1282,2831.114,2677.8919,2321.278,2052.0719,1901.558,1811.6888,1730.899,1674.5183,1711.0265,1682.4991,1646.4156,1579.059,1638.0314,1616.1404,1675.024,1622.4338,1888.9063,2126.6773,2141.0886,2073.2929,2174.5879,2605.3772,2911.1786,3121.3119,3288.1125,3884.855,3616.701,4130.0431,3960.8985,3878.1205,3951.5794,3944.0891,3946.7626,3951.643,3932.9702,3954.8035,4000.6016,4015.882,4031.8657,4074.1147,4014.6258,4047.8943,4014.4056,3909.5439,3813.8354,3742.0507,3551.6267,3375.1048,3009.4366,2812.8269,2360.8938,2105.4573,1870.6872,1822.3363,1747.3302,1694.4468,1687.1148,1661.6016,1615.1955,1617.1831,1614.9969,1612.9696,1617.1889,1566.0062,1640.0407,1901.0388,1949.4867,1963.9285,2060.0237,2334.1404,2630.0931,2676.1289,3014.5919,3475.2485,3362.2797,3472.8644,3692.7968,3651.2529,3630.3999,3708.4516,3751.2728,3742.7682,3765.0997,3746.1112,3759.0907,3728.9856,3730.1931,3687.9697,3681.9849,3668.3845,3685.7345,3577.6914,3564.5678,3549.0118,3332.707,3047.8015,2711.1932,2573.5851,2256.093,2044.0106,1912.9129,1849.149,1743.8538,1702.9448,1761.2025,1709.8613,1678.1744,1665.9788,1652.4483,1640.3571,1702.7575,1725.769,1632.4432,1729.835,1715.455,2329.3658,2405.3669,2355.5389,2295.0706,2270.7069,2448.5081,2577.9307,2478.0834,2490.8034,2573.3251,2622.2154,2778.3981,2729.3765,2698.8012,2646.2039,2618.2619,2642.2227,2591.3165,2476.6875,2329.8768,2271.5383,2126.2581,2117.3362,1913.3092,1762.857,1764.6878,1740.0429,1706.8833,1690.8104,1691.0764,1704.9521,1684.6397,1661.4673,1659.0838,1656.939,1695.3939,1645.0128,1663.5692,1656.7976,1666.4946,1620.5457,1630.9448,1647.6098,1805.1419,2035.4547,1945.3898,1657.7217,1637.2996,1893.2518,1727.0135,1800.3427,1678.2005,1661.9636,1715.9497,1735.0079,1741.6388,1791.3632,1761.9376,1783.3724,1805.1896,1783.939,1756.8993,1756.9202,1750.4033,1759.3238,1750.4815,1733.0281,1716.712,1739.8043,1751.1887,1772.5539,1725.1604,1723.5189,1705.7739,1679.5403]],"fixedtz":false,"tzone":"UTC"},"evals":["attrs.interactionModel"],"jsHooks":[]}</script>
-
-We have two nice interactive options here: on the graph itself and panel under it for zooming. Ok, let's do now some more serious analysis.
- 
 There are possible to see two main seasonalities in plotted time series: daily and weekly. We have 48 measurements during the day and 7 days during the week so that will be our independent variables to model response variable - electricity load. Let's construct it:
 
 {% highlight r %}
@@ -204,7 +187,7 @@ layout(matrix(1:2, nrow = 1))
 plot(gam_1, shade = TRUE)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-10](/images/unnamed-chunk-10-1.png)
+![plot of chunk unnamed-chunk-9](/images/unnamed-chunk-9-1.png)
  
 That looks nice, right? We can see here the influence of variables to electricity load. In the left plot, the peak of the load is around 3 p.m. during the day. In the right plot, we can see that during weekends consumption logically decreases.
  
@@ -260,7 +243,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.1")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-12](/images/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-11](/images/unnamed-chunk-11-1.png)
  
 That's, of course, horrible result. We need to include interactions of two independent variables to the model.
  
@@ -305,7 +288,7 @@ summary(gam_2)$s.table
 
 {% highlight text %}
 ##                     edf   Ref.df        F p-value
-## s(Daily,Weekly) 28.7008 28.99423 334.2963       0
+## s(Daily,Weekly) 28.7008 28.99423 334.4754       0
 {% endhighlight %}
  
 Seems good too. Plot of fitted values:
@@ -323,7 +306,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.2")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-16](/images/unnamed-chunk-16-1.png)
+![plot of chunk unnamed-chunk-15](/images/unnamed-chunk-15-1.png)
  
 It's not bad, but it can be better. Now, let's try above mentioned tensor product interactions. That can be done by function `te`, basis functions can be defined as well.
 
@@ -370,7 +353,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.3")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-19](/images/unnamed-chunk-19-1.png)
+![plot of chunk unnamed-chunk-18](/images/unnamed-chunk-18-1.png)
  
 Just a little differences in comparison to the `gam_2` model, looks like with `te` fit is more smoothed. Are we something missing? Of course! Function `te` has a default for a number of knots \\( 5^d \\), where d is a number of dimensions (variables), which is in our case little bit small. Now, I will set a number of knots to the maximal possible value `k = c(period, 7)`, what means that upper boundary for EDF (Estimated Degrees of Freedom) will be 48*7 - 1 = 335.
 
@@ -432,7 +415,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.4")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-21](/images/unnamed-chunk-21-1.png)
+![plot of chunk unnamed-chunk-20](/images/unnamed-chunk-20-1.png)
  
 This seems much better than it was with model `gam_3`.
  
@@ -464,8 +447,8 @@ summary(gam_4_fx)$s.table
 
 
 {% highlight text %}
-##                  edf Ref.df        F p-value
-## te(Daily,Weekly) 335    335 57.25389       0
+##                  edf Ref.df        F       p-value
+## te(Daily,Weekly) 335    335 57.25389 5.289648e-199
 {% endhighlight %}
  
 EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
@@ -561,8 +544,8 @@ summary(gam_6)$s.table
 
 
 {% highlight text %}
-##                       edf   Ref.df       F p-value
-## t2(Daily,Weekly) 98.12005 120.2345 84.4022       0
+##                       edf   Ref.df        F p-value
+## t2(Daily,Weekly) 98.12005 120.2345 86.70754       0
 {% endhighlight %}
  
 I printed also the GCV score value for the last three models, which is also a good criterion to choose optimal model among a set of fitted models. We can see that with `t2` term and corresponding model `gam_6` is GCV value lowest. It may be indicating that `gam_6` is our best model so far.
@@ -597,7 +580,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.6")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-26](/images/unnamed-chunk-26-1.png)
+![plot of chunk unnamed-chunk-25](/images/unnamed-chunk-25-1.png)
  
 Seems OK. We can see that fitted values for models `gam_4` and `gam_6` are very similar. It's very difficult to choose which model is better. It's possible to use more visualization and model diagnostic capabilities of package `mgcv` to compare these two models.
  
@@ -607,7 +590,7 @@ The first one is function `gam.check`, which makes four plots: QQ-plot of residu
 gam.check(gam_4)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-27](/images/unnamed-chunk-27-1.png)
+![plot of chunk unnamed-chunk-26](/images/unnamed-chunk-26-1.png)
 
 {% highlight text %}
 ## 
@@ -621,8 +604,8 @@ gam.check(gam_4)
 ## Basis dimension (k) checking results. Low p-value (k-index<1) may
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
-##                      k'    edf k-index p-value
-## te(Daily,Weekly) 335.00 119.41    1.23       1
+##                     k'   edf k-index p-value
+## te(Daily,Weekly) 335.0 119.4     1.2       1
 {% endhighlight %}
  
 
@@ -630,7 +613,7 @@ gam.check(gam_4)
 gam.check(gam_6)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-28](/images/unnamed-chunk-28-1.png)
+![plot of chunk unnamed-chunk-27](/images/unnamed-chunk-27-1.png)
 
 {% highlight text %}
 ## 
@@ -645,7 +628,7 @@ gam.check(gam_6)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## t2(Daily,Weekly) 335.00  98.12    1.16       1
+## t2(Daily,Weekly) 335.00  98.12    1.19       1
 {% endhighlight %}
  
 The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also insignificant.
@@ -658,7 +641,7 @@ plot(gam_4, rug = FALSE, se = FALSE, n2 = 80, main = "gam n.4 with te()")
 plot(gam_6, rug = FALSE, se = FALSE, n2 = 80, main = "gam n.6 with t2()")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-29](/images/unnamed-chunk-29-1.png)
+![plot of chunk unnamed-chunk-28](/images/unnamed-chunk-28-1.png)
  
 It's nice contour line plot. On axes are our independent variables, contour lines and corresponding numbers on them represents effects of ind. variables to the response variable. Now is possible to see some little differences. The model `gam_6` with `t2` have more "wavy" contours. So it implies that it more adapts to response variable and smoothing factor is lower. In the next parts of the post, the model `gam_6` will be used for the analysis.
  
@@ -669,7 +652,7 @@ vis.gam(gam_6, theta = 35, phi = 32, ticktype = "detailed",
         color = "topo", n.grid = 50, main = "t2(D, W)", zlab = "")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-30](/images/unnamed-chunk-30-1.png)
+![plot of chunk unnamed-chunk-29](/images/unnamed-chunk-29-1.png)
  
 We can see that highest peak is when the Daily variable has values near 30 and the Weekly variable has value 1 (it is a Monday).
  
@@ -680,7 +663,7 @@ vis.gam(gam_6, plot.type = "contour", color = "terrain",
         lwd = 2, main = "t2(D, W)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-31](/images/unnamed-chunk-31-1.png)
+![plot of chunk unnamed-chunk-30](/images/unnamed-chunk-30-1.png)
  
 Again we can see that highest value of electricity load is on Monday at 3:00 pm, it is very similar till Thursday, then load decreasing (weekends).
  
@@ -746,7 +729,7 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 {% highlight text %}
 ##         lower      est.     upper
-## Phi 0.6363059 0.7107914 0.7721463
+## Phi 0.6363081 0.7107914 0.7721448
 ## attr(,"label")
 ## [1] "Correlation structure:"
 {% endhighlight %}
@@ -761,7 +744,7 @@ pacf(resid(gam_6_ar0$lme), lag.max = 48, main = "pACF of gam n.6")
 pacf(resid(gam_6_ar1$lme), lag.max = 48, main = "pACF of gam n.6 with AR(1)")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
+![plot of chunk unnamed-chunk-34](/images/unnamed-chunk-34-1.png)
  
 Am I blind, or I can't see a significant difference between these two plots and corresponding values of pACF. Optimal values of pACF should be under dashed blue lines, so it isn't this scenario.
  
@@ -789,7 +772,7 @@ ggplot(data = datas,
   labs(title = "Fitted values vs Residuals of two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-36](/images/unnamed-chunk-36-1.png)
+![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
  
 Here we are. The model with an AR(1) process has residuals at low fitted values somehow correlated, which is not good. What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of AR(1) model to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without AR(1). 
  
