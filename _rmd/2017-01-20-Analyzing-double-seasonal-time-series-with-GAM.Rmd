@@ -1,53 +1,50 @@
 ---
-title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized
-  Additive Model) in R
-author: "Peter Laurinec"
 layout: post
-published: no
+title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized Additive Model) in R
+author: Peter Laurinec
+published: false
 status: process
 tags: test
-draft: no
+draft: false
 ---
 
-As I wrote in the previous post, I will continue in describing **regression** methods, which are suitable to double seasonal (or multi-seasonal) **time series**. In the previous post about [Multiple Linear Regression](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/), I showed how to use "simple" [**OLS**](https://en.wikipedia.org/wiki/Ordinary_least_squares) regression method to model **double seasonal time series** of electricity consumption and use it for accurate forecasting. Interactions between two seasonal variables were successfully used to achieve this goal. The issue of [forecasting time series from smart meters](https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/) was discussed in my first post.
+As I wrote in the previous post, I will continue in describing **regression** methods, which are suitable for double seasonal (or multi-seasonal) **time series**. In the previous post about [Multiple Linear Regression](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/), I showed how to use "simple" [**OLS**](https://en.wikipedia.org/wiki/Ordinary_least_squares) regression method to model **double seasonal time series** of electricity consumption and use it for accurate forecasting. Interactions between two seasonal variables were successfully used to achieve this goal. The issue of [forecasting time series from smart meters](https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/) was discussed in my first post.
 
-In this post (tutorial), I will fully introduce "magical" [**Generalized Additive Model**](https://en.wikipedia.org/wiki/Generalized_additive_model) (GAM) to model time series of electricity consumption. You are maybe asking, why words "*magic*" or "*magical*" are mentioned? You will see in continuation of this post :wink:
+In this post (tutorial), I will fully introduce a "magical" [**Generalized Additive Model**](https://en.wikipedia.org/wiki/Generalized_additive_model) (GAM) to model time series of electricity consumption. You may wonder, why words "*magic*" or "*magical*" are mentioned? You will get your answer later in this post :wink:
 
-Now I have to warn you that this blog post is very long. **GAM** is a very complex method and I wanted to go little bit deeply in order to introduce you this interesting regression method. I think it will be worth it and in the end of the post, I hope you will understand a theory behind **R** functions. In my opinion, **R** blogging (or any data mining or machine learning blogging) without theory interpretation of used methods has zero informative value for a reader.
+Now I have to warn you that this blog post is very long. **GAM** is a very complex method and I wanted to go little bit deeper in order to show you this interesting regression method. I think it will be worth it and in the end of the post, I hope you will understand the theory behind **R** functions. In my opinion, **R** blogging (or any data mining or machine learning blogging) without theory interpretation of used methods has zero informative value for a reader.
 
-So, let's look under the roof of the **GAM** regression method. I think you need some motivation to it, here it is!
+So, let's look under the roof of the **GAM** regression method. I think you need some motivation to it – here it is!
 
 ![](/images/motivate.png)
 
-### Theory behind Generalized Additive Model (GAM) 
+### Theory behind Generalized Additive Model (GAM)
 
-What these three words (or letters) in the name of this method mean and where it comes from? I am sure that you know something about **Linear Model** (maybe because you had read my [previous post about MLR](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/) :relaxed:). It is simple regression method which model response (dependent) variable by independent variable(s). It's solved by OLS method. So we now know what is **M** in the name. When we want to linearly model response variable which is not from [normal Gaussian distribution](https://en.wikipedia.org/wiki/Normal_distribution), for example, it can be binary (logistic regression) or discrete (Poisson) variable, we can use a generalization of the linear model - [Generalized Linear Model](https://en.wikipedia.org/wiki/Generalized_linear_model) (GLM). It's solved by [iteratively reweighted least squares](https://en.wikipedia.org/wiki/Iteratively_reweighted_least_squares) (IRLS) method. **G** in the name is also solved. **A** letter, so [Additive Model](https://en.wikipedia.org/wiki/Additive_model), means that response variable depends linearly on unknown smooth functions. In the other words, the goal is to model response variable by independent variables, which are in the form of some smooth functions. Voilà, **GAM** is created.
+What do these three words (or letters) in the name of this method mean and where does it come from? I am sure that you know something about **Linear Model** (maybe because you had read my [previous post about MLR](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/) :relaxed:). It is a simple regression method which models the response (dependent) variable by independent variable(s). It's solved by the OLS method. So now we know, what the **M** in the name means. When we want to linearly model a response variable which is not from [normal Gaussian distribution](https://en.wikipedia.org/wiki/Normal_distribution), for example, it can be binary (logistic regression) or discrete (Poisson) variable, we can use a generalization of the linear model - [Generalized Linear Model](https://en.wikipedia.org/wiki/Generalized_linear_model) (GLM). It's solved by the [iteratively reweighted least squares](https://en.wikipedia.org/wiki/Iteratively_reweighted_least_squares) (IRLS) method. The **G** in the name is also clear. The **A** letter [Additive Model](https://en.wikipedia.org/wiki/Additive_model), means that the response variable depends linearly on unknown smooth functions. In the other words, the goal is to model the response variable by independent variables, which are in the form of some smooth functions. Voilà, **GAM** is created.
 
 The GAM can be formally written as:
 
-$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i,$$
-$$y_i \sim \mbox{some exponential family distribution,}$$
+$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
 
 where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarithmic or inverse), \\( y \\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
 
-The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and theirs corresponding regression coefficients \\( \beta \\), formally written:
+The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and their corresponding regression coefficients \\( \beta \\), formally written:
 
-$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i,$$
-$$\mbox{ where } q \mbox{ is basis dimension.}$$
+$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
 
-Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
+Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places, where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
 
-It follows that model can be written in a linear way like this:
+Therefore, the model can be written in a linear way like this:
 
 $$g(E(y)) = \beta\mathbf{X} + \varepsilon,$$
 
 where \\( \mathbf{X} \\) is a model matrix and \\( \beta \\) is a vector of regression coefficients.
 
-Than objective function to be minimized is:
+Then, the objective function to be minimized is:
 
 $$\parallel y - \beta\mathbf{X}\parallel^2 + \lambda\int_0^1 [f^{''}(x)]^2dx,$$
 
-where \\( \lambda \\) is smoothing parameter and the integral of squares of second derivatives can be written as:
+where \\( \lambda \\) is a smoothing parameter and the integral of squares of second derivatives can be written as:
 
 $$\int_0^1 [f^{''}(x)]^2dx = \beta^T\mathbf{S}\beta,$$
 
@@ -60,7 +57,7 @@ $$\hat{\beta} = (\mathbf{X}^T\mathbf{X} + \lambda\mathbf{S})^{-1}\mathbf{X}^Ty.$
 \\( \hat{\beta} \\) is called penalized least squares estimator in this case.
 The method of obtaining the estimate of the \\( \beta \\) is called Penalized Iteratively Re-weighted Least Squares (P-IRLS).
 
-Have you already enough of this post? I would no wonder...you can skip this section whenever you want, but there are next important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose optimally smoothing parameter \\( \lambda \\)? How is set basis dimensions (or a number of knots)?
+There are some more important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose an optimal smoothing parameter \\( \lambda \\)? How basis dimensions (or a number of knots) are set?
 
 There are several smoothing bases (splines) which are suitable for regression:
 
@@ -69,17 +66,17 @@ There are several smoothing bases (splines) which are suitable for regression:
 * cyclic cubic regression spline
 * P-splines
 
-You can then read more about them in references, which I will write up. In this post, for daily seasonality cubic regression spline, and for weekly seasonality P-splines will be used. Both types of splines are knot-based, so choosing a right number of knots will be important.
+You can read more about them in references, which I will write up. In this post, for daily seasonality cubic regression spline, and for weekly seasonality P-splines will be used. Both types of splines are knot-based, so choosing a right number of knots will be important.
 
-Next, an important procedure is to choose (estimate) optimal smoothing parameter \\( \lambda \\) and the number of basis dimensions (i.e. degrees of freedom). This can be done in **GAM** by Generalized Cross Validation score (GCV). It minimizes an equation:
+Next, an important procedure is to choose (estimate) an optimal smoothing parameter \\( \lambda \\) and the number of basis dimensions (i.e. degrees of freedom). This can be done in **GAM** by Generalized Cross Validation score (GCV). It minimizes an equation:
 
 $$\nu_g = \frac{n\sum_{i=1}^n (y_i - \hat{f}_i)^2}{[tr(\mathbf{I} - \mathbf{A})]^2},$$
 
-where \\( \mathbf{A} \\) is the influence or hat matrix. It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized so the method behaves like classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
+where \\( \mathbf{A} \\) is the influence or hat matrix. It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized, so the method behaves like a classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
 
 #### Interactions
 
-We are near the end of the explanation of **GAMs** theory, one more thing. As I showed in the previous blog post, **interactions** are very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\( f(x_1, x_2) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
+We are almost at the end of the explanation of **GAMs** theory. One more thing. As I showed in the previous blog post, **interactions** are a very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities, how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\( f(x_1, x_2) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
 
 $$f_{12}(x_1, x_2) = \sum_{i=1}^I \sum_{j=1}^J \delta_{ij}b_{1i}(x_1)b_{2j}(x_2),$$
 
@@ -89,14 +86,14 @@ This allows for an overall [anisotropic](https://en.wikipedia.org/wiki/Anisotrop
 
 #### Resources (references)
 
-Phuuu...that's almost all of the difficult theory behind **GAM** method. I will add some more things in analytical part of this post. Honestly, it was difficult to me to find this information on the web. So if you want to read more about **GAM**, here is the list of useful links which were used in my post:
+Phew...that's almost all of the difficult theory behind **GAM** method. I will add some more things in analytical part of this post. Honestly, it was difficult for me to find this information on the web. So if you want to read more about **GAM**, here is the list of useful links which were used in my post:
 
 * Amazing book: Simon N. Wood: [Generalized Additive Models: an introduction with R](https://www.crcpress.com/Generalized-Additive-Models-An-Introduction-with-R/Wood/p/book/9781584884743), CRC Press, 2006.
 * Great blog post by Gavin Simpson: [Modelling seasonal data with GAMs](http://www.fromthebottomoftheheap.net/2014/05/09/modelling-seasonal-data-with-gam/)
 * Very helpful StackExchange (Cross Validated) [question about the intuition behind tensor product interactions](http://stats.stackexchange.com/questions/45446/intuition-behind-tensor-product-interactions-in-gams-mgcv-package-in-r)
 * This [tutorial about mixed GAMs](http://www.sfs.uni-tuebingen.de/~jvanrij/Tutorial/GAMM.html) can be helpful too.
 
-Go ahead to modeling and analyzing time series with **GAMs**
+Go ahead to modeling and analyzing time series with **GAMs**.
 
 ### Doing "magic" with GAMs for modeling time series
 
@@ -157,7 +154,7 @@ ggplot(data_r, aes(date_time, value)) +
   labs(x = "Date", y = "Load (kW)")
 ```
 
-There are possible to see two main seasonalities in plotted time series: daily and weekly. We have 48 measurements during the day and 7 days during the week so that will be our independent variables to model response variable - electricity load. Let's construct it:
+There is possible to see two main seasonalities in plotted time series: daily and weekly. We have 48 measurements during the day and 7 days during the week so that will be our independent variables to model response variable - electricity load. Let's construct it:
 ```{r}
 N <- nrow(data_r) # number of observations in the train set
 window <- N / period # number of days in the train set
@@ -180,15 +177,14 @@ layout(matrix(1:2, nrow = 1))
 plot(gam_1, shade = TRUE)
 ```
 
-That looks nice, right? We can see here the influence of variables to electricity load. In the left plot, the peak of the load is around 3 p.m. during the day. In the right plot, we can see that during weekends consumption logically decreases.
+That looks nice, right? We can see here the influence of variables to electricity load. In the left plot, the peak of the load is around 3 p.m. during the day. In the right plot, we can see that during weekends the consumption logically decreases.
 
 Let's use `summary` function to do the diagnostic of our first model.
 ```{r}
 summary(gam_1)
 ```
 
-What to look at here? EDF: estimated degrees of freedom - can be interpreted like how much given variable is smoothed (higher EDF value implies more complex splines). P-values: statistical significance of given variable to response variable, tested by F-test (lower is better). \\( R^2 \\) - adjusted R-squared (higher is better). GCV: GCV score (mentioned above).
-In the summary, we can see that the R-sq. (adj) value is a little bit low...
+What to look at here? EDF: estimated degrees of freedom - can be interpreted like how much given variable is smoothed (higher EDF value implies more complex splines). P-values: statistical significance of given variable to response variable, tested by F-test (lower is better). \\( R^2 \\) - adjusted R-squared (higher is better). GCV: GCV score (mentioned above). In the summary, we can see that the R-sq. (adj) value is a little bit low...
 
 Let's plot fitted values:
 ```{r, echo=TRUE, fig.height=3.5, fig.width=9, message=FALSE, warning=FALSE, results='hide'}
@@ -204,16 +200,16 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.1")
 ```
 
-That's, of course, horrible result. We need to include interactions of two independent variables to the model.
+That is, of course, a horrible result. We need to include interactions of two independent variables to the model.
 
-One more thing before it...what is hiding behind stored `gam_1` object and used optimizer?
+One more thing before that… What is hiding behind the stored `gam_1` object and used optimizer?
 ```{r}
 gam_1$optimizer
 ```
 
 Here is that "magic"! :smile:
 
-The first type of interactions will be the third one mentioned in the section about interactions, so one smoothing function to both variables is used. In the term `s(Daily, Weekly)` are also automatically included simple smoothing terms `s(Daily)` and `s(Weekly)`. Let's do it.
+The first type of interactions will be the third one mentioned in the section about interactions, so one smoothing function to both variables is used. In the term `s(Daily, Weekly)` simple smoothing terms `s(Daily)` and `s(Weekly)` are also automatically included. Let's do it.
 
 ```{r}
 gam_2 <- gam(Load ~ s(Daily, Weekly),
@@ -242,7 +238,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.2")
 ```
 
-It's not bad, but it can be better. Now, let's try above mentioned tensor product interactions. That can be done by function `te`, basis functions can be defined as well.
+It's not bad, but it can be better. Now, let's try the above mentioned tensor product interactions. That can be done by function `te`, basis functions can be defined as well.
 ```{r}
 gam_3 <- gam(Load ~ te(Daily, Weekly,
                        bs = c("cr", "ps")),
@@ -271,7 +267,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.3")
 ```
 
-Just a little differences in comparison to the `gam_2` model, looks like with `te` fit is more smoothed. Are we something missing? Of course! Function `te` has a default for a number of knots \\( 5^d \\), where d is a number of dimensions (variables), which is in our case little bit small. Now, I will set a number of knots to the maximal possible value `k = c(period, 7)`, what means that upper boundary for EDF (Estimated Degrees of Freedom) will be 48*7 - 1 = 335.
+Just a little differences in comparison to the `gam_2` model, looks like with `te` fit is more smoothed. Are we missing something? Of course! Function `te` has a default for a number of knots \\( 5^d \\), where d is a number of dimensions (variables), which is in our case too small. Now, I will set a number of knots to the maximal possible value `k = c(period, 7)`, what means that upper boundary for EDF (Estimated Degrees of Freedom) will be 48*7 - 1 = 335.
 ```{r}
 gam_4 <- gam(Load ~ te(Daily, Weekly,
                         k = c(period, 7),
@@ -301,7 +297,7 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 
 This seems much better than it was with model `gam_3`.
 
-Now I will prove my statement about the upper boundary for EDF. There is possibility to fix number of smooth basis (i.e. EDF) in smooth terms. Just use an argument `fx = TRUE`.
+Now I will prove my statement about the upper boundary for EDF. There is a possibility to fix number of smooth basis (i.e. EDF) in smooth terms. Just use an argument `fx = TRUE`.
 ```{r}
 gam_4_fx <- gam(Load ~ te(Daily, Weekly,
                         k = c(period, 7),
@@ -316,7 +312,7 @@ summary(gam_4_fx)$s.table
 
 EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
 
-With package `mgcv` we have two more opportunities, methods, how to include tensor product interactions term - with functions `ti` and `t2`. `ti` produces a tensor product interaction, appropriate when the main effects (and any lower interactions) are also present, while `te` produces a full tensor product smooth. `t2` is an alternative function to `te` and uses different penalization method. You can read more about it in a documentation of the package `mgcv`: use `?ti` and `?t2` to see more.
+With the`mgcv` package we have two more opportunities, methods, how to include tensor product interactions term - with functions `ti` and `t2`. `ti` produces a tensor product interaction, appropriate when the main effects (and any lower interactions) are also present, while `te` produces a full tensor product smooth. `t2` is an alternative function to `te` and uses different penalization method. You can read more about it in a documentation of the package `mgcv`: use `?ti` and `?t2` to see more.
 
 So, let's try both methods in the our case (model). First, let's use `ti`:
 ```{r}
@@ -347,14 +343,14 @@ summary(gam_6)$sp.criterion
 summary(gam_6)$s.table
 ```
 
-I printed also the GCV score value for the last three models, which is also a good criterion to choose optimal model among a set of fitted models. We can see that with `t2` term and corresponding model `gam_6` is GCV value lowest. It may be indicating that `gam_6` is our best model so far.
+I have also printed the GCV score value for the last three models, which is also a good criterion to choose optimal model among a set of fitted models. We can see that with `t2` term and corresponding model `gam_6` the GCV value is the lowest. It may be indicating that `gam_6` is our best model so far.
 
 Other model selection criterion, which is widely used in statistics, is AIC ([Akaike Information Criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion)). Criterion has equation \\( AIC = 2k - 2\ln (\hat{L}) \\), where k is the number of parameters to be estimated and \\(\hat{L}\\) is the maximized value of the likelihood function of the model. So lower values are better for AIC. Let's look at them for our three models:
 ```{r}
 AIC(gam_4, gam_5, gam_6)
 ```
 
-The lowest value is in the `gam_6` model, so again it's winning model. Let's again look at fitted values to be sure that everything is OK.
+The lowest value is in the `gam_6` model, so again it's the winning model. Let's again look at fitted values to be sure that everything is OK.
 ```{r, echo=TRUE, fig.height=3.5, fig.width=9, message=FALSE, warning=FALSE, results='hide'}
 datas <- rbindlist(list(data_r[, .(value, date_time)],
                         data.table(value = gam_6$fitted.values,
@@ -379,48 +375,46 @@ gam.check(gam_4)
 gam.check(gam_6)
 ```
 
-The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms can be seen some differences, but it's also insignificant.
+The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms some differences can be seen, but it's also insignificant.
 
-We didn't use so far default `plot` function to `gam` object for models with tensor product interactions. Let's use it and explore what it brings us.
+We didn't use so far the default `plot` function to `gam` object for models with tensor product interactions. Let's use it and explore what it brings us.
 ```{r, fig.height=5, fig.width=9.5}
 layout(matrix(1:2, nrow = 1))
 plot(gam_4, rug = FALSE, se = FALSE, n2 = 80, main = "gam n.4 with te()")
 plot(gam_6, rug = FALSE, se = FALSE, n2 = 80, main = "gam n.6 with t2()")
 ```
 
-It's nice contour line plot. On axes are our independent variables, contour lines and corresponding numbers on them represents effects of ind. variables to the response variable. Now is possible to see some little differences. The model `gam_6` with `t2` have more "wavy" contours. So it implies that it more adapts to response variable and smoothing factor is lower. In the next parts of the post, the model `gam_6` will be used for the analysis.
+It's a nice contour line plot. On axes are our independent variables, contour lines and corresponding numbers on them represents effects of ind. variables to the response variable. Now it is possible to see some little differences. The model `gam_6` with `t2` have more "wavy" contours. So it implies that it adapts more to response variable and smoothing factor is lower. In the next parts of the post, the model `gam_6` will be used for the analysis.
 
 Another great feature of the package `mgcv` is the plotting function `vis.gam`. It makes 3D view (or 2D) of surface of fitted values according to independent variables. Let's look at it.
 ```{r, fig.height=6, fig.width=6}
-vis.gam(gam_6, theta = 35, phi = 32, ticktype = "detailed",
-        color = "topo", n.grid = 50, main = "t2(D, W)", zlab = "")
+vis.gam(gam_6, n.grid = 50, theta = 35, phi = 32, zlab = "",
+        ticktype = "detailed", color = "topo", main = "t2(D, W)")
 ```
 
-We can see that highest peak is when the Daily variable has values near 30 and the Weekly variable has value 1 (it is a Monday).
+We can see that the highest peak is when the Daily variable has values near 30 and the Weekly variable has value 1 (it is a Monday).
 
 2D view, contour lines type of plot, can be visualized too. Just set argument `plot.type = "contour"`.
 ```{r, fig.height=5, fig.width=6}
-vis.gam(gam_6, plot.type = "contour", color = "terrain",
-        lwd = 2, main = "t2(D, W)")
+vis.gam(gam_6, main = "t2(D, W)", plot.type = "contour",
+        color = "terrain", contour.col = "black", lwd = 2)
 ```
 
-Again we can see that highest value of electricity load is on Monday at 3:00 pm, it is very similar till Thursday, then load decreasing (weekends).
+Again we can see that the highest value of electricity load is on Monday at 3:00 pm, it is very similar till Thursday, then the load is decreasing (weekends).
 
 Another interesting contribution to the **time series regression model** can be an inclusion of [**autoregressive model**](https://en.wikipedia.org/wiki/Autoregressive_model) for serially correlated errors. Let's look at it.
 
 ### Autoregressive models and GAMS
 
-**GAM** or **MLR** have assumptions in a model that errors (residuals) are identically and independently distributed (i.i.d.). In the case of the time series regression, it is very strong assumption, which is here logically not fulfilled. Present time series values are highly correlated with past values, so errors of the model will be correlated too. This phenomenon is called an [autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation). This implies that estimated regression coefficients and residuals of a model might be negatively biased, which also implies that previously computed p-values of statistical tests or confidence intervals are wrong.
+**GAM** or **MLR** have assumptions in a model that errors (residuals) are identically and independently distributed (i.i.d.). In the case of the time series regression, it is very strong assumption, which is here, logically, not fulfilled. Present time series values are highly correlated with past values, so errors of the model will be correlated too. This phenomenon is called an [autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation). This implies that estimated regression coefficients and residuals of a model might be negatively biased, which also implies that previously computed p-values of statistical tests or confidence intervals are wrong.
 
-How can be this situation handled? By inclusion of autoregressive model (AR) for errors in our model. So we have the
-model with the term for errors like this:
+How can we handle this situation? By inclusion of autoregressive model (AR) for errors in our model. So we have the model with the term for errors like this:
 
 $$y_i = \beta\mathbf{X} + \varepsilon_i, \hspace{0.2cm} \varepsilon_i = \phi\varepsilon_{i-1} + v_i,$$
 
 where the second equation is a classical AR(1) process and \\( \phi \\) is an unknown autoregressive coefficient to be estimated. Errors can be also nested within a week, which is in our case more appropriate, because of the double seasonal character of our time series. You can read more about estimation and modeling of this kind of models in an excellent book by [Box, Jenkins, and Reinsel: Time Series Analysis](http://onlinelibrary.wiley.com/book/10.1002/9781118619193).
 
-It's possible to add correlation term for errors with function `gamm`, which stands for **GAM** mixture models. It calls `lme` function from package `nlme`. Now, train basic model with function `gamm` and a another model with AR(1) process nested within a week - just add this argument to `gamm` function: `correlation = corARMA(form = ~ 1|Weekly, p = 1)`.
-
+It's possible to add correlation term for errors with function `gamm`, which stands for **GAM** mixture models. It calls the `lme` function from package `nlme`. Now, train basic model with function `gamm` and an another model with AR(1) process nested within a week - just add this argument to `gamm` function: `correlation = corARMA(form = ~ 1|Weekly, p = 1)`.
 ```{r}
 gam_6_ar0 <- gamm(Load ~ t2(Daily, Weekly,
                             k = c(period, 7),
@@ -440,13 +434,12 @@ gam_6_ar1 <- gamm(Load ~ t2(Daily, Weekly,
              method = "REML")
 ```
 
-
 We can use an [ANOVA](https://en.wikipedia.org/wiki/Analysis_of_variance) to compare these two models and pick the right one.
 ```{r}
 anova(gam_6_ar0$lme, gam_6_ar1$lme)
 ```
 
-AIC value of the model with AR(1) term is lower, so seems better, also p-value is very low which indicates that second model is better to choose.
+AIC value of the model with AR(1) term is lower, so it seems better, also p-value is very low which indicates that second model is better to choose.
 
 Estimated \\( \phi \\) coefficient of AR(1) process can be seen here:
 ```{r}
@@ -455,14 +448,14 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 Value 0.71 is pretty high, which indicates a strong dependency on previous values of errors (lags).
 
-Let's look now on another diagnostic for these two models. Plot of values of a [partial autocorrelation function](https://en.wikipedia.org/wiki/Partial_autocorrelation_function):
+Now let's look another diagnostic for these two models. Plot of values of a [partial autocorrelation function](https://en.wikipedia.org/wiki/Partial_autocorrelation_function):
 ```{r, fig.height=4, fig.width=9}
 layout(matrix(1:2, ncol = 2))
 pacf(resid(gam_6_ar0$lme), lag.max = 48, main = "pACF of gam n.6")
 pacf(resid(gam_6_ar1$lme), lag.max = 48, main = "pACF of gam n.6 with AR(1)")
 ```
 
-Am I blind, or I can't see a significant difference between these two plots and corresponding values of pACF. Optimal values of pACF should be under dashed blue lines, so it isn't this scenario.
+Am I blind, or I can't see a significant difference between these two plots and corresponding values of pACF? Optimal values of pACF should be under dashed blue lines, so it isn't this scenario.
 
 Let's make another useful visualization of residuals of two models to confirm uncertainty about correctness of model with AR(1).
 ```{r, fig.height=6, fig.width=8}
@@ -488,7 +481,7 @@ ggplot(data = datas,
 
 ```
 
-Here we are. The model with an AR(1) process has residuals at low fitted values somehow correlated, which is not good. What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of AR(1) model to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without AR(1). 
+Here we are. The model with an AR(1) process has residuals at low fitted values somehow correlated, which is not good. What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of AR(1) model to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without AR(1).
 
 ### Animations and conclusions
 
@@ -498,7 +491,7 @@ I will end this post with a visualization analysis of the model `gam_6`. I will 
 2. Fitted values vs. residuals of GAM.
 3. Forecast for one week ahead vs. real consumption plus forecast accuracy in MAPE.
 
-Animations were created by functions from package `grid` to layout ggplots to one figure, and function `saveGIF` from package `animation` to create final GIF. Here there are:
+Animations were created by functions from package `grid` to layout ggplots to one figure, and function `saveGIF` from package `animation` to create the final GIF. Here there are:
 
 ![](/images/industry_1_dashboard.gif)
 
@@ -512,7 +505,7 @@ Another animation, which I created, is a 3D visualization of fitted values like 
 
 We can compare it with the first dashboard because again it's time series from commercial properties. EDF is also printed to the title of GIF for reasons to see how it changes depending on the behavior of electricity consumption.
 
-With this, I would like to end main part of this tutorial and conclude it with some remarks.
+With this, I would like to end the main part of this tutorial and conclude it with some remarks.
 
 In the beginning of the post, motivation and the theory behind GAM method was introduced. Next, the analytical (**magical**) part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed. Next, consideration about the correctness of an autoregressive model for errors was discussed. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
 
@@ -533,4 +526,4 @@ Disadvantages:
 
 In the future post, I want to focus on some machine learning method like Support Vector Regression or Regression Trees with alongside of grid search for tuning parameters.
 
-The script for a creation of the whole tutorial is located on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). I would like to encourage you to add any feedback to the discussion below, thank you for reading this long post.
+The script for a creation of the whole tutorial is located on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). I would like to encourage you to add any feedback to the discussion below. Thank you for reading this long post.
