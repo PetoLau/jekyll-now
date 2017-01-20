@@ -82,13 +82,8 @@ ggmap(map) +
         axis.text.y = element_text(colour = "white"))
 {% endhighlight %}
 
+![plot of chunk unnamed-chunk-6](/images/post_1/unnamed-chunk-6-1.png)
 
-
-{% highlight text %}
-## Error: GeomRasterAnn was built with an incompatible version of ggproto.
-## Please reinstall the package that provides this extension.
-{% endhighlight %}
- 
 Now look at the `SQ_FT` feature. Firstly, I transform square feets to square meters (I am an European...). Histogram of `SQ_M` of buildings.
 
 {% highlight r %}
