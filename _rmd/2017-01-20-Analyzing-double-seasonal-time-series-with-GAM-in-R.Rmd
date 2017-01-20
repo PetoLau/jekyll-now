@@ -1,9 +1,9 @@
 ---
 layout: post
-title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized Additive Model) in R
+title: Doing magic and analyzing seasonal time series with GAM (Generalized Additive Model) in R
 author: Peter Laurinec
 published: false
-status: process
+status: processed
 tags: test
 draft: false
 ---
@@ -24,13 +24,15 @@ What do these three words (or letters) in the name of this method mean and where
 
 The GAM can be formally written as:
 
-$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
+$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i,$$
+$$y_i \sim \mbox{some exponential family distribution,}$$
 
 where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarithmic or inverse), \\( y \\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
 
 The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and their corresponding regression coefficients \\( \beta \\), formally written:
 
-$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
+$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i,$$
+$$\mbox{ where } q \mbox{ is basis dimension.}$$
 
 Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places, where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
 
@@ -312,7 +314,7 @@ summary(gam_4_fx)$s.table
 
 EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
 
-With the`mgcv` package we have two more opportunities, methods, how to include tensor product interactions term - with functions `ti` and `t2`. `ti` produces a tensor product interaction, appropriate when the main effects (and any lower interactions) are also present, while `te` produces a full tensor product smooth. `t2` is an alternative function to `te` and uses different penalization method. You can read more about it in a documentation of the package `mgcv`: use `?ti` and `?t2` to see more.
+With the `mgcv` package we have two more opportunities, methods, how to include tensor product interactions term - with functions `ti` and `t2`. `ti` produces a tensor product interaction, appropriate when the main effects (and any lower interactions) are also present, while `te` produces a full tensor product smooth. `t2` is an alternative function to `te` and uses different penalization method. You can read more about it in a documentation of the package `mgcv`: use `?ti` and `?t2` to see more.
 
 So, let's try both methods in the our case (model). First, let's use `ti`:
 ```{r}
@@ -526,4 +528,4 @@ Disadvantages:
 
 In the future post, I want to focus on some machine learning method like Support Vector Regression or Regression Trees with alongside of grid search for tuning parameters.
 
-The script for a creation of the whole tutorial is located on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). I would like to encourage you to add any feedback to the discussion below. Thank you for reading this long post.
+The script (*3post-GAM.R*) for a creation of the whole tutorial is located on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). I would like to encourage you to add any feedback to the discussion below. Thank you for reading this long post.

@@ -8,12 +8,12 @@ draft: false
 tags: R forecast
 ---
  
-Deployment of smart grids gives space to an occurrence of new methods of machine learning and data analysis. Smart grids can contain of millions of smart meters, which produce a large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about the consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make an accurate forecast or to detect anomalies. In this blog post, I will focus on the exploration of available open smart meter data and on the creation of a simple forecast model, which uses similar day approach (will be drawn up in detail below).
+Deployment of smart grids gives space to an occurrence of new methods of **machine learning** and **data analysis**. Smart grids can contain of millions of smart meters, which produce a large amount of data of electricity consumption (long time series). In addition to time series of electricity consumption, we can have extra information about the consumer like ZIP code, type of consumer ([consumer vs. prosumer](http://wikidiff.com/consumer/prosumer)) and so on. These data can be used to support intelligent grid control, make an accurate forecast or to detect anomalies. In this blog post, I will focus on the exploration of available open **smart meter data** and on the creation of a simple forecast model, which uses similar day approach (will be drawn up in detail below).
  
-Firstly, we must download smart meter data of electricity consumption. These data can be downloaded [here](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by the [EnerNOC](https://www.enernoc.com/) company and consists of 100 anonymized commercial buildings for 2012. The dataset contains time series of 100 consumers and theirs corresponding meta data. Let’s download the **all-data.tar.gz** file and explore it.
+Firstly, we must download smart meter data of electricity consumption. These data can be downloaded from the site [open enernoc data](https://open-enernoc-data.s3.amazonaws.com/anon/index.html). This dataset was produced by the [EnerNOC](https://www.enernoc.com/) company and consists of 100 anonymized commercial buildings for 2012. The dataset contains time series of 100 consumers and theirs corresponding meta data. Let’s download the *all-data.tar.gz* file and explore it.
  
 ### Exploring meta data of consumers (IDs)
-I will do every reading and filtering (cleaning) of the dataset by means of the awesome package `data.table`. As you may already know, with [data.table](https://CRAN.R-project.org/package=data.table) you can change dataset by reference (`:=` or `set`), which is very effective. You can do similar things with package `dplyr`, but I prefer `data.table`, because of performance and memory usage. An interesting comparison of both packages can be seen on this stackoverflow [question](http://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly). To visualize interesting relations, I will use package `ggplot2`. Manipulation with date and time can be done easily by package `lubridate`.
+I will do every reading and filtering (cleaning) of the dataset by means of the awesome package `data.table`. As you may already know, with [data.table](https://CRAN.R-project.org/package=data.table) you can change dataset by reference (`:=` or `set`), which is very effective. You can do similar things with package `dplyr`, but I prefer `data.table`, because of performance and memory usage. An interesting comparison of both packages can be seen on this [stackoverflow question](http://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly). To visualize interesting relations, I will use package `ggplot2`. Manipulation with date and time can be done easily by package `lubridate`.
  
 So...I hope I haven't forgotten something, go ahead to the programming and exploration part of this post. First step - scan all of the needed packages.
 
@@ -74,12 +74,20 @@ With the package `ggmap` it is easy to map location of our consumers to the map 
 {% highlight r %}
 map <- get_map(location = "USA", zoom = 4)
 ggmap(map) + 
-  geom_point(aes(x = LNG, y = LAT, color = INDUSTRY), size = 5, data = meta_data, alpha = .6) + 
-  theme(axis.title.x = element_text(colour = "white"), axis.title.y = element_text(colour = "white"),
-        axis.text.x = element_text(colour = "white"), axis.text.y = element_text(colour = "white"))
+  geom_point(data = meta_data, aes(x = LNG, y = LAT, color = INDUSTRY),
+             size = 5, alpha = .6) + 
+  theme(axis.title.x = element_text(colour = "white"),
+        axis.title.y = element_text(colour = "white"),
+        axis.text.x = element_text(colour = "white"),
+        axis.text.y = element_text(colour = "white"))
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-6](/images/post_1/unnamed-chunk-6-1.png)
+
+
+{% highlight text %}
+## Error: GeomRasterAnn was built with an incompatible version of ggproto.
+## Please reinstall the package that provides this extension.
+{% endhighlight %}
  
 Now look at the `SQ_FT` feature. Firstly, I transform square feets to square meters (I am an European...). Histogram of `SQ_M` of buildings.
 
@@ -100,7 +108,7 @@ ggplot(meta_data, aes(meta_data$SQ_M)) +
 
 ![plot of chunk unnamed-chunk-7](/images/post_1/unnamed-chunk-7-1.png)
  
-Looks like we have a majority of buildings under 20,000 m^2.
+Looks like we have a majority of buildings under 20,000 \\( m^2 \\).
  
 Let's do something similar, but now do density plot for our 4 industries separately.
 
@@ -431,7 +439,7 @@ This is a much more interesting plot than the previous one, isn't it? We can see
  
 ### Creation of forecast model for different days during the week (similar day approach)
  
-As we have seen in the previous plot (plots), a forecast of time series of electricity consumption will be a challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt the forecast model to this problem. One of the ideas to overcome this problem is to use a similar day approach - separate forecast models for groups of days.
+As we have seen in the previous plot (plots), a **forecast of time series** of electricity consumption will be a challenging task. We have 2 main seasonalities - daily and weekly. So it is necessary to adapt the forecast model to this problem. One of the ideas to overcome this problem is to use a **similar day approach** - separate forecast models for groups of days.
  
 Let’s prepare data and define all functions to achieve this goal. Add corresponding weekdays to date for datasets `DT_48` and `DT_agg`.
 
@@ -459,7 +467,7 @@ n_date <- unique(DT_agg[, date])
 period <- 48
 {% endhighlight %}
  
-Let’s define basic forecast methods - functions, which will produce forecasts. I am using two powerful methods, which are based on the decomposition of time series. STL + ARIMA and STL + exponential smoothing. [STL](https://www.otexts.org/fpp/6/5) decomposition is widely used decomposition for seasonal time series, based on Loess regression. With [package](https://CRAN.R-project.org/package=forecast) `forecast` it can be combined to produce very accurate forecasts. We have two main possibilities of usage - with [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) and with [exponential smoothing](https://en.wikipedia.org/wiki/Exponential_smoothing). We will use both to compare the performance (accuracy) of both. It should be added that the functions return forecast of the length of one period (in this case 48 values).
+Let’s define basic forecast methods - functions, which will produce forecasts. I am using two powerful methods, which are based on the decomposition of time series. STL + ARIMA and STL + exponential smoothing. [STL decomposition](https://www.otexts.org/fpp/6/5) is widely used decomposition for seasonal time series, based on Loess regression. With package [`forecast`](https://CRAN.R-project.org/package=forecast) it can be combined to produce very accurate forecasts. We have two main possibilities of usage - with [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) and with [exponential smoothing](https://en.wikipedia.org/wiki/Exponential_smoothing). We will use both to compare the performance (accuracy) of both. It should be added that the functions return forecast of the length of one period (in this case 48 values).
 
 {% highlight r %}
 # STL + ARIMA
@@ -503,7 +511,7 @@ predictWeek <- function(data, set_of_date, FUN, train_win = 6){
 }
 {% endhighlight %}
  
-Let’s do some examples of using `predictWeek` function. Run the forecast for selection of dates on aggregated consumption and compute MAPE for both methods (STL+ARIMA and STL+EXP).
+Let’s do some examples of using `predictWeek` function. Run the forecast for selection of dates on aggregated consumption `DT_agg` and compute MAPE for both methods (STL+ARIMA and STL+EXP).
 
 {% highlight r %}
 for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred) # forecast for one week
@@ -592,7 +600,7 @@ c(ARIMA = mape(real_week, for_week_arima),
  
 Similar results, but obviously not so accurate because of stochastic behavior of the consumer.
  
-Plot computed forecast for one week ahead.
+Plot of computed forecasts for one week ahead.
 
 {% highlight r %}
 datas <- data.table(value = c(for_week_arima, for_week_exp,
@@ -621,7 +629,7 @@ Again, STL+ARIMA is winning against STL+EXP.
  
 In this way, you can make a forecast for any consumer, any set of dates and with your own forecast method.
  
-Except for the two methods shown, you can try for example these functions (methods): `HoltWinters`, `ar`, `arima` and `snaive`, which are suitable for seasonal time series. These methods are starters (benchmarks) for time series analyses and forecast. In **R**, there are already implemented methods of time series, which can handle two seasons. For example `dshw` and `tbats` (both in the package `forecast`). Their disadvantage is high computational complexity and not as good results of the forecast as the custom functions that I have shown you.
+Except for the two methods shown, you can try for example these functions (methods): `HoltWinters`, `ar`, `arima` and `snaive`, which are suitable for **seasonal time series**. These methods are starters (benchmarks) for time series analyses and forecast. In **R**, there are already implemented methods of time series, which can handle two seasons. For example `dshw` and `tbats` (both in the package `forecast`). Their disadvantage is high computational complexity and not as good results of the forecast as the custom functions that I have shown you. Script (*1post-EnernocDataForecast.R*) for a creation of whole analysis (tutorial) is on my [GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
  
-To sum up, I have pointed out to you, which interesting features are contained in smart meter data. Then a forecast model with similar day approach was proposed.
-In my future posts, I want to focus mainly on regression methods for time series forecasting, because they can handle similar day approach much easier. So methods like multiple linear regression, generalized additive model, support vector regression, regression trees and forests and artificial neural networks will be demonstrated.
+To sum up, I have pointed out to you, which interesting features are contained in smart meter data. Then a forecast model with **similar day approach** was proposed.
+In my future posts, I want to focus mainly on regression methods for time series forecasting, because they can handle similar day approach (double seasonality) much easier. So methods like multiple linear regression, generalized additive model, support vector regression, regression trees and forests and artificial neural networks will be demonstrated.
