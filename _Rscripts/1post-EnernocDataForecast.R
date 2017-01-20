@@ -180,8 +180,6 @@ ggplot(data = DT_48[ID %in% c(213, 401, 9, 832)], aes(x = date, y = value)) +
         strip.text = element_text(size = 12, face = "bold")) +
   labs(x = "Date", y = "Load (kW)")
 
-# ggplot(DT_48[ID %in% c(213, 9, 401, 832)], aes(x=date, y=value, colour=ID, group=ID)) + geom_line()
-
 # Aggregate consumption of all consumers (43)
 DT_agg <- as.data.table(aggregate(DT_48[, .(value)], by = DT_48[, .(date_time)], FUN = sum, simplify = TRUE))
 ggplot(DT_agg, aes(date_time, value)) +
@@ -218,9 +216,11 @@ ggplot(Med_Mad_Week, aes(x = seq, Med)) +
   labs(x = "Time", y = "Load (kW)")
 
 ## Create forecast model for different days during the week ----
+
 # add corresponding weekdays to date for datasets DT_48 and DT_agg
 DT_48[, week := weekdays(date_time)]
 DT_agg[, ':='(week = weekdays(date_time), date = as.Date(date_time))]
+
 # now we have datasets with all needed features to build model for different days
 n_ID <- unique(DT_48[, ID])
 n_weekdays <- unique(DT_agg[, week])
@@ -246,6 +246,7 @@ stlEXPPred <- function(Y, period = 48){
   return(as.vector(expo$mean))
 }
 
+## Optional other methods - HW and snaive:
 ## Holt-Winters ES
 HWPred <- function(Y, period = 48){
   ts_Y <- ts(Y, start = 0, freq = period) # Transform to ts
@@ -281,15 +282,15 @@ mape <- function(real, pred){
 
 for_week_arima <- predictWeek(DT_agg, n_date[56:84], stlARIMAPred)
 for_week_exp <- predictWeek(DT_agg, n_date[56:84], stlEXPPred)
-for_week_hw <- predictWeek(DT_agg, n_date[56:84], snaivePred)
+for_week_naive <- predictWeek(DT_agg, n_date[56:84], snaivePred)
 real_week <- DT_agg[date %in% n_date[85:91], value]
 mape(real_week, for_week_arima)
 mape(real_week, for_week_exp)
-mape(real_week, for_week_hw)
+mape(real_week, for_week_naive)
 
 sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_arima[((i*period)+1):((i+1)*period)]))
 sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_exp[((i*period)+1):((i+1)*period)]))
-sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_hw[((i*period)+1):((i+1)*period)]))
+sapply(0:6, function(i) mape(real_week[((i*period)+1):((i+1)*period)], for_week_naive[((i*period)+1):((i+1)*period)]))
 
 # Plot forecast for one week
 datas <- data.table(value = c(for_week_arima, for_week_exp, DT_agg[date %in% n_date[78:91], value]),
