@@ -1,0 +1,24 @@
+
+img {
+	-webkit-box-shadow: 7px 11px 50px -29px rgba(0, 0, 0, 0.45);
+	-moz-box-shadow: 7px 11px 50px -29px rgba(0, 0, 0, 0.45);
+	box-shadow: 7px 11px 50px -29px rgba(0, 0, 0, 0.45);
+}
+
+img{
+	margin-top: 1rem;
+	margin-bottom: 2rem;
+  display: block;
+  margin: 2rem auto;
+}
+
+img {
+	border-radius: 7px 7px 7px 7px;
+	-moz-border-radius: 7px 7px 7px 7px;
+	-webkit-border-radius: 7px 7px 7px 7px;
+	border: 0px none #000000;
+}
+
+img {
+  border: 0.01px solid #ccc ;
+}
