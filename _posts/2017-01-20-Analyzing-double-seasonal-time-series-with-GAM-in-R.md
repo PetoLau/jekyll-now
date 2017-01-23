@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Doing "magic" and analyzing double seasonal time series with GAM (Generalized Additive Model) in R
+title: Doing magic and analyzing seasonal time series with GAM (Generalized Additive Model) in R
 author: Peter Laurinec
 published: true
 status: publish
@@ -24,13 +24,16 @@ What do these three words (or letters) in the name of this method mean and where
  
 The GAM can be formally written as:
  
-$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i, \hspace{0.1 cm} y_i \sim \mbox{some exponential family distribution,}$$
+$$g(E(y_i)) = \beta_0 + f_1(x_{i1}) + \dots + f_p(x_{ip}) + \varepsilon_i,$$
+ 
+$$y_i \sim \mbox{some exponential family distribution,}$$
  
 where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarithmic or inverse), \\( y \\) is a response variable, \\( x_1, \dots, x_p \\) are independent variables, \\( \beta_0 \\) is an intercept, \\( f_1, \dots, f_p \\) are unknown smooth functions and \\( \varepsilon \\) is an i.i.d. random error.
  
 The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and their corresponding regression coefficients \\( \beta \\), formally written:
  
-$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i, \mbox{ where } q \mbox{ is basis dimension.}$$
+$$f(x) = \sum_{i = 1}^q b_i(x)\beta_i,$$
+$$\mbox{ where } q \mbox{ is basis dimension.}$$
  
 Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places, where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
  
@@ -59,12 +62,23 @@ The method of obtaining the estimate of the \\( \beta \\) is called Penalized It
  
 There are some more important theoretical questions to answer. For example, what kind of smoothing splines exists? Or, how to choose an optimal smoothing parameter \\( \lambda \\)? How basis dimensions (or a number of knots) are set?
  
-There are several smoothing bases (splines) which are suitable for regression:
+There are several smoothing bases \\( b \\) (splines) which are suitable for regression:
  
 * thin plate regression splines
 * cubic regression spline
 * cyclic cubic regression spline
 * P-splines
+ 
+An example of the cubic basis function for dimension \\( q = 3 \\):
+ 
+$$\begin{equation*}
+b_{cubic}(x) =
+\begin{cases}
+\frac{1}{4}(x+2)^3 & \text{if } -2 \leq x \leq -1,\\
+\frac{1}{4}(3|x|^3-6x^2+4) & \text{if } -1 \leq x \leq 1,\\
+\frac{1}{4}(2-x)^3 & \text{if } \hspace{0.48cm}  1 \leq x \leq 2.
+\end{cases}
+\end{equation*}$$
  
 You can read more about them in references, which I will write up. In this post, for daily seasonality cubic regression spline, and for weekly seasonality P-splines will be used. Both types of splines are knot-based, so choosing a right number of knots will be important.
  
@@ -72,11 +86,11 @@ Next, an important procedure is to choose (estimate) an optimal smoothing parame
  
 $$\nu_g = \frac{n\sum_{i=1}^n (y_i - \hat{f}_i)^2}{[tr(\mathbf{I} - \mathbf{A})]^2},$$
  
-where \\( \mathbf{A} \\) is the influence or hat matrix. It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized, so the method behaves like a classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
+where \\( \mathbf{A} \\) is the [projection matrix](https://en.wikipedia.org/wiki/Projection_matrix) (i.e. influence or hat). It's obvious that when lambda is near 1 then spline will be over-smoothed, in opposite side when lambda is near zero than spline isn't penalized, so the method behaves like a classical OLS. With a number of basis dimensions (estimated degrees of freedom), it is opposite. Higher dimension implies that fit will be less smoothed (overfit), on the other side lower dimensions implies more smoothed behavior of fitted values.
  
 #### Interactions
  
-We are almost at the end of the explanation of **GAMs** theory. One more thing. As I showed in the previous blog post, **interactions** are a very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities, how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\( f(x_1, x_2) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
+We are almost at the end of the explanation of **GAMs** theory. One more thing. As I showed in the previous blog post, **interactions** are a very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities, how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\(f_1(x_1)\times f_1(x_2) (\mbox{often denoted} f(x_1, x_2)) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
  
 $$f_{12}(x_1, x_2) = \sum_{i=1}^I \sum_{j=1}^J \delta_{ij}b_{1i}(x_1)b_{2j}(x_2),$$
  
@@ -126,8 +140,9 @@ DT <- as.data.table(read_feather("DT_4_ind"))
 Prepare `DT` to work with a **GAM** regression model. Transform the characters of weekdays to integers and use function `recode` from package `car` to recode weekdays as there are coming in the week: 1. Monday, ..., 7. Sunday.
 
 {% highlight r %}
-DT[, week_num := as.integer(as.factor(DT[, week]))]
-DT[, week_num := recode(week_num, "1=5;2=1;3=6;4=7;5=4;6=2;7=3")]
+DT[, week_num := as.integer(car::recode(week,
+    "'Monday'='1';'Tuesday'='2';'Wednesday'='3';'Thursday'='4';
+    'Friday'='5';'Saturday'='6';'Sunday'='7'"))]
 {% endhighlight %}
  
 Store informations in variables of the type of industry, date, weekday and period for simpler working.
@@ -287,7 +302,7 @@ summary(gam_2)$s.table
 ## s(Daily,Weekly) 28.7008 28.99423 334.2963       0
 {% endhighlight %}
  
-Seems good too. Plot of fitted values:
+Seems good too, the p-value is 0, which means that independent variable is significant. Plot of fitted values:
 
 {% highlight r %}
 datas <- rbindlist(list(data_r[, .(value, date_time)],
@@ -443,13 +458,13 @@ summary(gam_4_fx)$s.table
 
 
 {% highlight text %}
-##                  edf Ref.df        F       p-value
-## te(Daily,Weekly) 335    335 57.25389 5.289648e-199
+##                  edf Ref.df        F p-value
+## te(Daily,Weekly) 335    335 57.25389       0
 {% endhighlight %}
  
-EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in the book from Simon Wood.
+EDF = 335, here we are. We can see that R-squared is lower than with the model `gam_4`, it is due to that 335 is too high and we [overfitted](https://en.wikipedia.org/wiki/Overfitting) the model. It is prove to that GCV procedure (estimation of lambda and EDF) is working properly. You can read more about the optimal setting (choosing) of `k` argument at [`?choose.k`](https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/choose.k.html) and of course in [the book from Simon Wood](https://www.crcpress.com/Generalized-Additive-Models-An-Introduction-with-R/Wood/p/book/9781584884743).
  
-With the`mgcv` package we have two more opportunities, methods, how to include tensor product interactions term - with functions `ti` and `t2`. `ti` produces a tensor product interaction, appropriate when the main effects (and any lower interactions) are also present, while `te` produces a full tensor product smooth. `t2` is an alternative function to `te` and uses different penalization method. You can read more about it in a documentation of the package `mgcv`: use `?ti` and `?t2` to see more.
+With the `mgcv` package we have two more opportunities, methods, how to include tensor product interactions term - with functions `ti` and `t2`. `ti` produces a tensor product interaction, appropriate when the main effects (and any lower interactions) are also present, while `te` produces a full tensor product smooth. `t2` is an alternative function to `te` and uses different penalization method. You can read more about it in a documentation of the package `mgcv`: use `?ti` and `?t2` to see more.
  
 So, let's try both methods in the our case (model). First, let's use `ti`:
 
@@ -601,7 +616,7 @@ gam.check(gam_4)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## te(Daily,Weekly) 335.00 119.41    1.19       1
+## te(Daily,Weekly) 335.00 119.41    1.22       1
 {% endhighlight %}
  
 
@@ -624,7 +639,7 @@ gam.check(gam_6)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## t2(Daily,Weekly) 335.00  98.12    1.16       1
+## t2(Daily,Weekly) 335.00  98.12    1.17       1
 {% endhighlight %}
  
 The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms some differences can be seen, but it's also insignificant.
@@ -650,7 +665,7 @@ vis.gam(gam_6, n.grid = 50, theta = 35, phi = 32, zlab = "",
 
 ![plot of chunk unnamed-chunk-29](/images/unnamed-chunk-29-1.png)
  
-We can see that the highest peak is when the Daily variable has values near 30 and the Weekly variable has value 1 (it is a Monday).
+We can see that the highest peak is when the Daily variable has values near 30 (3 p.m.) and the Weekly variable has value 1 (it is a Monday).
  
 2D view, contour lines type of plot, can be visualized too. Just set argument `plot.type = "contour"`.
 
@@ -673,7 +688,7 @@ How can we handle this situation? By inclusion of autoregressive model (AR) for 
  
 $$y_i = \beta\mathbf{X} + \varepsilon_i, \hspace{0.2cm} \varepsilon_i = \phi\varepsilon_{i-1} + v_i,$$
  
-where the second equation is a classical AR(1) process and \\( \phi \\) is an unknown autoregressive coefficient to be estimated. Errors can be also nested within a week, which is in our case more appropriate, because of the double seasonal character of our time series. You can read more about estimation and modeling of this kind of models in an excellent book by [Box, Jenkins, and Reinsel: Time Series Analysis](http://onlinelibrary.wiley.com/book/10.1002/9781118619193).
+where the second equation is a classical AR(1) process and \\( \phi \\) is an unknown autoregressive coefficient to be estimated. Errors can be also nested within a week, which is in our case more appropriate, because of the double seasonal character of our time series. You can add also higher orders of AR process and also MA ([moving average](https://en.wikipedia.org/wiki/Moving-average_model)) model. You can read more about estimation and modeling of this kind of models in an excellent book by [Box, Jenkins, and Reinsel: Time Series Analysis](http://onlinelibrary.wiley.com/book/10.1002/9781118619193).
  
 It's possible to add correlation term for errors with function `gamm`, which stands for **GAM** mixture models. It calls the `lme` function from package `nlme`. Now, train basic model with function `gamm` and an another model with AR(1) process nested within a week - just add this argument to `gamm` function: `correlation = corARMA(form = ~ 1|Weekly, p = 1)`.
 
@@ -696,7 +711,7 @@ gam_6_ar1 <- gamm(Load ~ t2(Daily, Weekly,
              method = "REML")
 {% endhighlight %}
  
-We can use an [ANOVA](https://en.wikipedia.org/wiki/Analysis_of_variance) to compare these two models and pick the right one.
+We can use an [ANOVA](https://en.wikipedia.org/wiki/Analysis_of_variance) to compare these two models and pick the right one. It does generalized likelihood ratio test to our nested models.
 
 {% highlight r %}
 anova(gam_6_ar0$lme, gam_6_ar1$lme)
@@ -722,33 +737,92 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 {% highlight text %}
 ##         lower      est.     upper
-## Phi 0.6362993 0.7107914 0.7721507
+## Phi 0.6362986 0.7107914 0.7721512
 ## attr(,"label")
 ## [1] "Correlation structure:"
 {% endhighlight %}
  
 Value 0.71 is pretty high, which indicates a strong dependency on previous values of errors (lags).
  
-Now let's look another diagnostic for these two models. Plot of values of a [partial autocorrelation function](https://en.wikipedia.org/wiki/Partial_autocorrelation_function):
+Now let's look another diagnostic for these two models. Plot of values of a [partial autocorrelation function](https://en.wikipedia.org/wiki/Partial_autocorrelation_function) applied to normalized residuals. It gives the partial correlation of residuals with its own lagged values, controlling for the values of the residuals at all shorter lags.
 
 {% highlight r %}
 layout(matrix(1:2, ncol = 2))
-pacf(resid(gam_6_ar0$lme), lag.max = 48, main = "pACF of gam n.6")
-pacf(resid(gam_6_ar1$lme), lag.max = 48, main = "pACF of gam n.6 with AR(1)")
+pacf(resid(gam_6_ar0$lme, type = "normalized"), lag.max = 48, main = "pACF of gam n.6")
+pacf(resid(gam_6_ar1$lme, type = "normalized"), lag.max = 48, main = "pACF of gam n.6 with AR(1)")
 {% endhighlight %}
 
 ![plot of chunk unnamed-chunk-34](/images/unnamed-chunk-34-1.png)
  
-Am I blind, or I can't see a significant difference between these two plots and corresponding values of pACF? Optimal values of pACF should be under dashed blue lines, so it isn't this scenario.
+We can see a significant difference between these two plots and corresponding values of pACF. Optimal values of pACF should be under dashed blue lines, which isn't completely this scenario on the right plot (model with the AR(1)). It can be better...
  
-Let's make another useful visualization of residuals of two models to confirm uncertainty about correctness of model with AR(1).
+I will do little hack now. For optimal choose of AR(p) and MA(q) orders `auto.arima` function, from the library `forecast`, will be used on residuals from the model `gam_6_ar0`. It automatically chooses optimal orders of ARMA (in our case) based on AIC criterion. As we can use just ARMA models in `gamm`, so unstationarity isn't allowed, set an argument `stationarity = TRUE`.
+
+{% highlight r %}
+library(forecast)
+arma_res <- auto.arima(resid(gam_6_ar0$lme, type = "normalized"),
+                       stationary = TRUE, seasonal = FALSE)
+ 
+arma_res$coef
+{% endhighlight %}
+
+
+
+{% highlight text %}
+##        ar1        ma1        ma2 
+##  0.9102517 -0.3763428 -0.2862549
+{% endhighlight %}
+ 
+It's interesting. `auto.arima` chooses also two orders of MA model. Let's fit a new model and again do ANOVA.
+
+{% highlight r %}
+gam_6_arma<- gamm(Load ~ t2(Daily, Weekly,
+                            k = c(period, 7),
+                            bs = c("cr", "ps"),
+                            full = TRUE),
+                  data = matrix_gam,
+                  family = gaussian,
+                  correlation = corARMA(form = ~ 1|Weekly, p = 1, q = 2),
+                  method = "REML")
+ 
+anova(gam_6_ar0$lme, gam_6_ar1$lme, gam_6_arma$lme)
+{% endhighlight %}
+
+
+
+{% highlight text %}
+##                Model df      AIC      BIC    logLik   Test  L.Ratio
+## gam_6_ar0$lme      1 10 9070.525 9115.568 -4525.263                
+## gam_6_ar1$lme      2 11 8751.361 8800.908 -4364.680 1 vs 2 321.1644
+## gam_6_arma$lme     3 13 8731.750 8790.306 -4352.875 2 vs 3  23.6107
+##                p-value
+## gam_6_ar0$lme         
+## gam_6_ar1$lme   <.0001
+## gam_6_arma$lme  <.0001
+{% endhighlight %}
+ 
+The new model `gam_6_arma` is slightly better in the meaning of AIC. P-value is again very small, which means that `gam_6_arma` is significantly better then `gam_6_ar1`.
+ 
+Now do comparison of these two models on theirs pACF values.
+
+{% highlight r %}
+layout(matrix(1:2, ncol = 2))
+pacf(resid(gam_6_ar1$lme, type = "normalized"), lag.max = 48, main = "pACF of gam n.6 with AR(1)")
+pacf(resid(gam_6_arma$lme, type = "normalized"), lag.max = 48, main = "pACF of gam n.6 with ARMA(1,2)")
+{% endhighlight %}
+
+![plot of chunk unnamed-chunk-37](/images/unnamed-chunk-37-1.png)
+ 
+It's better now. Can we be happy? Up to now, everything seems fine.
+ 
+Let's make one more visualization of residuals of two models to confirm our little uncertainty about correctness of model with ARMA(1,2). Compare it with baseline model `gam_6_ar0`.
 
 {% highlight r %}
 datas <- data.table(Fitted_values = c(gam_6_ar0$gam$fitted.values,
-                                      gam_6_ar1$gam$fitted.values),
+                                      gam_6_arma$gam$fitted.values),
                     Residuals = c(gam_6_ar0$gam$residuals,
-                                  gam_6_ar1$gam$residuals),
-                    Model = rep(c("Gam n.6", "Gam n.6 with AR(1)"), each = nrow(data_r)))
+                                  gam_6_arma$gam$residuals),
+                    Model = rep(c("Gam n.6", "Gam n.6 with ARMA(1,2)"), each = nrow(data_r)))
  
 ggplot(data = datas,
        aes(Fitted_values, Residuals)) +
@@ -765,9 +839,9 @@ ggplot(data = datas,
   labs(title = "Fitted values vs Residuals of two models")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-35](/images/unnamed-chunk-35-1.png)
+![plot of chunk unnamed-chunk-38](/images/unnamed-chunk-38-1.png)
  
-Here we are. The model with an AR(1) process has residuals at low fitted values somehow correlated, which is not good. What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of AR(1) model to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without AR(1).
+Here we are. The model with an ARMA(1,2) process has residuals at low fitted values somehow correlated, which is not good (heteroscedasticity). What now? I have to be honest, I can't explain why this interesting thing happened. So, I would be very happy when someone guides me to the right direction and writes some notes to the discussion, it would really help. One more note about the inclusion of ARMA models to **GAM** or **MLR**. It didn't help in the meaning of forecast accuracy, I made a lot of experiments, but MAPE was higher than with models without ARMAs.
  
 ### Animations and conclusions
  
@@ -779,19 +853,15 @@ I will end this post with a visualization analysis of the model `gam_6`. I will 
  
 Animations were created by functions from package `grid` to layout ggplots to one figure, and function `saveGIF` from package `animation` to create the final GIF. Here there are:
  
-![](/images/industry_1_dashboard.gif)
+![](/images/industry_1_dashboard_v2.gif)
  
-![](/images/industry_4_dashboard.gif)
+![](/images/industry_4_dashboard_v2.gif)
  
 We can see the behavior of **GAMs** on two times series from two different types of industries: commercial property and light industrial. Notice (look), that fitted values and forecasts are smoother than where were with [Multiple linear regression from the previous post](https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/). It's good information to know, it implies that our model isn't overfitted. On the other hand, I also compared forecast performance of **GAM** and **MLR**, but GAM was slightly worse than MLR, which can be a little bit surprising for somebody. Seems that usage of penalized least squares (GAM) for forecasting time series doesn't bring improvement against classical OLS (MLR). But there are other advantages, which I will point out in the end.
  
 Another animation, which I created, is a 3D visualization of fitted values like a surface. As I showed you before, it can be done very easily by function `vis.gam`.
-
-
-{% gif /images/industry_1_vis_3D.gif %}
-
-
-![](/images/industry_1_vis_3D.gif)
+ 
+![](/images/industry_1_vis_3D_v2.gif)
  
 We can compare it with the first dashboard because again it's time series from commercial properties. EDF is also printed to the title of GIF for reasons to see how it changes depending on the behavior of electricity consumption.
  
@@ -816,4 +886,4 @@ Disadvantages:
  
 In the future post, I want to focus on some machine learning method like Support Vector Regression or Regression Trees with alongside of grid search for tuning parameters.
  
-The script for a creation of the whole tutorial is located on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). I would like to encourage you to add any feedback to the discussion below. Thank you for reading this long post.
+The script (*3post-GAM.R*) for a creation of the whole tutorial is located on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). I would like to encourage you to add any feedback to the discussion below. Thank you for reading this long post.
