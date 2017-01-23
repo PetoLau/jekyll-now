@@ -18,8 +18,13 @@ DT <- as.data.table(read_feather("DT_4_ind"))
 
 # prepare DT to work with a regression model
 # tranform charactres of weekdays to integers
-DT[, week_num := as.integer(as.factor(DT[, week]))]
-DT[, week_num := recode(week_num, "1=5;2=1;3=6;4=7;5=4;6=2;7=3")] #recode
+# DT[, week_num := as.integer(as.factor(DT[, week]))]
+# DT[, week_num := recode(week_num, "1=5;2=1;3=6;4=7;5=4;6=2;7=3")] #recode
+
+# alternative:
+DT[, week_num := as.integer(car::recode(
+  week, "'Monday'='1';'Tuesday'='2';'Wednesday'='3';'Thursday'='4';'Friday'='5';'Saturday'='6';'Sunday'='7'"
+))]
 
 # store information of the type of consumer, date, weekday and period
 n_type <- unique(DT[, type])
@@ -194,7 +199,6 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
        title = "Fit from GAM n.6")
 
 AIC(gam_4, gam_5, gam_6)
-BIC(gam_4, gam_5, gam_6)
 
 # Seems gam_6 with t2 is best
 # Look at autocorrelation of residuals
@@ -223,44 +227,57 @@ gam_6_ar1 <- gamm(Load ~ t2(Daily, Weekly,
              correlation = corARMA(form = ~ 1|Weekly, p = 1),
              method = "REML")
 
-gam_6_ar2 <- gamm(Load ~ t2(Daily, Weekly,
+library(forecast)
+
+arima_1 <- auto.arima(resid(gam_6_ar0$lme, type = "normalized"),
+                      stationary = TRUE, seasonal = FALSE)
+summary(arima_1)
+arima_1$model$theta
+arima_1$model$phi
+arima_1$coef
+
+gam_6_arma <- gamm(Load ~ t2(Daily, Weekly,
                             k = c(period, 7),
-                            bs = c("cr", "ps")),
+                            bs = c("cr", "ps"),
+                            full = TRUE),
                   data = matrix_gam,
                   family = gaussian,
-                  correlation = corARMA(form = ~ 1|Weekly, p = 2),
+                  correlation = corARMA(form = ~ 1|Weekly, p = 1, q = 2),
                   method = "REML")
 
-anova(gam_6_ar0$lme, gam_6_ar1$lme, gam_6_ar2$lme)
+layout(matrix(1:2, ncol = 2))
+acf(resid(gam_6_ar1$lme, type = "normalized"), lag.max = 48, main = "ACF")
+pacf(resid(gam_6_ar1$lme, type = "normalized"), lag.max = 48, main = "pACF")
+dev.off()
+
+layout(matrix(1:2, ncol = 2))
+acf(resid(gam_6_arma$lme, type = "normalized"), lag.max = 48, main = "ACF")
+pacf(resid(gam_6_arma$lme, type = "normalized"), lag.max = 48, main = "pACF")
+dev.off()
+
+anova(gam_6_ar0$lme, gam_6_ar1$lme, gam_6_arma$lme)
 anova(gam_6_ar0$lme, gam_6_ar1$lme)
-# gam_6 with AR(1) correlated errors seems better than simple model, but AR(2) is not better than AR(1).
+# gam_6 with AR(1) correlated errors seems better than simple model, ARMA is slightly better than AR
 
 # Different method of estimation of parameters
+summary(gam_6_arma$gam)
 summary(gam_6_ar1$gam)
 summary(gam_6_ar0$gam)
 summary(gam_6)
 
-layout(matrix(1:2, ncol = 2))
-acf(resid(gam_6_ar1$lme), lag.max = 48, main = "ACF")
-pacf(resid(gam_6_ar1$lme), lag.max = 48, main = "pACF")
-dev.off()
-
-# seems it helped little bit
-plot(gam_6_ar1$gam)
-plot(gam_6_ar0$gam)
-
 # Estimated \phi coefficient of AR(1) process
 intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
+intervals(gam_6_arma$lme, which = "var-cov")$corStruct
 
 datas <- rbindlist(list(data_r[, .(value, date_time)],
-                        data.table(value = gam_6_ar1$gam$fitted.values, data_time = data_r[, date_time])))
+                        data.table(value = gam_6_arma$gam$fitted.values, data_time = data_r[, date_time])))
 datas[, type := c(rep("Real", nrow(data_r)), rep("Fitted", nrow(data_r)))]
 
 ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
   geom_line(size = 0.8) +
   theme_bw() +
   labs(x = "Time", y = "Load (kW)",
-       title = "Fit from GAM n.6 with AR(1)")
+       title = "Fit from GAM n.6 with ARMA(1,2)")
 
 # We are happy that we chosen the best model..lets make more exploratory analysis!
 
@@ -269,9 +286,16 @@ ggplot(data = datas, aes(date_time, value, group = type, colour = type)) +
 # looks gam_6 is better than gam_6_ar1
 # lets make more detailed view of residuals of these two models
 
-datas <- data.table(Fitted_values = c(gam_6_ar0$gam$fitted.values, gam_6_ar1$gam$fitted.values),
-                    Residuals = c(gam_6_ar0$gam$residuals, gam_6_ar1$gam$residuals),
-                    Model = rep(c("Gam n.6", "Gam n.6 with AR(1)"), each = nrow(data_r)))
+summary(gam_6_arma$gam)
+summary(gam_6_ar1$gam)
+
+datas <- data.table(Fitted_values = c(gam_6_ar0$gam$fitted.values, gam_6_arma$gam$fitted.values),
+                    Residuals = c(gam_6_ar0$gam$residuals, gam_6_arma$gam$residuals),
+                    Model = rep(c("Gam n.6", "Gam n.6 with ARMA)"), each = nrow(data_r)))
+
+# datas <- data.table(Fitted_values = c(gam_6_ar0$gam$fitted.values, gam_6_ar1$gam$fitted.values),
+#                     Residuals = c(gam_6_ar0$gam$residuals, gam_6_ar1$gam$residuals),
+#                     Model = rep(c("Gam n.6", "Gam n.6 with AR(1)"), each = nrow(data_r)))
 
 ggplot(data = datas,
        aes(Fitted_values, Residuals)) +
@@ -337,19 +361,23 @@ mape <- function(real, pred){
 
 n_weeks <- floor(length(n_date)/7) - 2
 
+define_region <- function(row, col){
+  viewport(layout.pos.row = row, layout.pos.col = col)
+}
+
 saveGIF({
-  oopt = ani.options(interval = 1.6, nmax = 50)
+  oopt = ani.options(interval = 2, nmax = 50)
   for(i in 0:(n_weeks-1)){
     
-    gam_pred_weeks <- predWeekGAM(DT[type == n_type[4]], n_date[((i*7)+1):((i*7)+7*2)])
+    gam_pred_weeks <- predWeekGAM(DT[type == n_type[1]], n_date[((i*7)+1):((i*7)+7*2)])
     
-    gam_err_mape <- mape(DT[(type == n_type[4] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
+    gam_err_mape <- mape(DT[(type == n_type[1] & date %in% n_date[(15+(i*7)):(21+(i*7))]), value],
                          gam_pred_weeks$Pred)
     
     # 1. plot of fitted values
     g1 <- ggplot(data = data.table(value = c(gam_pred_weeks$GAMobj$fitted.values,
-                                             DT[(type == n_type[4]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), value]),
-                                   date_time = rep(DT[(type == n_type[4]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), date_time], 2),
+                                             DT[(type == n_type[1]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), value]),
+                                   date_time = rep(DT[(type == n_type[1]) & (date %in% n_date[(1+(i*7)):(14+(i*7))]), date_time], 2),
                                    type = rep(c("Fit", "Real"), each = length(gam_pred_weeks$GAMobj$fitted.values))),
                  aes(date_time, value, group = type, colour = type)) +
       geom_line(size = 0.8) +
@@ -362,7 +390,7 @@ saveGIF({
             axis.title = element_text(size = 12, face = "bold"),
             legend.text = element_text(size = 12, face = "bold")) +
       labs(x = "Time", y = "Load (kW)",
-           title = paste("Fit from GAM (", n_type[4], "); ", "week: ", i+1, "-", i+2, sep = ""))
+           title = paste("Fit from GAM (", n_type[1], "); ", "week: ", i+1, "-", i+2, sep = ""))
     
     # 2. plot of fitted values vs. residuals
     g2 <- ggplot(data = data.table(Fitted_values = gam_pred_weeks$GAMobj$fitted.values,
@@ -379,8 +407,8 @@ saveGIF({
     
     # 3. plot of forecasts
     g3 <- ggplot(data = data.table(value = c(gam_pred_weeks$Pred,
-                                             DT[(type == n_type[4]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), value]),
-                                   date_time = rep(DT[(type == n_type[4]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), date_time], 2),
+                                             DT[(type == n_type[1]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), value]),
+                                   date_time = rep(DT[(type == n_type[1]) & (date %in% n_date[(15+(i*7)):(21+(i*7))]), date_time], 2),
                                    type = rep(c("GAM", "Real"), each = length(gam_pred_weeks$Pred))),
                  aes(date_time, value, group = type, colour = type)) +
       geom_line(size = 0.8) +
@@ -400,12 +428,12 @@ saveGIF({
     # Create layout : nrow = 2, ncol = 2
     pushViewport(viewport(layout = grid.layout(2, 2)))
     # Arrange the plots
-    print(g1, vp=define_region(1, 1:2))
+    print(g1, vp = define_region(1, 1:2))
     print(g2, vp = define_region(2, 1))
     print(g3, vp = define_region(2, 2))
     
     ani.pause()
-  }}, movie.name = "industry_4_dashboard.gif", ani.height = 750, ani.width = 950)
+  }}, movie.name = "industry_1_dashboard_v2.gif", ani.height = 750, ani.width = 950)
 
 
 saveGIF({
@@ -443,7 +471,7 @@ saveGIF({
   }}, movie.name = "industry_1_vis.gif", ani.height = 450, ani.width = 550)
 
 saveGIF({
-  oopt = ani.options(interval = 1.1, nmax = 50)
+  oopt = ani.options(interval = 1.5, nmax = 50)
   for(i in 0:(n_weeks-1)){
     
     data_train <- DT[type == n_type[1] & date %in% n_date[((i*7)+1):((i*7)+7*2)]]
@@ -475,7 +503,7 @@ saveGIF({
             zlim = c(min(DT[type == n_type[1], value]) - 100, max(DT[type == n_type[1], value])-1000))
     
     ani.pause()
-  }}, movie.name = "industry_1_vis_3D_v3.gif", ani.height = 520, ani.width = 550)
+  }}, movie.name = "industry_1_vis_3D_v4.gif", ani.height = 520, ani.width = 550)
 
 # interpretation of plot.gam - effect (estimated coefficients) of variables on target variable
 # interpretation of vis.gam - response in values of selected variables
@@ -491,3 +519,18 @@ saveGIF({
 # You can statistically test significance of independent variable to target variable, which is modeled not linearly (like in MLR), so test if ind. variable has significant non linear behaviour. (Big advantage)
 # Tensor product interactions - another big advantage - so you can make interactions of two variables with two differnt smoothing functions.
 # For monitoring behavior thru time, for me, GAM is perfect method. Monitor significance, EDF etc.
+
+## Evaluation of time complexity ----
+library(microbenchmark)
+
+res1 <- microbenchmark(GAM = gam(Load ~ t2(Daily, Weekly,
+                                           k = c(period, 7),
+                                           bs = c("cr", "ps"),
+                                           full = TRUE),
+                                 data = matrix_gam,
+                                 family = gaussian),
+                       MLR = lm(Load ~ 0 + Daily + Weekly + Daily:Weekly, data = matrix_train),
+                       times = 50L)
+
+plot(res1)
+autoplot(res1)
