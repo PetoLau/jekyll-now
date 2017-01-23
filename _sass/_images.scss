@@ -33,3 +33,68 @@ img.emoji {
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
 }
+
+figure.animated_gif_frame {
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+    @include opacity(0.85);
+    @include transition(opacity, 0.2s, ease-in-out);
+    &:hover, &.playing {
+        @include opacity(1);
+    }
+
+    &::before {
+        content: attr(data-caption);
+        pointer-events: none;
+        position: absolute;
+        z-index: 100;
+        text-align: center;
+        line-height: 2;
+        border: solid 3px #666;
+        border-radius: 8px;
+        font-weight: 700;
+        color: #666;
+        left: 50%;
+        margin-left: -80px;
+        width: 160px;
+        height: 2em;
+        top: 50%;
+        margin-top: -1em;
+        white-space: nowrap;
+        font-size: 21px;
+    }
+
+    &.playing::before {
+        display: none;
+    }
+
+
+    img {
+        padding: 0!important;
+        border: none;
+        @include box-shadow(none);
+        @include opacity(0.5);
+    }
+
+    figcaption {
+        position: absolute;
+        bottom: 0;
+        background: rgba(0,0,0,.5);
+        color: white;
+        display: block;
+        width: 100%;
+        padding: 0;
+        line-height: 2.4;
+    }
+
+    &.playing {
+        img {
+            @include opacity(1);
+        }
+
+        figcaption {
+            display: none;
+        }
+    }
+}
