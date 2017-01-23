@@ -33,6 +33,7 @@ where \\( i = 1, \dots, N \\), \\( g \\) is a link function (identical, logarith
 The smooth function \\( f \\) is composed by sum of basis functions \\( b \\) and their corresponding regression coefficients \\( \beta \\), formally written:
  
 $$f(x) = \sum_{i = 1}^q b_i(x)\beta_i,$$
+ 
 $$\mbox{ where } q \mbox{ is basis dimension.}$$
  
 Smooth functions are also called [splines](https://en.wikipedia.org/wiki/Spline_(mathematics)). [Smoothing splines](https://en.wikipedia.org/wiki/Smoothing_spline) are real functions that are piecewise-defined by polynomial functions (basis functions). The places, where the polynomial pieces connect are called knots. In **GAMs**, penalized regression splines are used in order to regularize the smoothness of a spline.
@@ -90,7 +91,7 @@ where \\( \mathbf{A} \\) is the [projection matrix](https://en.wikipedia.org/wik
  
 #### Interactions
  
-We are almost at the end of the explanation of **GAMs** theory. One more thing. As I showed in the previous blog post, **interactions** are a very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities, how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\(f_1(x_1)\times f_1(x_2) (\mbox{often denoted} f(x_1, x_2)) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
+We are almost at the end of the explanation of **GAMs** theory. One more thing. As I showed in the previous blog post, **interactions** are a very important part of the **regression** model for **double seasonal time series**. With **GAMs** there are four (!) main possibilities, how to include them to the model. First is the most basic, like in **MLR**, the multiplication of two independent variables: \\( x_1\times x_2 \\). Second one is possibility to use smoothed function to one variable: \\( f_1(x_1)\times x_2 \\). Third one comes to use same smoothed function for both variables: \\( f_1(x_1)\times f_1(x_2) (\mbox{often denoted } f(x_1, x_2)) \\). Fourth one is the most complex, with GAM it is possible to use [tensor product](https://en.wikipedia.org/wiki/Tensor_product) interactions. So it is possible to use different smoothing bases for variables and penalize it in two (when we do interactions of two independent variables) different ways: \\( f_1(x_1)\otimes f_2(x_2)  \\). More nicely, tensor product interactions can be written as:
  
 $$f_{12}(x_1, x_2) = \sum_{i=1}^I \sum_{j=1}^J \delta_{ij}b_{1i}(x_1)b_{2j}(x_2),$$
  
@@ -299,7 +300,7 @@ summary(gam_2)$s.table
 
 {% highlight text %}
 ##                     edf   Ref.df        F p-value
-## s(Daily,Weekly) 28.7008 28.99423 334.2963       0
+## s(Daily,Weekly) 28.7008 28.99423 334.4754       0
 {% endhighlight %}
  
 Seems good too, the p-value is 0, which means that independent variable is significant. Plot of fitted values:
@@ -555,8 +556,8 @@ summary(gam_6)$s.table
 
 
 {% highlight text %}
-##                       edf   Ref.df       F p-value
-## t2(Daily,Weekly) 98.12005 120.2345 84.4022       0
+##                       edf   Ref.df        F p-value
+## t2(Daily,Weekly) 98.12005 120.2345 86.70754       0
 {% endhighlight %}
  
 I have also printed the GCV score value for the last three models, which is also a good criterion to choose optimal model among a set of fitted models. We can see that with `t2` term and corresponding model `gam_6` the GCV value is the lowest. It may be indicating that `gam_6` is our best model so far.
@@ -616,7 +617,7 @@ gam.check(gam_4)
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
 ##                      k'    edf k-index p-value
-## te(Daily,Weekly) 335.00 119.41    1.22       1
+## te(Daily,Weekly) 335.00 119.41    1.18       1
 {% endhighlight %}
  
 
@@ -638,8 +639,8 @@ gam.check(gam_6)
 ## Basis dimension (k) checking results. Low p-value (k-index<1) may
 ## indicate that k is too low, especially if edf is close to k'.
 ## 
-##                      k'    edf k-index p-value
-## t2(Daily,Weekly) 335.00  98.12    1.17       1
+##                     k'   edf k-index p-value
+## t2(Daily,Weekly) 335.0  98.1     1.2       1
 {% endhighlight %}
  
 The function `gam.check` makes also output to the console of more useful information. We can see again that models are very similar, just in histograms some differences can be seen, but it's also insignificant.
@@ -737,7 +738,7 @@ intervals(gam_6_ar1$lme, which = "var-cov")$corStruct
 
 {% highlight text %}
 ##         lower      est.     upper
-## Phi 0.6362986 0.7107914 0.7721512
+## Phi 0.6362872 0.7107914 0.7721589
 ## attr(,"label")
 ## [1] "Correlation structure:"
 {% endhighlight %}
@@ -756,7 +757,7 @@ pacf(resid(gam_6_ar1$lme, type = "normalized"), lag.max = 48, main = "pACF of ga
  
 We can see a significant difference between these two plots and corresponding values of pACF. Optimal values of pACF should be under dashed blue lines, which isn't completely this scenario on the right plot (model with the AR(1)). It can be better...
  
-I will do little hack now. For optimal choose of AR(p) and MA(q) orders `auto.arima` function, from the library `forecast`, will be used on residuals from the model `gam_6_ar0`. It automatically chooses optimal orders of ARMA (in our case) based on AIC criterion. As we can use just ARMA models in `gamm`, so unstationarity isn't allowed, set an argument `stationarity = TRUE`.
+I will do little hack now. For optimal choose of AR(p) and MA(q) orders `auto.arima` function, from the library `forecast`, will be used on residuals from the model `gam_6_ar0`. It automatically chooses optimal orders of ARMA (in our case) based on AIC criterion. As we can use just ARMA models in `gamm`, so nonstationarity isn't allowed, set an argument `stationarity = TRUE`.
 
 {% highlight r %}
 library(forecast)
@@ -801,9 +802,9 @@ anova(gam_6_ar0$lme, gam_6_ar1$lme, gam_6_arma$lme)
 ## gam_6_arma$lme  <.0001
 {% endhighlight %}
  
-The new model `gam_6_arma` is slightly better in the meaning of AIC. P-value is again very small, which means that `gam_6_arma` is significantly better then `gam_6_ar1`.
+The new model `gam_6_arma` is slightly better in the meaning of AIC. P-value is again very small, which means that `gam_6_arma` is significantly better than `gam_6_ar1`.
  
-Now do comparison of these two models on theirs pACF values.
+Now do a comparison of these two models on theirs pACF values.
 
 {% highlight r %}
 layout(matrix(1:2, ncol = 2))
@@ -815,7 +816,7 @@ pacf(resid(gam_6_arma$lme, type = "normalized"), lag.max = 48, main = "pACF of g
  
 It's better now. Can we be happy? Up to now, everything seems fine.
  
-Let's make one more visualization of residuals of two models to confirm our little uncertainty about correctness of model with ARMA(1,2). Compare it with baseline model `gam_6_ar0`.
+Let's make one more visualization of residuals of two models to confirm our little uncertainty about the correctness of model with ARMA(1,2). Compare it with baseline model `gam_6_ar0`.
 
 {% highlight r %}
 datas <- data.table(Fitted_values = c(gam_6_ar0$gam$fitted.values,
@@ -861,13 +862,13 @@ We can see the behavior of **GAMs** on two times series from two different types
  
 Another animation, which I created, is a 3D visualization of fitted values like a surface. As I showed you before, it can be done very easily by function `vis.gam`.
  
-![](/images/industry_1_vis_3D_v2.gif)
+![](/images/industry_1_3D_v2.gif)
  
 We can compare it with the first dashboard because again it's time series from commercial properties. EDF is also printed to the title of GIF for reasons to see how it changes depending on the behavior of electricity consumption.
  
 With this, I would like to end the main part of this tutorial and conclude it with some remarks.
  
-In the beginning of the post, motivation and the theory behind GAM method was introduced. Next, the analytical (**magical**) part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed. Next, consideration about the correctness of an autoregressive model for errors was discussed. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
+In the beginning of the post, motivation and the theory behind GAM method was introduced. Next, the analytical ("magical") part continued with explaining various features of the package `mgcv`. Different types of **interactions** were showed and analyzed - best chose was tensor product interactions (`t2`). Next, consideration about the correctness of an autoregressive model (or ARMA) for errors was discussed - ended with an open question. In the end, I tried to make a big view of a behavior of **GAMs** by animations of its performance on **double seasonal time series**.
  
 Everything that was said implies these advantages and disadvantages of using **GAM** for your problem:
  
