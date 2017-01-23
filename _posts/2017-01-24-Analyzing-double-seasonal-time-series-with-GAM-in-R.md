@@ -862,7 +862,7 @@ We can see the behavior of **GAMs** on two times series from two different types
  
 Another animation, which I created, is a 3D visualization of fitted values like a surface. As I showed you before, it can be done very easily by function `vis.gam`.
  
-![](/images/post_3/industry_1_3D_v2.gif)
+![](/images/post_3/industry_1_v2.gif)
  
 We can compare it with the first dashboard because again it's time series from commercial properties. EDF is also printed to the title of GIF for reasons to see how it changes depending on the behavior of electricity consumption.
  
