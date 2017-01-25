@@ -15,5 +15,5 @@ permalink: /links/
 * [STU](http://www.stuba.sk/english.html?page_id=132)
 
 #### Data Science
-* [StatsBlogs](http://www.statsblogs.com/) - I'm contributor (hope so).
+* [StatsBlogs](http://www.statsblogs.com/)
 * [KDnuggets](http://www.kdnuggets.com/)
