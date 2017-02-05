@@ -15,7 +15,7 @@ I am a **PhD. student** at the [Faculty of Informatics and Information Technolog
 
 My **publications** are on:
 
- * <p>[Google Scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en)  <a href="https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en"><img src="/images/avatars/avatarscholar.png" width="37" height="36" border="0"/></a></p>
+ * <span>[Google Scholar](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en)  <a href="https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en"><img src="/images/avatars/avatarscholar.png" width="37" height="36" border="0"/></a></span>
  * [Research Gate](https://www.researchgate.net/profile/Peter_Laurinec)  <a href="https://www.researchgate.net/profile/Peter_Laurinec"><img src="/images/avatars/avatarRG.png" width="36" height="36" border="0"/></a>
  * [Scopus](http://www.researcherid.com/rid/Q-2356-2016)  <a href="http://www.researcherid.com/rid/Q-2356-2016"><img src="/images/avatars/avatarscopus.png" width="80" height="34" border="0"/></a>
  * [ORCID](http://orcid.org/0000-0002-3501-8783)  <a href="http://orcid.org/0000-0002-3501-8783"><img src="/images/avatars/avatarorcid.png" width="76" height="30" border="0"/></a>
