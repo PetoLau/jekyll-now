@@ -1,28 +1,36 @@
+# Script for a creation of the word-cloud of html pages
 library(rvest)
 library(wordcloud2)
 library(data.table)
 library(RColorBrewer)
 
+# scan 1.post
 test <- read_html("https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/")
 text <- html_text(test) 
 content <- stringi::stri_extract_all_words(text, simplify = TRUE)
 
+# scan 2.post
 test <- read_html("https://petolau.github.io/Analyzing-double-seasonal-time-series-with-GAM-in-R/")
 text <- html_text(test) 
 content_2 <- stringi::stri_extract_all_words(text, simplify = TRUE)
 
+# scan 3.post
 test <- read_html("https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/")
 text <- html_text(test) 
 content_3 <- stringi::stri_extract_all_words(text, simplify = TRUE)
 
+# Preprocess words nad frequencies
 freq.word <- as.data.table(table(cbind(content, content_2, content_3)))
 setkey(freq.word, N)
 setnames(freq.word, "V1", "word")
 setnames(freq.word, "N", "freq")
 
+# Subset valuable words
 words_best <- freq.word[(freq > 9) & (freq < 65), ]
 words_best <- words_best[which(words_best[, lapply(word, nchar)] > 4)]
 
+# Plot it
 wordcloud2(as.data.frame(words_best), size = 0.2, minSize = 10,
            backgroundColor = brewer.pal(6,"Greys")[2],
            color = "random-dark")
+
