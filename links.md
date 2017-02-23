@@ -5,7 +5,7 @@ permalink: /links/
 ---
 #### R
 * [R-bloggers](http://www.r-bloggers.com/) - I'm contributor.
-* [R-weekly](https://rweekly.org) - Already one post from here is mentioned there.
+* [R-weekly](https://rweekly.org) - Already two posts from here is mentioned there.
 * [Jobs for R-users](https://www.r-users.com/)
 * [CRAN packages](https://cran.r-project.org/web/packages/)
 * [CRAN Task Views](https://cran.r-project.org/web/views/)

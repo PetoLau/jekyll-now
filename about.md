@@ -23,7 +23,7 @@ My **publications** are on:
 
 I am a fan of the programming language **R** and of **Data Science**, **Statistics** and **Data Visualizations** in general.
 
-Read my [**CV**](/images/CV.pdf).
+### Read my [**CV**](/images/CV.pdf).
 
 ### Contact me at:
 
