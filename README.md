@@ -1,4 +1,4 @@
-## [Blog repository](https://petolau.github.io/)
+## [Blog by Peter Laurinec](https://petolau.github.io/)
 
 <img src="images/sitelogo.png?raw=true" alt="Blog logo" width="350" height="225"/>
 
