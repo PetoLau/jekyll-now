@@ -38,6 +38,6 @@ With this large amount of information (see links), you can initiate your meetup 
  
 I hope you will benefit some knowledge from my slides, e.g. get a bigger picture of how to use data mining methods on smart meter data. If you don't get some details, don't worry, I will explain in more detail, how to implement regression trees, ensemble learning or cluster analysis of consumers in R. Stay tuned and in the meantime check my previous [**blog posts**](https://petolau.github.io/blog).
  
-Teaser :sunglasses: :chart_with_upwards_trend:
+Teaser :sunglasses: :chart_with_upwards_trend: :
  
 ![](/images/post_4/lotofseries.png)
