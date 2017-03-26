@@ -4,7 +4,7 @@ author: Peter Laurinec
 layout: post
 published: true
 status: publish
-tags: test meetup
+tags: R meetup
 draft: false
 ---
  
@@ -12,7 +12,7 @@ On 22. March a first special **R** related meetup called **R<-Slovakia** took pl
  
 ## Topics of the presentation
  
-The work on my **PhD. thesis** was the main topic of my presentation, which is still in progress. So, what kind of challenges did I tackle in the field of "mining" smart meter data? I am focused on **clustering of consumers** to produce more accurate forecasts of aggregated electricity consumption. For this task, it is crucial to choose most suitable forecast methods and representations of time series of electricity consumption, which are inputs to the clustering algorithm. I also spoke about **R** "tips and tricks", that can help to write more effective scripts for this task.
+The work on my **PhD. thesis** was the main topic of my presentation, which is still in progress. So, what kind of challenges did I tackle in the field of "mining" smart meter data? I am focused on **clustering of consumers** to produce more accurate forecasts of aggregated electricity consumption. For this task, it is crucial to choose most suitable forecast methods and representations of time series of electricity consumption, which are inputs to the clustering algorithm. I also spoke about **R** "tips and tricks", that can help to write more effective scripts for this task. Some ideas from the presentation are already published in scientific papers - you can check them in my [ResearchGate profile](https://www.researchgate.net/profile/Peter_Laurinec).
  
 The headlines of the presentation are as follows:
  * Introduction of R
@@ -36,6 +36,8 @@ With this large amount of information (see links), you can initiate your meetup 
  
 ## Look ahead
  
-I hope you will benefit some knowledge from my slides, e.g. get a bigger picture of how to use data mining methods on smart meter data. If you don't get some details, don't worry, I will explain in more detail, how to implement regression trees, ensemble learning or cluster analysis of consumers in R. Stay tuned and in the meantime check my previous [blog posts](https://petolau.github.io/blog).
+I hope you will benefit some knowledge from my slides, e.g. get a bigger picture of how to use data mining methods on smart meter data. If you don't get some details, don't worry, I will explain in more detail, how to implement regression trees, ensemble learning or cluster analysis of consumers in R. Stay tuned and in the meantime check my previous [**blog posts**](https://petolau.github.io/blog).
+ 
+Teaser :sunglasses: :chart_with_upwards_trend:
  
 ![](/images/post_4/lotofseries.png)
