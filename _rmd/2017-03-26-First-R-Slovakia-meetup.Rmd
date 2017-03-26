@@ -1,5 +1,5 @@
 ---
-title: R &larr Slovakia meetup started to build community in Bratislava
+title: R&larr;Slovakia meetup started to build community in Bratislava
 author: Peter Laurinec
 layout: post
 published: false
