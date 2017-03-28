@@ -3,7 +3,7 @@ title: R&lt;-Slovakia meetup started to build community in Bratislava
 author: Peter Laurinec
 layout: post
 published: false
-status: process
+status: processed
 tags: R meetup
 draft: false
 ---
