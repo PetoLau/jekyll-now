@@ -518,7 +518,7 @@ saveGIF({
 # Main advantage is that you can model target variable with non linear function.
 # You can statistically test significance of independent variable to target variable, which is modeled not linearly (like in MLR), so test if ind. variable has significant non linear behaviour. (Big advantage)
 # Tensor product interactions - another big advantage - so you can make interactions of two variables with two differnt smoothing functions.
-# For monitoring behavior thru time, for me, GAM is perfect method. Monitor significance, EDF etc.
+# For monitoring behavior thru time, for me, GAM is perfect method. Monitor significance, smoothness, EDF etc.
 
 ## Evaluation of time complexity ----
 library(microbenchmark)
