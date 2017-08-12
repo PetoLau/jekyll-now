@@ -11,7 +11,7 @@ I am a **PhD. student** at the [Faculty of Informatics and Information Technolog
  * Machine Learning
  * Cluster Analysis
  * Data Streams
- * Forecast of Time Series
+ * Forecasting of Time Series
 
 My **publications** are on:
 
