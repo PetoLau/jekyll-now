@@ -4,7 +4,7 @@ title: Using regression trees for forecasting double-seasonal time series with t
 author: Peter Laurinec
 published: true
 status: publish
-tags: tree forecast
+tags: R tree forecast
 draft: false
 ---
  
