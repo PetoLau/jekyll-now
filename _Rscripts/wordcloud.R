@@ -9,35 +9,45 @@ library(wordcloud)
 library(RColorBrewer)
 
 # scan 1.post
-test <- read_html("https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/")
-text <- html_text(test) 
-content_2 <- stringi::stri_extract_all_words(text, simplify = TRUE)
-
-# scan 2.post
-test <- read_html("https://petolau.github.io/Analyzing-double-seasonal-time-series-with-GAM-in-R/")
-text <- html_text(test) 
-content_3 <- stringi::stri_extract_all_words(text, simplify = TRUE)
-
-# scan 3.post
 test <- read_html("https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/")
 text <- html_text(test) 
 content_1 <- stringi::stri_extract_all_words(text, simplify = TRUE)
 
+# scan 2.post
+test <- read_html("https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/")
+text <- html_text(test) 
+content_2 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+
+# scan 3.post
+test <- read_html("https://petolau.github.io/Analyzing-double-seasonal-time-series-with-GAM-in-R/")
+text <- html_text(test) 
+content_3 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+
+# scan 4.post
+test <- read_html("https://petolau.github.io/Regression-trees-for-forecasting-time-series-in-R/")
+text <- html_text(test) 
+content_4 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+
 # merge all post to one 1 data.frame
-contents_all <- data.frame(words = c(content_1, content_2, content_3))
+contents_all <- data.frame(words = c(content_1, content_2, content_3, content_4))
 labels_all <- c(rep("Intro_Smart_Meters", length(content_1)),
                 rep("MLR", length(content_2)),
-                rep("GAM", length(content_3)))
+                rep("GAM", length(content_3)),
+                rep("Trees", length(content_4)))
 
 
 dataset_s <- sapply(unique(labels_all), function(label) list(contents_all[labels_all %in% label, 1]) )
 
 # convert each list content into a corpus
-dataset_corpus <- lapply(dataset_s, function(x) Corpus(VectorSource( toString(x) ))) 
+dataset_corpus <- lapply(dataset_s, function(x) Corpus(VectorSource( toString(x) )))
 
 # merge all documents into one single corpus
-dataset_corpus_all <- dataset_corpus[[1]]
-for (i in 2:length(unique(labels_all))) { dataset_corpus_all <- c(dataset_corpus_all, dataset_corpus[[i]]) }
+dataset_corpus_all <- c(dataset_corpus[[1]][["1"]], dataset_corpus[[2]][["1"]], dataset_corpus[[3]][["1"]], dataset_corpus[[4]][["1"]])
+# 
+# for (i in 2:length(unique(labels_all))) { 
+#   print(i)
+#   dataset_corpus_all <- c(dataset_corpus_all, dataset_corpus[[1]][["1"]])
+# }
 
 # remove punctuation, numbers and stopwords
 dataset_corpus_all <- tm_map(dataset_corpus_all, removePunctuation)
@@ -65,7 +75,7 @@ head(document_tm_clean_mat_s)
 # Plot it
 
 comparison.cloud(document_tm_clean_mat_s, max.words = 400, random.order = FALSE, scale = c(3.8, 0.8),
-                 colors = c("dodgerblue3", "mediumseagreen", "orangered1"), title.size = 1.5)
+                 colors = c("dodgerblue3", "mediumseagreen", "orangered1", "black"), title.size = 1.5)
 
 # Old (alternative) solution:
 
