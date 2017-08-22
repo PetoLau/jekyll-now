@@ -11,7 +11,7 @@ draft: false
 After blogging break caused by writing research papers, I managed to secure time to write something new about time series forecasting. This time I want to share with you my experiences with seasonal-trend time series forecasting using simple regression trees. Classification and **regression tree** (or [decision tree](https://en.wikipedia.org/wiki/Decision_tree_learning)) is broadly used **machine learning** method for modeling. They are favorite because of these factors:
 
 * simple to understand (white box)
-* from trees we can extract interpretable results and make simple decisions
+* from a tree we can extract interpretable results and make simple decisions
 * they are helpful for exploratory analysis as binary structure of tree is simple to visualize
 * very good prediction accuracy performance
 * very fast
@@ -88,7 +88,7 @@ data_test <- DT[date %in% n_date[64]]
 ```
 
 Let's plot the train set and corresponding average weekly values of electricity load.
-```{r, fig.width = 8, fig.height=3.2}
+```{r, fig.width = 8.5, fig.height=3.5}
 averages <- data.table(value = rep(sapply(0:2, function(i)
                         mean(data_train[((i*period*7)+1):((i+1)*period*7), value])),
                         each = period * 7),
@@ -108,7 +108,7 @@ A very useful method for visualization and analysis of time series is [STL decom
 STL decomposition is based on Loess regression, and it decomposes time series to three parts: seasonal, trend and remainder.
 We will use results from the STL decomposition to model our data as well.
 I am using `stl()` from `stats` package and before computation we must define weekly seasonality to our time series object. Let's look on results:
-```{r, fig.width = 7, fig.height = 6.8}
+```{r, fig.width = 8, fig.height = 6.8}
 data_ts <- ts(data_train$value, freq = period * 7)
 decomp_ts <- stl(data_ts, s.window = "periodic", robust = TRUE)$time.series
 
@@ -138,9 +138,11 @@ Classical way to handle seasonality is to add seasonal features to a model as ve
 A better way to model seasonal variables (features) with **nonlinear regression** methods like **tree** is to transform it to [Fourier terms](https://en.wikipedia.org/wiki/Fourier_transform) (sinus and cosine). It is more effective to tree models and also other nonlinear machine learning methods. I will explain why it is like that further of this post.
 
 Fourier daily signals (terms) are defined as:
+
 $$\left( \sin\left(\frac{2\pi jt}{48}\right),~\cos\left(\frac{2\pi jt}{48}\right) \right)_{j=1}^{ds} ,$$
 
 where \\( ds \\) is number of daily seasonality Fourier pairs and Fourier weekly terms are defines as:
+
 $$\left( \sin\left(\frac{2\pi jt}{7}\right),~\cos\left(\frac{2\pi jt}{7}\right) \right)_{j=1}^{ws} ,$$
 
 where \\( ws \\) is a number of weekly seasonality Fourier pairs.
@@ -149,7 +151,7 @@ Another great feature (most of the times most powerful) is a lag of original tim
 The lag of time series can be preprocessed by removing noise or trend for example by STL decomposition method to ensure stability.
 
 As was earlier mentioned, regression trees can't predict trend because they logically make rules and predict future values only by rules made by training set.
-Therefore original time series that inputs to regression tree as dependent variable must be [detrended](https://en.wiktionary.org/wiki/detrending) (removing trend part of time series). Acquired trend part then can be forecasted by for example [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) model.
+Therefore original time series that inputs to regression tree as dependent variable must be [detrended](https://en.wiktionary.org/wiki/detrending) (removing the trend part of the time series). The acquired trend part then can be forecasted by for example [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) model.
 
 Let's go to constructing mentioned features and trend forecasting.
 
@@ -168,7 +170,7 @@ fuur <- fourier(data_msts, K = c(K, K))
 
 It made 2 pairs (sine and cosine) of daily and weekly seasonal signals.
 If we compare it with approach described in previous posts, so simple periodic vectors, it looks like this:
-```{r, fig.width = 8, fig.height = 4.5}
+```{r, fig.width = 9, fig.height = 4.8}
 Daily <- rep(1:period, 21) # simple daily vector
 Weekly <- data_train[, week_num] # simple weekly vector
 
@@ -188,7 +190,7 @@ ggplot(data_fuur_simple, aes(x = date, y = value, color = method)) +
   theme_ts
 ```
 
-where *four-daily* is the Fourier term for daily season, *simple-daily* is the simple feature for daily season, *four-weekly* is the Fourier term for weekly season, and *simple-weekly* is the simple feature for weekly season. The advantage of Fourier terms is that there is much more closeness between ending and starting of a day or a week, which is more natural.
+where *four-daily* is the Fourier term for daily season, *simple-daily* is the simple feature for daily season, *four-weekly* is the Fourier term for weekly season, and *simple-weekly* is the simple feature for weekly season. The **advantage** of **Fourier terms** is that there is much more closeness between ending and starting of a day or a week, which is more natural.
 
 Now, let's use data from STL decomposition to forecast trend part of time series. I will use `auto.arima` procedure from the `forecast` package to perform this.
 ```{r}
@@ -198,7 +200,7 @@ trend_for <- forecast(trend_fit, period)$mean
 ```
 
 Let's plot it:
-```{r, fig.width = 8, fig.height = 3}
+```{r, fig.width = 8, fig.height = 3.2}
 trend_data <- data.table(Load = c(decomp_ts[,2], trend_for),
                          Date = c(data_train$date_time, data_test$date_time),
                          Type = c(rep("Real", nrow(data_train)), rep("Forecast",
@@ -251,7 +253,7 @@ paste("Number of splits: ", tree_1$cptable[dim(tree_1$cptable)[1], "nsplit"])
 We can see that most important variables are Lag and cosine forms of the daily and weekly season. The number of splits is 10, ehm, is it enough for time series of length 1008 values?
 
 Let's plot created rules with fancy `rpart.plot` function from the same named package:
-```{r, fig.width = 6.5, fig.height = 4.5}
+```{r, fig.width = 7.5, fig.height = 5.5}
 rpart.plot(tree_1, digits = 2, 
            box.palette = viridis::viridis(10, option = "D", begin = 0.85, end = 0), 
            shadow.col = "grey65", col = "grey99")
@@ -260,7 +262,7 @@ rpart.plot(tree_1, digits = 2,
 We can see values, rules, and percentage of values split each time. Pretty simple and interpretable. 
 
 Now plot fitted values to see results of the `tree_1` model.
-```{r, fig.width = 8, fig.height = 3.2}
+```{r, fig.width = 8.5, fig.height=3.5}
 datas <- data.table(Load = c(matrix_train$Load,
                              predict(tree_1)),
                     Time = rep(1:length(matrix_train$Load), 2),
@@ -272,7 +274,7 @@ ggplot(datas, aes(Time, Load, color = Type)) +
   theme_ts
 ```
 
-And see the error of fitted values againts real values.
+And see the error of fitted values against real values.
 ```{r}
 mape(matrix_train$Load, predict(tree_1))
 ```
@@ -280,8 +282,8 @@ mape(matrix_train$Load, predict(tree_1))
 Whups. It's a little bit simple (rectangular) and not really accurate, but it's logical result from a simple tree model.
 The key to achieving better results and have more accurate fit is to set manually control hyperparameters of rpart.
 Check `?rpart.control` to get more information.
-"Hack" is to change cp (complexity) parameter to very low to produce more splits (nodes). `cp` is a threshold deciding if each branch fulfills conditions for further processing, so only nodes with fitness larger than factor cp are processed. Other important parameters are the minimum number of observations in needed in a node to split (`minsplit`) and maximal depth of a tree (`maxdepth`).
-Set `minsplit` to 2 and set `maxdepth` to its maximal value - 30.
+The "hack" is to change cp (complexity) parameter to very low to produce more splits (nodes). The `cp` is a threshold deciding if each branch fulfills conditions for further processing, so only nodes with fitness larger than factor cp are processed. Other important parameters are the minimum number of observations in needed in a node to split (`minsplit`) and the maximal depth of a tree (`maxdepth`).
+Set the `minsplit` to 2 and set the `maxdepth` to its maximal value - 30.
 ```{r}
 tree_2 <- rpart(Load ~ ., data = matrix_train,
                 control = rpart.control(minsplit = 2,
@@ -290,7 +292,7 @@ tree_2 <- rpart(Load ~ ., data = matrix_train,
 ```
 
 Now make simple plot to see depth of the created tree...
-```{r, fig.width = 6, fig.height = 4}
+```{r, fig.width = 7, fig.height = 4.5}
 plot(tree_2, compress = TRUE)
 ```
 
@@ -303,7 +305,7 @@ tree_2$cptable[dim(tree_2$cptable)[1], "nsplit"] # Number of splits
 600 is higher than 10 :)
 
 Let's plot fitted values from the model `tree_2`:
-```{r, fig.width = 8, fig.height = 3.2}
+```{r, fig.width = 8.5, fig.height=3.5}
 datas <- data.table(Load = c(matrix_train$Load,
                              predict(tree_2)),
                     Time = rep(1:length(matrix_train$Load), 2),
@@ -315,7 +317,7 @@ ggplot(datas, aes(Time, Load, color = Type)) +
   theme_ts
 ```
 
-And see the error of fitted values againts real values.
+And see the error of fitted values against real values.
 ```{r}
 mape(matrix_train$Load, predict(tree_2))
 ```
@@ -338,7 +340,7 @@ for_rpart <- predict(tree_2, matrix_test) + trend_for
 ```
 
 Let's plot the results and compare it with real values from `data_test`.
-```{r, fig.width = 8, fig.height = 5}
+```{r, fig.width = 8.5, fig.height = 5}
 data_for <- data.table(Load = c(data_train$value, data_test$value, for_rpart),
                        Date = c(data_train$date_time, rep(data_test$date_time, 2)),
                        Type = c(rep("Train data", nrow(data_train)),
@@ -353,7 +355,7 @@ ggplot(data_for, aes(Date, Load, color = Type)) +
 ```
 
 Not bad. For clarity, compare forecasting results with model without separate trend forecasting and detrending.
-```{r, fig.width = 8, fig.height = 5}
+```{r, fig.width = 8.5, fig.height = 5}
 matrix_train_sim <- data.table(Load = tail(data_train$value, window*period),
                            fuur[(period+1):N,],
                            Lag = lag_seas)
@@ -391,7 +393,7 @@ We can see the large difference in MAPE. So detrending original time series and 
 
 ## CTREE
 
-Second simple regression tree method that will be used is CTREE. Conditional inference trees (CTREE) is a statistical approach to recursive partitioning, which takes into account the distributional properties of the data. CTREE performs multiple test procedures that are applied to determine whether no significant association between any of the feature and the response (load in our case) can be stated and the recursion needs to stop.
+The second simple regression tree method that will be used is **CTREE**. Conditional inference trees (CTREE) is a statistical approach to recursive partitioning, which takes into account the distributional properties of the data. CTREE performs multiple test procedures that are applied to determine whether no significant association between any of the feature and the response (load in the our case) can be stated and the recursion needs to stop.
 In **R** CTREE is implemented in the package `party` in the function `ctree`.
 
 Let's try fit simple `ctree` with a default values.
@@ -402,7 +404,7 @@ ctree_1 <- ctree(Load ~ ., data = matrix_train)
 Constructed tree can be again simply plotted by `plot` function, but it made many splits so it's disarranged.
 
 Let's plot fitted values from `ctree_1` model.
-```{r, fig.width = 8, fig.height = 3.2}
+```{r, fig.width = 8.5, fig.height=3.5}
 datas <- data.table(Load = c(matrix_train$Load,
                              predict(ctree_1)),
                     Time = rep(1:length(matrix_train$Load), 2),
@@ -414,15 +416,15 @@ ggplot(datas, aes(Time, Load, color = Type)) +
   theme_ts
 ```
 
-And see the error of fitted values againts real values.
+And see the error of fitted values against real values.
 ```{r}
 mape(matrix_train$Load, predict(ctree_1))
 ```
 
 Actually, this is pretty nice, but again, it can be tuned.
 
-For available hyperparameters tuning check `?ctree_control`. I changed hyperparameters `minsplit` and `minbucket` that have similar meaning like cp parameter in RPART. `mincriterion` can be tuned also, and it is significance level (1 - p-value) that must be exceeded in order to implement a split. Let's plot results.
-```{r, fig.width = 8, fig.height = 3.2}
+For available hyperparameters tuning check `?ctree_control`. I changed hyperparameters `minsplit` and `minbucket` that have similar meaning like the cp parameter in RPART. The `mincriterion` can be tuned also, and it is significance level (1 - p-value) that must be exceeded in order to implement a split. Let's plot results.
+```{r, fig.width = 8.5, fig.height=3.5}
 ctree_2 <- ctree(Load ~ ., data = matrix_train,
                         controls = party::ctree_control(teststat = "quad", 
                                                         testtype = "Teststatistic", 
@@ -441,18 +443,18 @@ ggplot(datas, aes(Time, Load, color = Type)) +
   theme_ts
 ```
 
-And see the error of fitted values againts real values.
+And see the error of fitted values against real values.
 ```{r}
 mape(matrix_train$Load, predict(ctree_2))
 ```
 
-Now forecast values with `ctree_2` model.
+It's better. Now forecast values with `ctree_2` model.
 ```{r}
 for_ctree <- predict(ctree_2, matrix_test) + trend_for
 ```
 
 And compare CTREE with RPART model.
-```{r, fig.width = 8, fig.height = 5}
+```{r, fig.width = 8.5, fig.height = 5}
 data_for <- data.table(Load = c(data_train$value, data_test$value, for_rpart, for_ctree),
                        Date = c(data_train$date_time, rep(data_test$date_time, 3)),
                        Type = c(rep("Train data", nrow(data_train)),
@@ -569,9 +571,9 @@ CtreeTrend <- function(data, set_of_date, K, period = 48){
 
 I created `plotly` boxplots graph of MAPE values from four models - CTREE simple, CTREE with detrending, RPART simple and RPART with detrending. Whole evaluation can be seen in the script that is stored in [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
 
-<iframe width="800" height="400" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/56.embed"></iframe>
+<iframe width="820" height="450" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/56.embed"></iframe>
 
-We can see that **detrending time series** of electricity consumption improves the accuracy of the forecast with the combination of both **regression tree** methods - **RPART** and **CTREE**.
+We can see that **detrending time series** of electricity consumption improves the accuracy of the forecast with the combination of both **regression tree** methods - **RPART** and **CTREE**. My approach works as expected.
 
 The habit of my posts is that animation must appear. So, I prepared for you two animations (animated dashboards) using `animation`, `grid`, `ggplot` and `ggforce` (for zooming) packages that visualize results of forecasting.
 
@@ -583,6 +585,6 @@ We can see that in many days it is almost perfect forecast, but on some days it 
 
 ## Conclusion
 
-In this post, I showed you have to solve **trend** appearance in **seasonal time series** with using **regression tree** model. **Detrending time series** for regression tree methods is important (must) procedure due to the character of decision trees. Trend part of time series was acquired by STL decomposition and separately forecasted by simple ARIMA model. I evaluated this approach on the dataset from smart meters measurements of electricity consumption. Regression (decision) tree is a great technique for getting simple and interpretable results in very fast computational time.
+In this post, I showed you how to solve **trend** appearance in **seasonal time series** with using a **regression tree** model. **Detrending time series** for regression tree methods is a important (must) procedure due to the character of decision trees. The trend part of a time series was acquired by STL decomposition and separately forecasted by a simple ARIMA model. I evaluated this approach on the dataset from smart meters measurements of electricity consumption. The regression (decision) tree is a great technique for getting simple and interpretable results in very fast computational time.
 
 In the future post, I will focus on enhancing the predictive performance of simple regression tree methods by ensemble learning methods like Bagging, Random Forest, and similar.
