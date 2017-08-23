@@ -49,7 +49,7 @@ library(animation) # gif
  
 
  
-Now read the mentioned time series data by `read_feather` to one `data.table`.
+Now read the mentioned time series data by `read_feather` to one `data.table`. The dataset can be found on [my github repo](https://github.com/PetoLau/petolau.github.io/tree/master/_rmd), the name of the file is *DT_load_17weeks*.
 
 {% highlight r %}
 DT <- as.data.table(read_feather("DT_load_17weeks"))
