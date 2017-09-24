@@ -64,3 +64,5 @@ Works (papers) that were presented by me at a conference, a workshop or a meetup
 <a href="/presentations/icmlda_laurinec.pdf" target="_blank">Download the presentation (PDF)</a>
 
 <hr>
+
+{% include share-page.html share-page_identifier=page.share-page_identifier %}
