@@ -5,20 +5,20 @@ layout: page
 ---
 
 ## PhD. thesis
-I am doing my dissertation (i.e. PhD. thesis) at the [Faculty of Informatics and Information Technologies](http://www.fiit.stuba.sk/en.html?page_id=749), Slovak University of Technology in Bratislava. My supervisor is associate professor [Mária Lucká](https://scholar.google.sk/citations?user=1bQwDSgAAAAJ&hl=sk&oi=ao). The theme of the thesis is about improving forecasting accuracy of electricity load by cluster analysis of consumers (or prosumers). I am focusing on three interesting areas of a data mining:
+I am currently working on my dissertation (i.e. PhD. thesis) at the [Faculty of Informatics and Information Technologies](http://www.fiit.stuba.sk/en.html?page_id=749), Slovak University of Technology in Bratislava. My supervisor is associate professor [Mária Lucká](https://scholar.google.sk/citations?user=1bQwDSgAAAAJ&hl=sk&oi=ao). The theme of the thesis is improving forecasting accuracy of electricity load by cluster analysis of consumers (or prosumers). I am focusing on three interesting areas of data mining:
 
   * **Time series analysis**
   * **Clustering**
   * **Forecasting and regression**
 
-The area of a **time series analysis** consists of a research in (and also proposals of new) **representations** of time series, so efficient dimensionality reduction of time series of electricity consumption that will input to a clustering algorithm.
+The area of **time series analysis** consists of a research in (and also proposals of new) **representations** of time series, specifically efficient dimensionality reduction of time series of electricity consumption that will input to a clustering algorithm.
 
 The **clustering** task is about classification (clustering) consumers into more predictable (forecastable) groups of consumers. The challenge is to develop an algorithm that will be adaptable to a behavior of **multiple data streams** of electricity load. Results of clustering are then used in time series analysis and regression methods to improve forecasting accuracy of aggregate (global) or individual (end-consumer) electricity load. Results of clustering can be also used for smart grid monitoring and an extraction of typical patterns of electricity consumption.
 
-The research scope of **forecasting and regression** part is about focusing on methods that will benefit most from clustering of consumers. Forecasting and regression methods have to incorporate to a model a seasonality and a trend, and they have to be adaptable to a concept drift appearance. Here is a promising approach the **ensemble learning** that combines multiple forecasts from various forecasting and regression methods.
+The research scope of the **forecasting and regression** part focuses on methods that will benefit the most from clustering of consumers. Forecasting and regression methods have to incorporate to a model a seasonality and a trend, and they have to be adaptable to a concept drift appearance. Here is a promising approach – **ensemble learning** that combines multiple forecasts from various forecasting and regression methods.
 
 #### Research papers
-As is mentioned also in the [About Me section](https://petolau.github.io/about), you can read my research papers on [**Google Scholar**](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en) and [**ResearchGate**](https://www.researchgate.net/profile/Peter_Laurinec).
+You can read my research papers on [**Google Scholar**](https://scholar.google.sk/citations?user=1fEwHTkAAAAJ&hl=en) and [**ResearchGate**](https://www.researchgate.net/profile/Peter_Laurinec) (as is also mentioned in the [About me section](https://petolau.github.io/about)).
 
 ## Presented works
 Works (papers) that were presented by me at a conference, a workshop or a meetup are listed below.
