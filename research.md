@@ -5,7 +5,7 @@ layout: page
 ---
 
 ## PhD. thesis
-I am currently working on my dissertation (i.e. PhD. thesis) at the [Faculty of Informatics and Information Technologies](http://www.fiit.stuba.sk/en.html?page_id=749), Slovak University of Technology in Bratislava. My supervisor is associate professor [Mária Lucká](https://scholar.google.sk/citations?user=1bQwDSgAAAAJ&hl=sk&oi=ao). The theme of the thesis is improving forecasting accuracy of electricity load by cluster analysis of consumers (or prosumers). I am focusing on three interesting areas of data mining:
+I am currently working on my dissertation (i.e. PhD. thesis) at the [Faculty of Informatics and Information Technologies](http://www.fiit.stuba.sk/en.html?page_id=749), Slovak University of Technology in Bratislava. My supervisor is associate professor [Mária Lucká](https://scholar.google.sk/citations?user=1bQwDSgAAAAJ&hl=sk&oi=ao). The theme of the thesis is about improving forecasting accuracy of electricity load by cluster analysis of consumers (or prosumers). I am focusing on three interesting areas of data mining:
 
   * **Time series analysis**
   * **Clustering**
