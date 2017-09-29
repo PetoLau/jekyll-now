@@ -10,23 +10,35 @@ library(RColorBrewer)
 
 # scan 1.post
 test <- read_html("https://petolau.github.io/Forecast-electricity-consumption-with-similar-day-approach-in-R/")
-text <- html_text(test) 
-content_1 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+page_subset1 <- html_nodes(test, c("p"));page_subset2 <- html_nodes(test, c("h2"));page_subset3 <- html_nodes(test, c("ul"))
+text1 <- html_text(page_subset1);text2 <- html_text(page_subset2);text3 <- html_text(page_subset3)
+content_1 <- matrix(c(stringi::stri_extract_all_words(text1, simplify = TRUE),
+                      stringi::stri_extract_all_words(text2, simplify = TRUE),
+                      stringi::stri_extract_all_words(text3, simplify = TRUE)), nrow = 1)
 
 # scan 2.post
 test <- read_html("https://petolau.github.io/Forecast-double-seasonal-time-series-with-multiple-linear-regression-in-R/")
-text <- html_text(test) 
-content_2 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+page_subset1 <- html_nodes(test, c("p"));page_subset2 <- html_nodes(test, c("h2"));page_subset3 <- html_nodes(test, c("ul"))
+text1 <- html_text(page_subset1);text2 <- html_text(page_subset2);text3 <- html_text(page_subset3)
+content_2 <- matrix(c(stringi::stri_extract_all_words(text1, simplify = TRUE),
+                      stringi::stri_extract_all_words(text2, simplify = TRUE),
+                      stringi::stri_extract_all_words(text3, simplify = TRUE)), nrow = 1)
 
 # scan 3.post
 test <- read_html("https://petolau.github.io/Analyzing-double-seasonal-time-series-with-GAM-in-R/")
-text <- html_text(test) 
-content_3 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+page_subset1 <- html_nodes(test, c("p"));page_subset2 <- html_nodes(test, c("h2"));page_subset3 <- html_nodes(test, c("ul"))
+text1 <- html_text(page_subset1);text2 <- html_text(page_subset2);text3 <- html_text(page_subset3)
+content_3 <- matrix(c(stringi::stri_extract_all_words(text1, simplify = TRUE),
+                      stringi::stri_extract_all_words(text2, simplify = TRUE),
+                      stringi::stri_extract_all_words(text3, simplify = TRUE)), nrow = 1)
 
 # scan 4.post
 test <- read_html("https://petolau.github.io/Regression-trees-for-forecasting-time-series-in-R/")
-text <- html_text(test) 
-content_4 <- stringi::stri_extract_all_words(text, simplify = TRUE)
+page_subset1 <- html_nodes(test, c("p"));page_subset2 <- html_nodes(test, c("h2"));page_subset3 <- html_nodes(test, c("ul"))
+text1 <- html_text(page_subset1);text2 <- html_text(page_subset2);text3 <- html_text(page_subset3)
+content_4 <- matrix(c(stringi::stri_extract_all_words(text1, simplify = TRUE),
+                      stringi::stri_extract_all_words(text2, simplify = TRUE),
+                      stringi::stri_extract_all_words(text3, simplify = TRUE)), nrow = 1)
 
 # merge all post to one 1 data.frame
 contents_all <- data.frame(words = c(content_1, content_2, content_3, content_4))
@@ -55,26 +67,27 @@ dataset_corpus_all <- tm_map(dataset_corpus_all, removeNumbers)
 dataset_corpus_all <- tm_map(dataset_corpus_all, function(x) removeWords(x,stopwords("english")))
 
 # remove some unintersting words
-words_to_remove <- c("said","from","what","told","over","more","other","have","last","with","this","that","such","when","been","says","will","also","where","why","would","today","about","both","only","they")
-dataset_corpus_all <- tm_map(dataset_corpus_all, removeWords, words_to_remove)
+words_to_remove <- c("said","till","just","like","well","it's","from","what","told","over","more","other","have","last","with","this","that","such","when","been","says","will","also","where","why","would","today","about","both","only","they")
+dataset_corpus_all <- tm_map(dataset_corpus_all, function(x) removeWords(x, words_to_remove))
 
 # compute term matrix & convert to matrix class --> you get a table summarizing the occurence of each word in each class.
 document_tm <- TermDocumentMatrix(dataset_corpus_all)
 document_tm_mat <- as.matrix(document_tm)
 colnames(document_tm_mat) <- unique(labels_all)
-document_tm_clean <- removeSparseTerms(document_tm, 0.8)
-document_tm_clean_mat <- as.matrix(document_tm_clean)
-colnames(document_tm_clean_mat) <- unique(labels_all)
+# document_tm_clean <- removeSparseTerms(document_tm, 0.5)
+# document_tm_clean_mat <- as.matrix(document_tm_clean)
+# colnames(document_tm_clean_mat) <- unique(labels_all)
 
 # remove words in term matrix with length < 4
-index <- as.logical(sapply(rownames(document_tm_clean_mat), function(x) (nchar(x)>3) ))
-document_tm_clean_mat_s <- document_tm_clean_mat[index,]
+index <- as.logical(sapply(rownames(document_tm_mat), function(x) (nchar(x)>3) ))
+document_tm_mat_s <- document_tm_mat[index,]
 
-head(document_tm_clean_mat_s)
+head(document_tm_mat_s)
+row.names(document_tm_mat_s)
 
 # Plot it
 
-comparison.cloud(document_tm_clean_mat_s, max.words = 400, random.order = FALSE, scale = c(3.8, 0.8),
+comparison.cloud(document_tm_mat_s, max.words = 400, random.order = FALSE, scale = c(3.3, 0.8),
                  colors = c("dodgerblue3", "mediumseagreen", "orangered1", "black"), title.size = 1.5)
 
 # Old (alternative) solution:

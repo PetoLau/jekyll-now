@@ -3,7 +3,7 @@ layout: post
 title: Using regression trees for forecasting double-seasonal time series with trend in R
 author: Peter Laurinec
 published: false
-status: process
+status: processed
 tags: R tree forecast
 draft: false
 ---
