@@ -317,12 +317,12 @@ rf_model <- randomForest(Load ~ ., data = data.frame(matrix_train),
                          ntree = 1000, mtry = 3, nodesize = 5, importance = TRUE)
 ```
 
-Whereas we use ensemble of CART trees in Random Forest, we can compute variable importance. Checking variable improtance can be important for extracting just most valuable features and to analyze dependencies and correlations in data. Let's check variable importance by `varImpPlot`.
-```{r, fig.width = 7, fig.height = 5.5}
+Whereas we use ensemble of CART trees in Random Forest, we can compute variable importance. Checking variable importance can be important for extracting just most valuable features and to analyze dependencies and correlations in data. Let's check variable importance by `varImpPlot`.
+```{r, fig.width = 7.8, fig.height = 5.5}
 varImpPlot(rf_model, main = "Variable importance")
 ```
 
-We can see that Lag and S1.336 (weekly seasonal feature in sinus form) features have best scores in both measures. It implies that weekly seasonality and and lagged values of load are most improtant for our training data.
+We can see that Lag and S1.336 (weekly seasonal feature in sinus form) features have best scores in both measures. It implies that weekly seasonality and and lagged values of load are most important for our training data.
 
 Let's compute also forecast.
 ```{r}
@@ -446,7 +446,7 @@ We can see that lowest average MAPEs are for `mtry` = 6 and `nodesize` = 2 or 5.
 For more exact evaluation, I made comparison of five methods - simple RPART, simple CTREE, Bagging + RPART, Bagging + CTREE and Random Forest on whole available dataset (so 98 forecasts were performed).
 I created `plotly` boxplots graph of MAPE values from these 5 methods. Whole evaluation can be seen in the script that is stored in [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
 
-<iframe width="900" height="700" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/62.embed"></iframe>
+<iframe width="900" height="700" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/68.embed"></iframe>
 
 We can see that Bagging really helps decrease forecasting error for RPART and CTREE. The Random Forest has best results among all tested methods, so I proposed suitable approach for seasonal time series forecasting.
 
