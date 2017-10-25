@@ -40,12 +40,21 @@ content_4 <- matrix(c(stringi::stri_extract_all_words(text1, simplify = TRUE),
                       stringi::stri_extract_all_words(text2, simplify = TRUE),
                       stringi::stri_extract_all_words(text3, simplify = TRUE)), nrow = 1)
 
+# scan 5.post
+test <- read_html("https://petolau.github.io/Ensemble-of-trees-for-forecasting-time-series/")
+page_subset1 <- html_nodes(test, c("p"));page_subset2 <- html_nodes(test, c("h2"));page_subset3 <- html_nodes(test, c("ul"))
+text1 <- html_text(page_subset1);text2 <- html_text(page_subset2);text3 <- html_text(page_subset3)
+content_5 <- matrix(c(stringi::stri_extract_all_words(text1, simplify = TRUE),
+                      stringi::stri_extract_all_words(text2, simplify = TRUE),
+                      stringi::stri_extract_all_words(text3, simplify = TRUE)), nrow = 1)
+
 # merge all post to one 1 data.frame
-contents_all <- data.frame(words = c(content_1, content_2, content_3, content_4))
+contents_all <- data.frame(words = c(content_1, content_2, content_3, content_4, content_5))
 labels_all <- c(rep("Intro_Smart_Meters", length(content_1)),
                 rep("MLR", length(content_2)),
                 rep("GAM", length(content_3)),
-                rep("Trees", length(content_4)))
+                rep("Trees", length(content_4)),
+                rep("Ensemble", length(content_5)))
 
 
 dataset_s <- sapply(unique(labels_all), function(label) list(contents_all[labels_all %in% label, 1]) )
@@ -54,7 +63,11 @@ dataset_s <- sapply(unique(labels_all), function(label) list(contents_all[labels
 dataset_corpus <- lapply(dataset_s, function(x) Corpus(VectorSource( toString(x) )))
 
 # merge all documents into one single corpus
-dataset_corpus_all <- c(dataset_corpus[[1]][["1"]], dataset_corpus[[2]][["1"]], dataset_corpus[[3]][["1"]], dataset_corpus[[4]][["1"]])
+dataset_corpus_all <- c(dataset_corpus[[1]][["1"]],
+                        dataset_corpus[[2]][["1"]],
+                        dataset_corpus[[3]][["1"]],
+                        dataset_corpus[[4]][["1"]],
+                        dataset_corpus[[5]][["1"]])
 # 
 # for (i in 2:length(unique(labels_all))) { 
 #   print(i)
@@ -87,8 +100,9 @@ row.names(document_tm_mat_s)
 
 # Plot it
 
-comparison.cloud(document_tm_mat_s, max.words = 400, random.order = FALSE, scale = c(3.3, 0.8),
-                 colors = c("dodgerblue3", "mediumseagreen", "orangered1", "black"), title.size = 1.5)
+comparison.cloud(document_tm_mat_s, max.words = 400, random.order = FALSE, scale = c(3.2, 0.6),
+                 colors = c("dodgerblue3", "mediumseagreen", "orangered1", "black", "purple"),
+                 title.size = 1.5)
 
 # Old (alternative) solution:
 
