@@ -387,6 +387,10 @@ RFgrid <- function(data_train, param1, param2, K, period = 48) {
   return(as.vector(pred_tree))
 }
 
+mape <- function(real, pred){
+  return(100 * mean(abs((real - pred)/real))) # MAPE - Mean Absolute Percentage Error
+}
+
 gridSearch <- function(Y, train.win = 21, FUN, param1, param2, period = 48) {
   
   days <- length(Y)/period

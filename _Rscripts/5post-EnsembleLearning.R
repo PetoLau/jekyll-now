@@ -317,6 +317,10 @@ RFgrid <- function(data_train, param1, param2, K, period = 48) {
   return(as.vector(pred_tree))
 }
 
+mape <- function(real, pred){
+  return(100 * mean(abs((real - pred)/real))) # MAPE - Mean Absolute Percentage Error
+}
+
 gridSearch <- function(Y, train.win = 21, FUN, param1, param2, period = 48) {
   
   days <- length(Y)/period
@@ -494,10 +498,6 @@ CtreeBaggTrend <- function(data, set_of_date, K, period = 48, N_boot = 100) {
 
 # Evaluation ----
 n_days <- floor(length(n_date)) - 21
-
-mape <- function(real, pred){
-  return(100 * mean(abs((real - pred)/real))) # MAPE - Mean Absolute Percentage Error
-}
 
 for_rpart <- sapply(0:(n_days-1), function(i)
   RpartBaggTrend(DT, n_date[(i+1):(i+7*3)], K = 2))
