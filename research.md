@@ -24,6 +24,16 @@ You can read my research papers on [**Google Scholar**](https://scholar.google.s
 Works (papers) that were presented by me at a conference, a workshop or a meetup are listed below.
 
 <hr>
+##### **New Clustering-based Forecasting Method for Disaggregated End-consumer Electricity Load Using Smart Grid Data**
+**Conference:** [Informatics'2017](https://informatics.kpi.fei.tuke.sk/)
+
+**Date:** 14.11.2017
+
+**Where:** Poprad, Slovakia
+
+<a href="/presentations/informatics_laurinec.pdf" target="_blank">Download the presentation (PDF)</a>
+
+<hr>
 ##### **Is Unsupervised Ensemble Learning Useful for Aggregated or Clustered Load Forecasting?**
 **Workshop:** [ECML-PKDD NFMCP'2017](http://www.di.uniba.it/~loglisci/NFmcp17/program.html)
 
