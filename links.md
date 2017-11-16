@@ -17,3 +17,5 @@ permalink: /links/
 #### Data Science
 * [StatsBlogs](http://www.statsblogs.com/)
 * [KDnuggets](http://www.kdnuggets.com/)
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ENlo0a1-5Uo" frameborder="0" allowfullscreen></iframe>
