@@ -23,7 +23,7 @@ My **publications** are on:
 
 I am a fan of the programming language **R** and of **Data Science**, **Statistics** and **Data Visualizations** in general.
 
-I created **R** package called **Tsrepr** for computing time series representations. The source code is available on my GitHub repository: [github.com/PetoLau/TSrepr](https://github.com/PetoLau/TSrepr).
+I created **R** package called **TSrepr** for computing time series representations. The source code is available on my GitHub repository: [github.com/PetoLau/TSrepr](https://github.com/PetoLau/TSrepr).
 
 <!---### Read my [**CV**](/images/CV.pdf).--->
 
