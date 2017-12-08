@@ -1,7 +1,7 @@
 ---
-title: "R package"
+title: "TSrepr - R package for time series representations"
 permalink: /package/
 layout: page
 ---
 
-## Tsrepr
+## TSrepr
