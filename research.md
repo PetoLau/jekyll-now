@@ -11,7 +11,7 @@ I am currently working on my dissertation (i.e. PhD. thesis) at the [Faculty of 
   * **Clustering**
   * **Forecasting and regression**
 
-The area of **time series analysis** consists of a research in (and also proposals of new) **representations** of time series, specifically efficient dimensionality reduction of time series of electricity consumption that will input to a clustering algorithm.
+The area of **time series analysis** consists of a research in (and also proposals of new) **representations** of time series, specifically efficient dimensionality reduction of time series of electricity consumption that will input to a clustering algorithm. I developed my own **R** package called **TSrepr** that involves various representations methods and is available on my GitHub repository: [github.com/PetoLau/TSrepr](https://github.com/PetoLau/TSrepr).
 
 The **clustering** task is about classification (clustering) consumers into more predictable (forecastable) groups of consumers. The challenge is to develop an algorithm that will be adaptable to a behavior of **multiple data streams** of electricity load. Results of clustering are then used in time series analysis and regression methods to improve forecasting accuracy of aggregate (global) or individual (end-consumer) electricity load. Results of clustering can be also used for smart grid monitoring and an extraction of typical patterns of electricity consumption.
 
