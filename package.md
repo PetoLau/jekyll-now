@@ -9,7 +9,7 @@ layout: page
 Install `TSrepr` R package from GitHub via `devtools` package (you need it to be installed - `install.packages('devtools')`):
 
 `
-devtools::install_github("petolau/TSrepr")
+devtools::install_github("PetoLau/TSrepr")
 `
 
 These representations of time series are implemented so far:
@@ -19,6 +19,7 @@ These representations of time series are implemented so far:
  * DCT - Discrete Cosine Transform (`repr_dct`)
  * SMA - Simple Moving Average (`repr_sma`)
  * PIP - Perceptually Important Points (`repr_pip`)
+ * SAX - Symbolic Aggregate Approximation (`repr_sax`)
  * PLA - Piecewise Linear Approximation (`repr_pla`)
  * Mean seasonal profile - Average seasonal profile, Median seasonal profile, etc. (`repr_seas_profile`)
  * Model-based seasonal representations based on linear (additive) model (lm, rlm, l1, gam) (`repr_lm`, `repr_gam`)
