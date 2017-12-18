@@ -1,5 +1,5 @@
 ---
-layout: post
+layout: page
 output:
   md_document:
     variant: markdown
@@ -98,3 +98,6 @@ Contact
 
 For any suggestions and comments write me an email at:
 <tsreprpackage@gmail.com>
+
+{% include share-page.html
+share-page\_identifier=page.share-page\_identifier %}
