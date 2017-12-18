@@ -4,7 +4,7 @@ permalink: /package/
 layout: page
 output:
   md_document:
-    variant: markdown_github
+    variant: markdown
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-TSrepr is R package for fast time series representations and dimensionality reduction computations. Z-score normalisation, min-max normalisation, forecasting accuracy measures and other useful functions implemented in C++ (Rcpp) and R.
+[**TSrepr**](https://github.com/PetoLau/TSrepr) is **R** package for fast time series representations and dimensionality reduction computations. Z-score normalisation, min-max normalisation, forecasting accuracy measures and other useful functions implemented in C++ (Rcpp) and R.
 
 ## Installation
 
