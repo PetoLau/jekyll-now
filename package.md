@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: post
 output:
   md_document:
     variant: markdown
