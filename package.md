@@ -1,27 +1,12 @@
----
-layout: page
-output:
-  md_document:
-    variant: markdown
-permalink: '/package/'
-title: 'TSrepr - R package for time series representations'
----
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-TSrepr
-======
-
-TSrepr is R package for fast time series representations and
-dimensionality reduction computations. Z-score normalisation, min-max
-normalisation, forecasting accuracy measures and other useful functions
-implemented in C++ (Rcpp) and R.
+TSrepr is R package for fast time series representations and dimensionality reduction computations. Z-score normalisation, min-max normalisation, forecasting accuracy measures and other useful functions implemented in C++ (Rcpp) and R.
 
 Installation
 ------------
 
 You can install **TSrepr** from github with:
 
-``` {.r}
+``` r
 # install.packages("devtools")
 devtools::install_github("PetoLau/TSrepr")
 ```
@@ -29,8 +14,7 @@ devtools::install_github("PetoLau/TSrepr")
 Overview
 --------
 
-All type of time series representations methods are implemented, and
-these are so far:
+All type of time series representations methods are implemented, and these are so far:
 
 -   Nondata adaptive:
     -   PAA - Piecewise Aggregate Approximation (`repr_paa`)
@@ -43,37 +27,27 @@ these are so far:
     -   SAX - Symbolic Aggregate Approximation (`repr_sax`)
     -   PLA - Piecewise Linear Approximation (`repr_pla`)
 -   Model-based:
-    -   Mean seasonal profile - Average seasonal profile, Median
-        seasonal profile, etc. (`repr_seas_profile`)
-    -   Model-based seasonal representations based on linear (additive)
-        model (LM, RLM, L1, GAM) (`repr_lm`, `repr_gam`)
+    -   Mean seasonal profile - Average seasonal profile, Median seasonal profile, etc. (`repr_seas_profile`)
+    -   Model-based seasonal representations based on linear (additive) model (LM, RLM, L1, GAM) (`repr_lm`, `repr_gam`)
     -   Exponential smoothing seasonal coefficients (`repr_exp`)
 -   Data dictated:
-    -   FeaClip - Feature extraction from clipping representation
-        (`repr_feaclip`, `clipping`)
-    -   FeaTrend - Feature extraction from trending representation
-        (`repr_featrend`, `trending`)
-    -   FeaClipTrend - Feature extraction from clipping and trending
-        representation (`repr_feacliptrend`)
+    -   FeaClip - Feature extraction from clipping representation (`repr_feaclip`, `clipping`)
+    -   FeaTrend - Feature extraction from trending representation (`repr_featrend`, `trending`)
+    -   FeaClipTrend - Feature extraction from clipping and trending representation (`repr_feacliptrend`)
 
 Additional useful functions are implemented as:
 
--   Windowing (`repr_windowing`) - applies above mentioned
-    representations to every window of a time series
--   Matrix of representations (`repr_matrix`) - applies above mentioned
-    representations to every row of a matrix of time series
--   Normalisation functions - z-score (`norm_z`), min-max
-    (`norm_min_max`)
--   Normalisation functions with output also of scaling parameters -
-    z-score (`norm_z_list`), min-max (`norm_min_max_list`)
--   Denormalisation functions - z-score (`denorm_z`), min-max
-    (`denorm_min_max`)
+-   Windowing (`repr_windowing`) - applies above mentioned representations to every window of a time series
+-   Matrix of representations (`repr_matrix`) - applies above mentioned representations to every row of a matrix of time series
+-   Normalisation functions - z-score (`norm_z`), min-max (`norm_min_max`)
+-   Normalisation functions with output also of scaling parameters - z-score (`norm_z_list`), min-max (`norm_min_max_list`)
+-   Denormalisation functions - z-score (`denorm_z`), min-max (`denorm_min_max`)
 -   Forecasting accuracy measures - MAE, RMSE, MdAE, MAPE, sMAPE, MASE
 
 Usage
 -----
 
-``` {.r}
+``` r
 library(TSrepr)
 library(ggplot2)
 
@@ -93,10 +67,9 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   theme_bw()
 ```
 
-![](images\package-paa_vs_pla-1.png)
+![](\images\package-paa_vs_pla-1.png)
 
 Contact
 -------
 
-For any suggestions and comments write me an email at:
-<tsreprpackage@gmail.com>
+For any suggestions and comments write me an email at: <tsreprpackage@gmail.com>
