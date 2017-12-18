@@ -99,5 +99,4 @@ Contact
 For any suggestions and comments write me an email at:
 <tsreprpackage@gmail.com>
 
-{% include share-page.html
-share-page\_identifier=page.share-page\_identifier %}
+{% include share-page.html share-page_identifier=page.share-page_identifier %}
