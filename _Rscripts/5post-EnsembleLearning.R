@@ -562,3 +562,4 @@ api_create(x = last_plot(), filename = "ensembles_v1",
            sharing = "public")
 
 # There is possibility to use another great methods like extraTrees, gbm or xgboost, lightGBM, catboost (if i will manage installation in windows machine)
+# still doing on it
