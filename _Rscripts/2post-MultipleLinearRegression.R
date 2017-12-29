@@ -1,10 +1,10 @@
-rm(list=ls())
-gc()
+# rm(list=ls())
+# gc()
 
 ## Prepare DT ----
 library(lubridate)
 
-setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
+# setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 
 files <- list.files(pattern = "*.csv")
 DT <- rbindlist(lapply(files, function(x) cbind(fread(x), gsub(".csv", "", x))))

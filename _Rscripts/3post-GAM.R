@@ -1,9 +1,8 @@
-rm(list=ls())
-gc()
+# rm(list=ls())
+# gc()
 
 ## Post from here ----
-setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
-# setwd("C:\\Users\\Peter\\Downloads\\Dizertacka\\Blog\\BlogPetoLau\\petolau.github.io\\")
+# setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
 
 library(feather)
 library(data.table)

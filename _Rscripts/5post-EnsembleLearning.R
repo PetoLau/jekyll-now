@@ -1,8 +1,8 @@
 ## Post from here ----
-rm(list=ls())
-gc()
-
-setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+# rm(list=ls())
+# gc()
+# 
+# setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
 
 library(feather)
 library(data.table)

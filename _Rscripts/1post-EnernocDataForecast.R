@@ -1,5 +1,5 @@
-rm(list=ls())
-gc()
+# rm(list=ls())
+# gc()
 
 library(data.table)
 library(lubridate)
@@ -9,7 +9,7 @@ library(gridExtra)
 library(forecast)
 
 ## Meta data ----
-setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+# setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
 meta_data <- fread("meta\\all_sites.csv")
 str(meta_data)
 
