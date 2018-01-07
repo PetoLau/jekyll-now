@@ -98,5 +98,3 @@ Contact
 
 For any suggestions and comments write me an email at:
 <tsreprpackage@gmail.com>
-
-{% include share-page.html share-page_identifier=page.share-page_identifier %}
