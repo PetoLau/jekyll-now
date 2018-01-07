@@ -1,8 +1,5 @@
 ---
 layout: package
-output:
-  md_document:
-    variant: markdown
 permalink: '/package/'
 title: 'TSrepr - R package for time series representations'
 ---
@@ -19,10 +16,10 @@ Installation
 
 You can install **TSrepr** from github with:
 
-``` {.r}
+{% highlight r %}
 # install.packages("devtools")
 devtools::install_github("PetoLau/TSrepr")
-```
+{% endhighlight %}
 
 Overview
 --------
@@ -71,7 +68,7 @@ Additional useful functions are implemented as:
 Usage
 -----
 
-``` {.r}
+{% highlight r %}
 library(TSrepr)
 library(ggplot2)
 
@@ -89,7 +86,7 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   geom_line(alpha = 0.8) +
   scale_size_manual(values = c(0.6, 0.8, 0.8)) +
   theme_bw()
-```
+{% endhighlight %}
 
 ![](\images\package-paa_vs_pla-1.png)
 
