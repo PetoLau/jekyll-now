@@ -2,9 +2,6 @@
 title: "TSrepr - R package for time series representations"
 permalink: /package/
 layout: package
-output:
-  md_document:
-    variant: markdown
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
