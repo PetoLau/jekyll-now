@@ -2,8 +2,6 @@
 layout: post
 title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
-bibliography: papers.bib
-csl: ieee.csl
 published: false
 status: process
 tags: test
@@ -16,7 +14,7 @@ The **TSrepr** package contains methods of time series representations (dimensio
 
 Time series representation can be defined as follows:
 
-Let \\( x \\) be a time series of length \\( n \\), then representation of \\( x \\) is a model \\( \hat{x} \\) with reduced dimensionality \\( p \\) \\( (p < n) \\) such that \\( \hat{x} \\) approximates closely \\( x \\) (@Esl).
+Let \\( x \\) be a time series of length \\( n \\), then representation of \\( x \\) is a model \\( \hat{x} \\) with reduced dimensionality \\( p \\) \\( (p < n) \\) such that \\( \hat{x} \\) approximates closely \\( x \\) (Esling and Agon (2012)).
 
 Time series representations are used for:
 
@@ -27,7 +25,7 @@ Time series representations are used for:
 
 Therefore, they are awesome!
 
-Time series representation methods can be divided into four groups (types) (@Agh):
+Time series representation methods can be divided into four groups (types) (Aghabozorgi, Seyed Shirkhorshidi, and Ying Wah (2015)):
 
  * nondata adaptive
  * data adaptive
@@ -37,11 +35,11 @@ Time series representation methods can be divided into four groups (types) (@Agh
 In **nondata adaptive** representations, the parameters of transformation remain the same for all time series, irrespective of their nature.
 In **data adaptive** representations, the parameters of transformation vary depending on the available data.
 An approach to the **model-based** representation relies on the assumption that the observed time series was created based on basic model. The aim is to find the parameters of such a model as a representation. Two time series are then considered as similar if they were created by the same set of parameters of a basic model.
-In **data dictated** approaches, the compression ratio is defined automatically based on raw time series such as clipped (@Agh).
+In **data dictated** approaches, the compression ratio is defined automatically based on raw time series such as clipped (Aghabozorgi, Seyed Shirkhorshidi, and Ying Wah (2015)).
 
 Most famous (well known) methods for **nondata adaptive** type of representations are PAA (Piecewise Aggregate Approximation), DWT (Discrete Wavelet Transform), DFT (Discrete Fourier Transform), DCT (Discrete Cosine Transform) or PIP (Perceptually Important Points). For **data adaptive** type of representations, it is SAX (Symbolic Aggregate approXimation), PLA (Piecewise Linear Approximation) and SVD (Singular Value Decomposition).
 For **model-based** representations it is ARMA, mean profiles or estimated regression coefficients from a statistical model (e.g. linear model).
-The **data dictated** is the less known type of representation and the most famous method of this type is clipping (bit-level) representation (@Bag).
+The **data dictated** is the less known type of representation and the most famous method of this type is clipping (bit-level) representation (Bagnall et al. (2006)).
 
 ## Implemented methods and functions
 
@@ -124,7 +122,7 @@ ggplot(data_plot, aes(Time, Value, color = Method)) +
 
 We can see that the electricity consumption pattern remains also after significant reduction of dimensionality. The difference between these four representation methods is not really significant, every one of them "did the job" well.
 
-For seasonal time series as electricity load data, the model-based representations are highly recommended (@Lau1, @Lau2). By model-based representation, we can extract a daily profile of some consumer. We can do it by simple average (or median) daily profile or by extraction of **seasonal regression coefficients**.
+For seasonal time series as electricity load data, the model-based representations are highly recommended (Laurinec et al. (2016), Laurinec and Lucká (2016)). By model-based representation, we can extract a daily profile of some consumer. We can do it by simple average (or median) daily profile or by extraction of **seasonal regression coefficients**.
 
 For this task, several methods are implemented in the **TSrepr** package. The mean **seasonal profile** (`repr_seas_profile`), seasonal linear models (`repr_lm`), seasonal additive model (`repr_gam`) or seasonal exponential smoothing coefficients (`repr_exp`). Let's compare them on our data.
 ```{r}
@@ -271,3 +269,14 @@ So, the maximal run length of ones is 15 and maximal run length of zeros is 30, 
 And we have described and used every time series representation method implemented in the **TSrepr** package. In the next post (tutorial), I will show you one typical use case for using time series representation – clustering of time series.
 
 ## References
+
+Aghabozorgi, Saeed, Ali Seyed Shirkhorshidi, and Teh Ying Wah. 2015. “Time-series clustering - A decade review.” Information Systems 53. Elsevier: 16–38.
+
+Bagnall, Anthony, Chotirat Ratanamahatana, Eamonn Keogh, Stefano Lonardi, and Gareth Janacek. 2006. “A bit level representation for time series data mining with shape based similarity.” Data Mining and Knowledge Discovery 13 (1): 11–40.
+
+Esling, Philippe, and Carlos Agon. 2012. “Time-series data mining.” ACM Computing Surveys 45 (1). ACM: 1–34.
+
+Laurinec, Peter, and Mária Lucká. 2016. “Comparison of Representations of Time Series for Clustering Smart Meter Data.” In Lecture Notes in Engineering and Computer Science: Proceedings of the World Congress on Engineering and Computer Science 2016, 458–63.
+
+Laurinec, Peter, Marek Lóderer, Petra Vrablecová, Mária Lucká, Viera Rozinajová, and Anna Bou Ezzeddine. 2016. “Adaptive Time Series Forecasting of Energy Consumption Using Optimized Cluster Analysis.” In Data Mining Workshops (Icdmw), 2016 Ieee 16th International Conference on, 398–405. IEEE.
+
