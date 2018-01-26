@@ -215,6 +215,7 @@ $$ \hat{x}_t = \left\{
 \end{array} \right. ,$$
  
 where $\mu$ is the average value of a time series. On **clipping** (bit-level) representation $\hat{x}$, compression method for binary series named Run Length Encoding (**RLE**) is applied. A run is continuous sequence of ones, respectively zeros. The number of ones respectively zeros in a run we call the run lengths. From run lengths counted by RLE, eight simple interpretable features are extracted to form the final representation and are defined as
+
 $$\begin{aligned}
  \mathbf{repr} = \{ & max_1 = \mbox{max. from run lengths of ones}, \\
  & sum_1 = \mbox{sum of run lengths of ones}, \\
