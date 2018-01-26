@@ -3,7 +3,7 @@ layout: post
 title: Ensemble learning for time series forecasting in R
 author: Peter Laurinec
 published: false
-status: process
+status: processed
 tags: R tree forecast
 draft: false
 ---
