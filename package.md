@@ -1,4 +1,14 @@
+---
+title: "TSrepr - R package for time series representations"
+permalink: /package/
+layout: package
+output:
+  md_document:
+    variant: markdown
+---
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 [**TSrepr**](https://github.com/PetoLau/TSrepr) is **R** package for
 fast time series representations and dimensionality reduction
 computations. Z-score normalisation, min-max normalisation, forecasting
@@ -12,17 +22,17 @@ Installation
 You can install **TSrepr** directly from
 [CRAN](https://CRAN.R-project.org/package=TSrepr):
 
-``` {.r}
+{% highlight r %}
 install.packages("TSrepr")
-```
+{% endhighlight %}
 
 Or development version from [GitHub](https://github.com/PetoLau/TSrepr)
 with:
 
-``` {.r}
+{% highlight r %}
 # install.packages("devtools")
 devtools::install_github("PetoLau/TSrepr")
-```
+{% endhighlight %}
 
 Overview
 --------
@@ -71,7 +81,7 @@ Additional useful functions are implemented as:
 Usage
 -----
 
-``` {.r}
+{% highlight r %}
 library(TSrepr)
 library(ggplot2)
 
@@ -89,7 +99,7 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   geom_line(alpha = 0.8) +
   scale_size_manual(values = c(0.6, 0.8, 0.8)) +
   theme_bw()
-```
+{% endhighlight %}
 
 ![](\images\package-paa_vs_pla-1.png)
 
