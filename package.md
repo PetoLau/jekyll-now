@@ -1,25 +1,28 @@
----
-layout: package
-permalink: '/package/'
-title: 'TSrepr - R package for time series representations'
----
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 [**TSrepr**](https://github.com/PetoLau/TSrepr) is **R** package for
 fast time series representations and dimensionality reduction
 computations. Z-score normalisation, min-max normalisation, forecasting
 accuracy measures and other useful functions implemented in C++ (Rcpp)
-and R.
+and R. **TSrepr** package is available on
+[CRAN](https://CRAN.R-project.org/package=TSrepr).
 
 Installation
 ------------
 
-You can install **TSrepr** from github with:
+You can install **TSrepr** directly from
+[CRAN](https://CRAN.R-project.org/package=TSrepr):
 
-{% highlight r %}
+``` {.r}
+install.packages("TSrepr")
+```
+
+Or development version from [GitHub](https://github.com/PetoLau/TSrepr)
+with:
+
+``` {.r}
 # install.packages("devtools")
 devtools::install_github("PetoLau/TSrepr")
-{% endhighlight %}
+```
 
 Overview
 --------
@@ -68,7 +71,7 @@ Additional useful functions are implemented as:
 Usage
 -----
 
-{% highlight r %}
+``` {.r}
 library(TSrepr)
 library(ggplot2)
 
@@ -76,20 +79,17 @@ data_ts <- as.numeric(elec_load[5,]) # electricity load consumption data
 # Comparison of PAA and PLA
 # Dimensionality of the time series will be reduced 8 times
 data_paa <- repr_paa(data_ts, q = 12, func = mean)
-# extract both places and values
-data_pla <- repr_pla(data_ts, times = 55, return = "both")
+data_pla <- repr_pla(data_ts, times = 55, return = "both") # returns both extracted places and values
 
 data_plot <- data.frame(value = c(data_ts, data_paa, data_pla$points),
-                        time = c(1:length(data_ts), seq(6, length(data_ts), by = 12),
-                                 data_pla$places),
-                        type = factor(c(rep("Original", length(data_ts)),
-                                      rep(c("PAA", "PLA"), each = 56))))
+                        time = c(1:length(data_ts), seq(6, length(data_ts), by = 12), data_pla$places),
+                        type = factor(c(rep("Original", length(data_ts)), rep(c("PAA", "PLA"), each = 56))))
 
 ggplot(data_plot, aes(time, value, color = type, size = type)) +
   geom_line(alpha = 0.8) +
   scale_size_manual(values = c(0.6, 0.8, 0.8)) +
   theme_bw()
-{% endhighlight %}
+```
 
 ![](\images\package-paa_vs_pla-1.png)
 
