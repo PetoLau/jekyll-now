@@ -4,7 +4,7 @@ title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
 bibliography: papers.bib
 published: false
-status: process
+status: processed
 tags: test
 draft: false
 ---
@@ -15,7 +15,7 @@ The **TSrepr** package contains methods of time series representations (dimensio
 
 Time series representation can be defined as follows:
 
-Let \\( x \\) be a time series of length \\( n \\), then representation of \\( x \\) is a model $\hat{x}$ with reduced dimensionality \\( p \\) \\( (p < n) \\) such that $\hat{x}$ approximates closely \\( x \\) (@Esl).
+Let \\( x \\) be a time series of length \\( n \\), then representation of \\( x \\) is a model \\( \hat{x} \\) with reduced dimensionality \\( p \\) \\( (p < n) \\) such that \\( \hat{x} \\) approximates closely \\( x \\) (@Esl).
 
 Time series representations are used for:
 

@@ -84,7 +84,7 @@ ggplot(data_train, aes(date_time, value)) +
   theme_ts
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-7](/images/post_7/unnamed-chunk-7-1.png)
+![plot of chunk unnamed-chunk-7](/images/post_6/unnamed-chunk-7-1.png)
  
 
  
@@ -164,7 +164,7 @@ ggplot(pred_melt_rpart, aes(Var2, value, group = Var1)) +
   theme_ts
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-11](/images/post_7/unnamed-chunk-11-1.png)
+![plot of chunk unnamed-chunk-11](/images/post_6/unnamed-chunk-11-1.png)
  
 The red line is median of forecasts. We can see that created forecasts by RPART have typical rectangular shape, but final ensemble forecasts has nice smooth behaviour. For comparison, compute forecast by RPART on whole train set and compare it with previous results. I am using function `RpartTrend` from my previous post.
 
@@ -180,7 +180,7 @@ ggplot(pred_melt_rpart, aes(Var2, value, group = Var1)) +
   theme_ts
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-12](/images/post_7/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-12](/images/post_6/unnamed-chunk-12-1.png)
  
 The blue line is simple RPART forecast. The difference between ensemble forecast and simple one is not very evident in this scenario.
  
@@ -223,7 +223,7 @@ ggplot(pred_melt_ctree, aes(Var2, value, group = Var1)) +
   theme_ts
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-14](/images/post_7/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-14](/images/post_6/unnamed-chunk-14-1.png)
  
 Again, behaviour of bootstrapped forecasts is very rectangular and the final ensemble forecast is much more smoother. Compare it also with forecast performed on whole train set. I am using function `CtreeTrend` from my previous post.
 
@@ -239,7 +239,7 @@ ggplot(pred_melt_ctree, aes(Var2, value, group = Var1)) +
   theme_ts
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-15](/images/post_7/unnamed-chunk-15-1.png)
+![plot of chunk unnamed-chunk-15](/images/post_6/unnamed-chunk-15-1.png)
  
 The simple forecast is a little bit more rectangular than ensemble one.
  
@@ -258,7 +258,7 @@ Whereas we use ensemble of CART trees in Random Forest, we can compute variable 
 varImpPlot(rf_model, main = "Variable importance")
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-17](/images/post_7/unnamed-chunk-17-1.png)
+![plot of chunk unnamed-chunk-17](/images/post_6/unnamed-chunk-17-1.png)
  
 We can see that Lag and S1.336 (weekly seasonal feature in sinus form) features have best scores in both measures. It implies that weekly seasonality and and lagged values of load are most important for our training data.
  
@@ -283,7 +283,7 @@ ggplot(preds_all, aes(Var2, value, color = as.factor(Var1))) +
   theme_ts
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-19](/images/post_7/unnamed-chunk-19-1.png)
+![plot of chunk unnamed-chunk-19](/images/post_6/unnamed-chunk-19-1.png)
  
 There are just small differences.
  
@@ -372,7 +372,12 @@ res_1
 
 
 {% highlight text %}
-## Error in eval(expr, envir, enclos): object 'res_1' not found
+##          2        3        4        5        6
+## 2 2.937151 2.931990 2.952967 2.970451 2.972355
+## 3 2.888450 2.896477 2.897801 2.912977 2.914294
+## 4 2.874241 2.878923 2.880959 2.882959 2.896501
+## 5 2.876503 2.872179 2.873983 2.875953 2.882657
+## 6 2.868838 2.872933 2.874093 2.867840 2.881881
 {% endhighlight %}
  
 And find the minimum.
@@ -385,7 +390,8 @@ c(mtry = row.names(res_1)[which(res_1 == min(res_1), arr.ind = TRUE)[1]],
 
 
 {% highlight text %}
-## Error in row.names(res_1): object 'res_1' not found
+##     mtry nodesize 
+##      "6"      "5"
 {% endhighlight %}
  
 So best (optimal) setting is `mtry` = 6 and `nodesize` = 5.
@@ -394,40 +400,15 @@ For better imagination and analysis of results, let's visualize the computed gri
 
 {% highlight r %}
 data_grid <- data.table(melt(res_1))
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.table(data): object 'res_1' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 colnames(data_grid) <- c("mtry", "nodesize", "MAPE")
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in colnames(data_grid) <- c("mtry", "nodesize", "MAPE"): object 'data_grid' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 ggplot(data_grid, aes(mtry, nodesize, size = MAPE, color = MAPE)) +
   geom_point() +
   scale_color_distiller(palette = "Reds") +
   theme_ts
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in ggplot(data_grid, aes(mtry, nodesize, size = MAPE, color = MAPE)): object 'data_grid' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-24](/images/post_6/unnamed-chunk-24-1.png)
  
 We can see that lowest average MAPEs are for `mtry` = 6 and `nodesize` = 2 or 5.
  
