@@ -4,7 +4,7 @@ title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
 published: false
 status: process
-tags: test
+tags: R TSrepr
 draft: false
 ---
 
@@ -207,7 +207,7 @@ clipping(data_oneday)
 ```
 
 If we visualize the data with its average value, then we can see that it works as the definition above:
-```{r, fig.height=3.5, fig.width=8.5}
+```{r, fig.height=3.8, fig.width=8.5}
 ggplot(data.frame(Time = 1:length(data_oneday), Value = data_oneday), aes(Time, Value)) +
   geom_line() +
   geom_line(data = data.frame(Time = 1:length(data_oneday), Value = mean(data_oneday)), aes(Time, Value), color = "red", size = 1, alpha = 0.8) +

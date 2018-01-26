@@ -4,7 +4,7 @@ title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
 published: true
 status: publish
-tags: test
+tags: R TSrepr
 draft: false
 ---
  
