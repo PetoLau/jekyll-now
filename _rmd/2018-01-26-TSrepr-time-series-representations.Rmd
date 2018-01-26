@@ -2,13 +2,14 @@
 layout: post
 title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
+bibliography: papers.bib
 published: false
 status: process
 tags: test
 draft: false
 ---
 
-I'm happy to announce a new package that has recently appeared on CRAN, called "**TSrepr**" (version 1.0.0: https://CRAN.R-project.org/package=TSrepr).
+I'm happy to announce a new package that has recently appeared on CRAN, called "**TSrepr**" (version 1.0.0: [https://CRAN.R-project.org/package=TSrepr](https://CRAN.R-project.org/package=TSrepr)).
 
 The **TSrepr** package contains methods of time series representations (dimensionality reduction, feature extraction or preprocessing) and several other useful helper methods and functions.
 
@@ -85,7 +86,7 @@ library(ggplot2)
 ```
 
 Let's load electricity consumption data (`elec_load`) and use first time series from the dataset. There is 672 values, so 14 days of measurements.
-```{r, fig.height=3.5, fig.width=7}
+```{r, fig.height=3.8, fig.width=9}
 data("elec_load")
 
 data_ts <- as.numeric(elec_load[1,])
@@ -109,7 +110,7 @@ data_paa <- repr_paa(data_ts, q = 8, func = mean)
 ```
 
 Let's plot the results:
-```{r, fig.height=3.5, fig.width=7}
+```{r, fig.height=3.8, fig.width=9}
 data_plot <- data.frame(Value = c(data_dwt, data_dft, data_dct, data_paa),
                         Time = rep(1:length(data_dwt), 4),
                         Method = factor(rep(c("DWT", "DFT", "DCT", "PAA"),
@@ -138,7 +139,7 @@ data_exp <- repr_exp(data_ts, freq = 48)
 ```
 
 And let's plot the results:
-```{r, fig.height=4, fig.width=7}
+```{r, fig.height=4, fig.width=9}
 data_plot <- data.frame(Value = c(data_lm, data_l1, data_seas_prof, data_exp, data_gam),
                         Time = c(rep(1:length(data_lm), 4), 1:length(data_gam)),
                         Method = c(rep(c("LM", "L1", "Median seas. prof.", "Exp. smooth."),
@@ -158,7 +159,7 @@ data_pla <- repr_pla(data_ts, times = 60, return = "both")
 ```
 
 And, of course, let's plot the results.
-```{r, fig.height=4, fig.width=7}
+```{r, fig.height=4, fig.width=9}
 data_plot <- data.frame(Value = c(data_ts, data_pip$points, data_pla$points),
                         Time = c(1:length(data_ts), data_pip$places, data_pla$places),
                         Method = c(rep("Original", length(data_ts)),
@@ -207,7 +208,7 @@ clipping(data_oneday)
 ```
 
 If we visualize the data with its average value, then we can see that it works as the definition above:
-```{r, fig.height=3.5, fig.width=7}
+```{r, fig.height=3.5, fig.width=8.5}
 ggplot(data.frame(Time = 1:length(data_oneday), Value = data_oneday), aes(Time, Value)) +
   geom_line() +
   geom_line(data = data.frame(Time = 1:length(data_oneday), Value = mean(data_oneday)), aes(Time, Value), color = "red", size = 1, alpha = 0.8) +
@@ -225,7 +226,7 @@ repr_feaclip(data_oneday)
 ```
 
 The **FeaClip** method is recommended to use with **windowing** approach, so for every specified window the FeaClip computation is separately applied. For the electricity consumption data, I am using the length of the window equal to 1 day so 48 measurements. The windowing method is implemented by function `repr_windowing` and its arguments are representation function (`func`), window size (`win_size`) and list of additional arguments to representation function (`args`). Let's use it in our case:
-```{r, fig.height=4, fig.width=7}
+```{r, fig.height=4, fig.width=9}
 data_feaclip <- repr_windowing(data_ts, func = repr_feaclip, win_size = 48)
 
 ggplot(data.frame(Time = 1:length(data_feaclip), Value = data_feaclip), aes(Time, Value)) +
@@ -253,7 +254,7 @@ rleC(trending(repr_sma(data_oneday, order = 4)))
 
 As expected, the run lengths of smoothed time series are more compact.
 The **FeaTrend** is designed to extract an arbitrary feature from run lengths of a trending representation. The recommended feature is the maximum value of zeros and ones, but it can vary from an application. In the `repr_featrend` function, the windowing is directly implemented, so the original time series is divided into pieces (subseries) and features are extracted from them separately. Let's try it in our case, but at first we will smooth original time series `data_ts` dramatically by SMA (order of moving average will be 48*7, so weekly seasonality) and do it only on whole time series (`pieces = 1`).
-```{r, fig.height=3.5, fig.width=7}
+```{r, fig.height=3.8, fig.width=9}
 # visualize smoothed time series
 data_sma <- repr_sma(data_ts, order = 48*7)
 ggplot(data.frame(Time = 1:length(data_sma), Value = data_sma), aes(Time, Value)) +
@@ -266,6 +267,6 @@ repr_featrend(data_ts, func = max, pieces = 1, order = 48*7)
 
 So, the maximal run length of ones is 15 and maximal run length of zeros is 30, as expected, the number of zeros is much more than the number of ones because of decreasing character of the used time series.
 
-And we have described and used every time series representation method implemented in the **TSrepr** package. In the next vignette (tutorial), I will show you one typical use case for using time series representation – clustering of time series.
+And we have described and used every time series representation method implemented in the **TSrepr** package. In the next post (tutorial), I will show you one typical use case for using time series representation – clustering of time series.
 
 ## Bibliography

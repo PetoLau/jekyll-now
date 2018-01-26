@@ -2,13 +2,14 @@
 layout: post
 title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
+bibliography: papers.bib
 published: true
 status: publish
 tags: test
 draft: false
 ---
  
-I'm happy to announce a new package that has recently appeared on CRAN, called "**TSrepr**" (version 1.0.0: https://CRAN.R-project.org/package=TSrepr).
+I'm happy to announce a new package that has recently appeared on CRAN, called "**TSrepr**" (version 1.0.0: [https://CRAN.R-project.org/package=TSrepr](https://CRAN.R-project.org/package=TSrepr)).
  
 The **TSrepr** package contains methods of time series representations (dimensionality reduction, feature extraction or preprocessing) and several other useful helper methods and functions.
  
@@ -362,6 +363,6 @@ repr_featrend(data_ts, func = max, pieces = 1, order = 48*7)
  
 So, the maximal run length of ones is 15 and maximal run length of zeros is 30, as expected, the number of zeros is much more than the number of ones because of decreasing character of the used time series.
  
-And we have described and used every time series representation method implemented in the **TSrepr** package. In the next vignette (tutorial), I will show you one typical use case for using time series representation – clustering of time series.
+And we have described and used every time series representation method implemented in the **TSrepr** package. In the next post (tutorial), I will show you one typical use case for using time series representation – clustering of time series.
  
 ## Bibliography
