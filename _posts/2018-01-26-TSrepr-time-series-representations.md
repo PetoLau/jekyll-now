@@ -3,6 +3,7 @@ layout: post
 title: TSrepr - Time Series Representations in R
 author: Peter Laurinec
 bibliography: papers.bib
+csl: ieee.csl
 published: true
 status: publish
 tags: test
@@ -15,7 +16,7 @@ The **TSrepr** package contains methods of time series representations (dimensio
  
 Time series representation can be defined as follows:
  
-Let \\( x \\) be a time series of length \\( n \\), then representation of \\( x \\) is a model $\hat{x}$ with reduced dimensionality \\( p \\) \\( (p < n) \\) such that $\hat{x}$ approximates closely \\( x \\) (@Esl).
+Let \\( x \\) be a time series of length \\( n \\), then representation of \\( x \\) is a model \\( \hat{x} \\) with reduced dimensionality \\( p \\) \\( (p < n) \\) such that \\( \hat{x} \\) approximates closely \\( x \\) (@Esl).
  
 Time series representations are used for:
  
@@ -365,4 +366,4 @@ So, the maximal run length of ones is 15 and maximal run length of zeros is 30, 
  
 And we have described and used every time series representation method implemented in the **TSrepr** package. In the next post (tutorial), I will show you one typical use case for using time series representation – clustering of time series.
  
-## Bibliography
+## References
