@@ -25,7 +25,7 @@ Time series representations are used for:
  
 Therefore, they are awesome!
  
-Time series representation methods can be divided into four groups (types) (Aghabozorgi, Seyed Shirkhorshidi, and Ying Wah (2015)):
+Time series representation methods can be divided into four groups (types) (Ratanamahatana et al. (2005)):
  
  * nondata adaptive
  * data adaptive
@@ -206,7 +206,7 @@ repr_sax(data_ts, q = 12, a = 10)
 The last type of implemented representation methods is the **data dictated** - clipped. I developed two methods in this category - **FeaClip** and **FeaTrend**.
 Both creates bit-level (binary) representation from original time series and computes run lengths of values by RLE (Run Length Encoding). Then interpretable features are extracted from run lengths.
  
-I will now describe the first of the mentioned methods - **FeaClip **. Clipping representation is created very easily - if a value of a time series is greater then its average value, then the value is transformed to 1 and otherwise to 0. It can be defined formally as follows:
+I will now describe the first of the mentioned methods - **FeaClip**. Clipping representation is created very easily - if a value of a time series is greater then its average value, then the value is transformed to 1 and otherwise to 0. It can be defined formally as follows:
  
 $$ \hat{x}_t = \left\{
 \begin{array}{rl}
@@ -215,7 +215,7 @@ $$ \hat{x}_t = \left\{
 \end{array} \right. ,$$
  
 where $\mu$ is the average value of a time series. On **clipping** (bit-level) representation $\hat{x}$, compression method for binary series named Run Length Encoding (**RLE**) is applied. A run is continuous sequence of ones, respectively zeros. The number of ones respectively zeros in a run we call the run lengths. From run lengths counted by RLE, eight simple interpretable features are extracted to form the final representation and are defined as
-
+ 
 $$\begin{aligned}
  \mathbf{repr} = \{ & max_1 = \mbox{max. from run lengths of ones}, \\
  & sum_1 = \mbox{sum of run lengths of ones}, \\
@@ -377,3 +377,4 @@ Laurinec, Peter, and Mária Lucká. 2016. “Comparison of Representations of Ti
  
 Laurinec, Peter, Marek Lóderer, Petra Vrablecová, Mária Lucká, Viera Rozinajová, and Anna Bou Ezzeddine. 2016. “Adaptive Time Series Forecasting of Energy Consumption Using Optimized Cluster Analysis.” In Data Mining Workshops (Icdmw), 2016 Ieee 16th International Conference on, 398–405. IEEE.
  
+Ratanamahatana, Chotirat, Eamonn Keogh, Anthony J Bagnall, and Stefano Lonardi. 2005. “A Novel Bit Level Time Series Representation with Implication of Similarity Search and Clustering.” In Pacific-Asia Conference on Knowledge Discovery and Data Mining, 771–77. Springer.
