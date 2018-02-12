@@ -25,7 +25,7 @@ I am a fan of the programming language **R** and of **Data Science**, **Statisti
 
 I created **R** package called **TSrepr** for computing time series representations. The source code is available on my GitHub repository: [github.com/PetoLau/TSrepr](https://github.com/PetoLau/TSrepr).
 
-<!---### Read my [**CV**](/images/CV.pdf).--->
+### Read my [**CV**](/images/CV_laurinec.pdf).
 
 ### Contact me at:
 
