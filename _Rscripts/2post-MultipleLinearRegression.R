@@ -1,10 +1,7 @@
-# rm(list=ls())
-# gc()
-
 ## Prepare DT ----
+library(feather)
+library(data.table)
 library(lubridate)
-
-# setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\csv\\")
 
 files <- list.files(pattern = "*.csv")
 DT <- rbindlist(lapply(files, function(x) cbind(fread(x), gsub(".csv", "", x))))
@@ -41,7 +38,7 @@ n_weekdays <- unique(DT_agg[, week])
 n_date <- unique(DT_agg[, date])
 period <- 48
 
-setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
+# setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
 meta_data <- fread("meta\\all_sites.csv")
 # prepare meta_data
 meta_data[, ':='(TIME_ZONE = NULL, TZ_OFFSET = NULL)]
@@ -68,15 +65,11 @@ DT_all_agg <- rbindlist(list(DT_ind_com, DT_ind_edu, DT_ind_food, DT_ind_ind))
 write_feather(DT_all_agg, "DT_4_ind")
 
 ## Post from here ----
-setwd("C:\\Users\\Peter\\Downloads\\ProjektBD\\enernoc\\")
-
 library(feather)
 library(data.table)
 library(ggplot2)
-# library(MASS)
 library(plotly)
 library(animation)
-# library(mgcv)
 
 # Use feather (fast to share data) to read data.table
 DT <- as.data.table(read_feather("DT_4_ind"))
