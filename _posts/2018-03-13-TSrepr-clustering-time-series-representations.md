@@ -35,11 +35,12 @@ dim(elec_load)
  
 There are 50 time series (consumers) of length 672, specifically time series of length 2 weeks of electricity consumption.
 These measurements are from smart meters from an unknown country.
+ 
 It is obvious that dimensionality is too high and the [**curse of dimensionality**](https://en.wikipedia.org/wiki/Curse_of_dimensionality) can happen.
 For this reason, we have to reduce dimensionality in some way. One of the best approaches is to use time series representations in order to reduce dimensionality, reduce noise and emphasize the main characteristics of time series.
  
 For double seasonal time series of electricity consumption (daily and weekly seasonality), the model-based representation approaches seem to have best ability to extract typical profiles of consumption.
-However, I will use some other representations too.
+However, I will use some other representation methods implemented in **TSrepr** too.
  
 Let's use one of the basic model-based representation methods - **mean seasonal profile**. It is implemented in the `repr_seas_profile` function and we will use it alongside `repr_matrix` function that computes representations for every row of a matrix of time series. One more very important notice here, normalisation of time series is a necessary procedure before every clustering or classification of time series. It is due to a fact that we want to extract typical curves of consumption and don't cluster based on an amount of consumption.
 By using the **TSrepr** package, we can do it all in one function - `repr_matrix`. We will use z-score normalisation implemented in `norm_z` function.
@@ -91,7 +92,8 @@ Let's plot the results of clustering with 7 number of clusters. I will use compu
 
 {% highlight r %}
 # prepare data for plotting
-data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[6]]$clustering), data_seasprof)))
+data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[6]]$clustering),
+                                        data_seasprof)))
 data_plot[, Time := rep(1:ncol(data_seasprof), each = nrow(data_seasprof))]
 data_plot[, ID := rep(1:nrow(data_seasprof), ncol(data_seasprof))]
  
@@ -104,7 +106,8 @@ centers[, ID := class]
 ggplot(data_plot, aes(Time, value, group = ID)) +
   facet_wrap(~class, ncol = 2, scales = "free_y") +
   geom_line(color = "grey10", alpha = 0.65) +
-  geom_line(data = centers, aes(Time, value), color = "firebrick1", alpha = 0.80, size = 1.2) +
+  geom_line(data = centers, aes(Time, value),
+            color = "firebrick1", alpha = 0.80, size = 1.2) +
   labs(x = "Time", y = "Load (normalised)") +
   theme_bw()
 {% endhighlight %}
@@ -113,7 +116,7 @@ ggplot(data_plot, aes(Time, value, group = ID)) +
  
 We can see 5 typical extracted profiles - red lines (medoids of clusters). The next two clusters are one-elemental, so they can be referred as outliers.
  
-Now, let's try some more sophisticated method for the extraction of seasonal profiles - **GAM regression coefficients**. By `repr_gam` function, we can extract double seasonal regression coefficients - daily and weekly.
+Now, let's try some more sophisticated method for the extraction of seasonal profiles - **GAM regression coefficients**. By `repr_gam` function, we can extract double seasonal regression coefficients - daily and weekly (you can read more about the [analysis of seasonal time series with **GAM** here](https://petolau.github.io/Analyzing-double-seasonal-time-series-with-GAM-in-R/)).
 However, the number of weekly seasonal regression coefficients will be only 6, because the number of the second seasonality coefficients is set to freq_2 / freq_1, so 48*7 / 48 = 7, and 7 - 1 = 6 because of splines computation (differentiation). I will again use `repr_matrix` function.
 
 {% highlight r %}
@@ -155,7 +158,8 @@ The optimal number of clusters is again 7. Let's plot results.
 
 {% highlight r %}
 # prepare data for plotting
-data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[6]]$clustering), data_gam)))
+data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[6]]$clustering),
+                                        data_gam)))
 data_plot[, Time := rep(1:ncol(data_gam), each = nrow(data_gam))]
 data_plot[, ID := rep(1:nrow(data_gam), ncol(data_gam))]
  
@@ -168,8 +172,10 @@ centers[, ID := class]
 ggplot(data_plot, aes(Time, value, group = ID)) +
   facet_wrap(~class, ncol = 2, scales = "free_y") +
   geom_line(color = "grey10", alpha = 0.65) +
-  geom_line(data = centers, aes(Time, value), color = "firebrick1", alpha = 0.80, size = 1.2) +
-  geom_vline(xintercept = 46, color = "dodgerblue2", size = 1.4, linetype = 5, alpha = 0.8) +
+  geom_line(data = centers, aes(Time, value),
+            color = "firebrick1", alpha = 0.80, size = 1.2) +
+  geom_vline(xintercept = 46, color = "dodgerblue2",
+             size = 1.4, linetype = 5, alpha = 0.8) +
   labs(x = "Time", y = "Load (normalised)") +
   theme_bw()
 {% endhighlight %}
@@ -219,7 +225,8 @@ We can see nice ["elbow"](https://en.wikipedia.org/wiki/Determining_the_number_o
 
 {% highlight r %}
 # prepare data for plotting
-data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[3]]$clustering), data_dft)))
+data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[3]]$clustering),
+                                        data_dft)))
 data_plot[, Time := rep(1:ncol(data_dft), each = nrow(data_dft))]
 data_plot[, ID := rep(1:nrow(data_dft), ncol(data_dft))]
  
@@ -232,19 +239,22 @@ centers[, ID := class]
 ggplot(data_plot, aes(Time, value, group = ID)) +
   facet_wrap(~class, ncol = 2, scales = "free_y") +
   geom_line(color = "grey10", alpha = 0.65) +
-  geom_line(data = centers, aes(Time, value), color = "firebrick1", alpha = 0.80, size = 1.2) +
+  geom_line(data = centers, aes(Time, value),
+            color = "firebrick1", alpha = 0.80, size = 1.2) +
   labs(x = "Time", y = "Load (normalised)") +
   theme_bw()
 {% endhighlight %}
 
 ![plot of chunk unnamed-chunk-13](/images/post_8/unnamed-chunk-13-1.png)
  
-The interpretability of these results would be difficult. Therefore, model-based time series representations are very effective in this use case (typical profiles extraction).
+The interpretability of these results would be difficult. Therefore, model-based time series representations are very effective in this use case (so the typical profiles extraction).
  
 I will show you the usage of one more representation method - **FeaClip**. The **FeaClip** is feature extraction method from a clipping representation. The windowing approach alongside FeaClip is recommended to use for every day of time series. The big advantage is that normalisation is not needed alongside FeaClip method. Let's use it in our case. The windowing method is also directly implemented in `repr_matrix` function.
 
 {% highlight r %}
-data_feaclip <- repr_matrix(elec_load, func = repr_feaclip, windowing = TRUE, win_size = 48)
+data_feaclip <- repr_matrix(elec_load, func = repr_feaclip,
+                            windowing = TRUE, win_size = 48)
+ 
 dim(data_feaclip)
 {% endhighlight %}
 
@@ -280,7 +290,8 @@ We can see that now 2 "elbows" appeared. The biggest change is between 2 and 3 n
 
 {% highlight r %}
 # prepare data for plotting
-data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[2]]$clustering), data_feaclip)))
+data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[2]]$clustering),
+                                        data_feaclip)))
 data_plot[, Time := rep(1:ncol(data_feaclip), each = nrow(data_feaclip))]
 data_plot[, ID := rep(1:nrow(data_feaclip), ncol(data_feaclip))]
  
@@ -293,7 +304,8 @@ centers[, ID := class]
 ggplot(data_plot, aes(Time, value, group = ID)) +
   facet_wrap(~class, ncol = 2, scales = "free_y") +
   geom_line(color = "grey10", alpha = 0.65) +
-  geom_line(data = centers, aes(Time, value), color = "firebrick1", alpha = 0.80, size = 1.2) +
+  geom_line(data = centers, aes(Time, value),
+            color = "firebrick1", alpha = 0.80, size = 1.2) +
   labs(x = "Time", y = "Load (normalised)") +
   theme_bw()
 {% endhighlight %}
