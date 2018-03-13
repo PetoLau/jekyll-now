@@ -4,7 +4,7 @@ author: Peter Laurinec
 layout: post
 published: no
 status: process
-tags: test
+tags: R TSrepr clustering
 draft: no
 ---
 
@@ -71,7 +71,7 @@ ggplot(data.table(Clusters = 2:7, DBindex = unlist(DB_values)),
 The "best" number of clusters is 7 (lowest value of the index).
 
 Let's plot the results of clustering with 7 number of clusters. I will use computed medoids stored in the object `clustering`. For a visualization, the `facet_wrap` function is very handy here.
-```{r, warning=F, message=F, fig.height=6, fig.width=8.5}
+```{r, warning=F, message=F, fig.height=6.5, fig.width=8.5}
 # prepare data for plotting
 data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[6]]$clustering),
                                         data_seasprof)))
@@ -123,7 +123,7 @@ ggplot(data.table(Clusters = 2:7, DBindex = unlist(DB_values)),
 ```
 
 The optimal number of clusters is again 7. Let's plot results.
-```{r, warning=F, message=F, fig.height=6, fig.width=8.5}
+```{r, warning=F, message=F, fig.height=6.5, fig.width=8.5}
 # prepare data for plotting
 data_plot <- data.table(melt(data.table(class = as.factor(clusterings[[6]]$clustering),
                                         data_gam)))

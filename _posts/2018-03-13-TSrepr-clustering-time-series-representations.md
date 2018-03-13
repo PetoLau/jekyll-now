@@ -4,7 +4,7 @@ author: Peter Laurinec
 layout: post
 published: true
 status: publish
-tags: test
+tags: R TSrepr clustering
 draft: no
 ---
  
