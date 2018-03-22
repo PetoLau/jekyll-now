@@ -82,7 +82,7 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   theme_bw()
 {% endhighlight %}
 
-![plot of chunk paa_vs_pla](/\images\package-paa_vs_pla-1.png)
+![plot of chunk paa_vs_pla](\images\package-paa_vs_pla-1.png)
  
 ## For more information
  
@@ -97,4 +97,4 @@ For any suggestions and comments write me an email at: [tsreprpackage@gmail.com]
  
 Cite the package as:
  
- - Laurinec, (2018). TSrepr R package: Time Series Representations. Journal of Open Source Software, 3(23), 577, https://doi.org/10.21105/joss.00577
+ - Laurinec, (2018). TSrepr R package: Time Series Representations. Journal of Open Source Software, 3(23), 577, [https://doi.org/10.21105/joss.00577](https://doi.org/10.21105/joss.00577)
