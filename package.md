@@ -1,11 +1,4 @@
----
-title: "TSrepr - R package for time series representations"
-permalink: /package/
-layout: package
----
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
 [**TSrepr**](https://github.com/PetoLau/TSrepr) is **R** package for
 fast time series representations and dimensionality reduction
 computations. Z-score normalisation, min-max normalisation, forecasting
@@ -19,17 +12,13 @@ Installation
 You can install **TSrepr** directly from
 [CRAN](https://CRAN.R-project.org/package=TSrepr):
 
-{% highlight r %}
-install.packages("TSrepr")
-{% endhighlight %}
+{% highlight r %} install.packages("TSrepr") {% endhighlight %}
 
 Or development version from [GitHub](https://github.com/PetoLau/TSrepr)
 with:
 
-{% highlight r %}
-# install.packages("devtools")
-devtools::install_github("PetoLau/TSrepr")
-{% endhighlight %}
+{% highlight r %} \# install.packages("devtools")
+devtools::install\_github("PetoLau/TSrepr") {% endhighlight %}
 
 Overview
 --------
@@ -78,30 +67,45 @@ Additional useful functions are implemented as:
 Usage
 -----
 
-{% highlight r %}
-library(TSrepr)
-library(ggplot2)
+{% highlight r %} library(TSrepr) library(ggplot2)
 
-data_ts <- as.numeric(elec_load[5,]) # electricity load consumption data
-# Comparison of PAA and PLA
-# Dimensionality of the time series will be reduced 8 times
-data_paa <- repr_paa(data_ts, q = 12, func = mean)
-data_pla <- repr_pla(data_ts, times = 55, return = "both") # returns both extracted places and values
+data\_ts &lt;- as.numeric(elec\_load\[5,\]) \# electricity load
+consumption data \# Comparison of PAA and PLA \# Dimensionality of the
+time series will be reduced 8 times data\_paa &lt;- repr\_paa(data\_ts,
+q = 12, func = mean) data\_pla &lt;- repr\_pla(data\_ts, times = 55,
+return = "both") \# returns both extracted places and values
 
-data_plot <- data.frame(value = c(data_ts, data_paa, data_pla$points),
-                        time = c(1:length(data_ts), seq(6, length(data_ts), by = 12), data_pla$places),
-                        type = factor(c(rep("Original", length(data_ts)), rep(c("PAA", "PLA"), each = 56))))
+data\_plot &lt;- data.frame(value = c(data\_ts, data\_paa,
+data\_pla$points),  time = c(1:length(data_ts), seq(6, length(data_ts), by = 12), data_pla$places),
+type = factor(c(rep("Original", length(data\_ts)), rep(c("PAA", "PLA"),
+each = 56))))
 
-ggplot(data_plot, aes(time, value, color = type, size = type)) +
-  geom_line(alpha = 0.8) +
-  scale_size_manual(values = c(0.6, 0.8, 0.8)) +
-  theme_bw()
-{% endhighlight %}
+ggplot(data\_plot, aes(time, value, color = type, size = type)) +
+geom\_line(alpha = 0.8) + scale\_size\_manual(values = c(0.6, 0.8, 0.8))
++ theme\_bw() {% endhighlight %}
 
 ![](\images\package-paa_vs_pla-1.png)
+
+For more information
+--------------------
+
+-   Check my blog post at
+    [petolau.github.io/TSrepr-time-series-representations](https://petolau.github.io/TSrepr-time-series-representations/),
+-   Check my blog post about clustering time series representations at
+    [petolau.github.io/TSrepr-clustering-time-series-representations](https://petolau.github.io/TSrepr-clustering-time-series-representations/).
 
 Contact
 -------
 
 For any suggestions and comments write me an email at:
 <tsreprpackage@gmail.com>
+
+Citation
+--------
+
+Cite the package as:
+
+-   Laurinec, (2018). TSrepr R package: Time Series Representations.
+    Journal of Open Source Software, 3(23), 577,
+    <https://doi.org/10.21105/joss.00577>
+
