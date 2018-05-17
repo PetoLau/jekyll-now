@@ -24,6 +24,16 @@ You can read my research papers on [**Google Scholar**](https://scholar.google.s
 Works (papers) that were presented by me at a conference, a workshop or a meetup are listed below.
 
 <hr>
+##### **Time Series Representations for Better Data Mining**
+**Conference:** [eRum'2018](http://2018.erum.io)
+
+**Date:** 15.5.2018
+
+**Where:** Budapest, Hungary
+
+<a href="/presentations/erum_laurinec.pdf" target="_blank">Download the presentation (PDF)</a>
+
+<hr>
 ##### **New Clustering-based Forecasting Method for Disaggregated End-consumer Electricity Load Using Smart Grid Data**
 **Conference:** [Informatics'2017](https://informatics.kpi.fei.tuke.sk/)
 
