@@ -4,7 +4,7 @@ author: Peter Laurinec
 layout: post
 published: false
 status: process
-tags: test meetup
+tags: R meetup
 draft: false
 ---
 
@@ -28,7 +28,11 @@ Great workshop by [Przemyslaw Biecek](https://github.com/pbiecek) and [Mateusz S
 
 <blockquote class="twitter-tweet"><p lang="en" dir="ltr">Fun on <a href="https://twitter.com/hashtag/workshop?src=hash&amp;ref_src=twsrc%5Etfw">#workshop</a> with DALEX to explain ML models at <a href="https://twitter.com/erum2018?ref_src=twsrc%5Etfw">@erum2018</a> <a href="https://twitter.com/hashtag/erum2018?src=hash&amp;ref_src=twsrc%5Etfw">#erum2018</a> <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> <a href="https://twitter.com/hashtag/dataviz?src=hash&amp;ref_src=twsrc%5Etfw">#dataviz</a> <a href="https://twitter.com/hashtag/DataScience?src=hash&amp;ref_src=twsrc%5Etfw">#DataScience</a> speaker: <a href="https://twitter.com/smarterpoland?ref_src=twsrc%5Etfw">@smarterpoland</a> <a href="https://t.co/hHf9dThcr2">pic.twitter.com/hHf9dThcr2</a></p>&mdash; Peter Laurinec (@petolauri) <a href="https://twitter.com/petolauri/status/995942420914343936?ref_src=twsrc%5Etfw">May 14, 2018</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
-I learned many techniques for a diagnosis of machine learning models. Techniques for explanations of a trained model, predictions, single prediction etc. were all presented here. Workshop resources can be downloaded here: [DALEX_docs](https://github.com/pbiecek/DALEX_docs/tree/master/workshops/eRum2018). Various packages were used for these purposes, the list of them follows:
+I learned many techniques for a diagnosis of machine learning models. Techniques for explanations of a trained model, predictions, single prediction etc. were all presented here. Workshop resources can be downloaded here:
+
+ * [DALEX_docs](https://github.com/pbiecek/DALEX_docs/tree/master/workshops/eRum2018).
+
+Various packages were used for these purposes, the list of them follows:
 
  * [`DALEX`](https://cran.r-project.org/package=DALEX)
  * [`lime`](https://cran.r-project.org/package=lime)
