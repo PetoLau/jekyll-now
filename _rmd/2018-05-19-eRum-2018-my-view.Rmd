@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 On the range of dates 14.-16. May 2018, the European R users meeting (eRum) was held in Budapest. I was there as an active participant since I had the presentation about time series data mining. The [**eRum 2018**](http://2018.erum.io/) was a very successful event and I want to thank organizers of this event for a great organization of it.
 
-![](/images/post_9/erum.jpg)
+![](/images/post_9/erum_e.jpg)
  
 This blog post will be oriented on my biggest highlights of the eRum conference and as a list of useful resources.
 
@@ -26,16 +26,15 @@ The eRum started with many [workshops](http://2018.erum.io/#workshop-tutors) sep
 
 Great workshop by [Przemyslaw Biecek](https://github.com/pbiecek) and [Mateusz Staniak](https://github.com/mstaniak) about tools for exploration, validation, and explanation of complex machine learning models.
 
-<iframe border=0 frameborder=0 height=250 width=550
- src="https://twitframe.com/show?url=https://twitter.com/petolauri/status/995942420914343936"></iframe>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Fun on <a href="https://twitter.com/hashtag/workshop?src=hash&amp;ref_src=twsrc%5Etfw">#workshop</a> with DALEX to explain ML models at <a href="https://twitter.com/erum2018?ref_src=twsrc%5Etfw">@erum2018</a> <a href="https://twitter.com/hashtag/erum2018?src=hash&amp;ref_src=twsrc%5Etfw">#erum2018</a> <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> <a href="https://twitter.com/hashtag/dataviz?src=hash&amp;ref_src=twsrc%5Etfw">#dataviz</a> <a href="https://twitter.com/hashtag/DataScience?src=hash&amp;ref_src=twsrc%5Etfw">#DataScience</a> speaker: <a href="https://twitter.com/smarterpoland?ref_src=twsrc%5Etfw">@smarterpoland</a> <a href="https://t.co/hHf9dThcr2">pic.twitter.com/hHf9dThcr2</a></p>&mdash; Peter Laurinec (@petolauri) <a href="https://twitter.com/petolauri/status/995942420914343936?ref_src=twsrc%5Etfw">May 14, 2018</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 I learned many techniques for a diagnosis of machine learning models. Techniques for explanations of a trained model, predictions, single prediction etc. were all presented here. Workshop resources can be downloaded here: [DALEX_docs](https://github.com/pbiecek/DALEX_docs/tree/master/workshops/eRum2018). Various packages were used for these purposes, the list of them follows:
 
- * [DALEX](https://cran.r-project.org/package=DALEX)
- * [lime](https://cran.r-project.org/package=lime)
- * [live](https://cran.r-project.org/package=live)
- * [auditor](https://cran.r-project.org/package=auditor)
- * [shapleyr](https://github.com/redichh/ShapleyR).
+ * [`DALEX`](https://cran.r-project.org/package=DALEX)
+ * [`lime`](https://cran.r-project.org/package=lime)
+ * [`live`](https://cran.r-project.org/package=live)
+ * [`auditor`](https://cran.r-project.org/package=auditor)
+ * [`shapleyr`](https://github.com/redichh/ShapleyR).
 
 #### Deep learning with Keras
 
@@ -53,8 +52,7 @@ The bombshell by [Florian Privé](https://github.com/privefl) was about using la
 
 The great keynote speech by [Nathalie Vialaneix](https://github.com/tuxette) was about using unsupervised learning for relational data (or dissimilarity data). She talked about various interesting use cases to use her R packages [`adjclust`](https://cran.r-project.org/package=adjclust) and [`SOMbrero`](https://cran.r-project.org/package=SOMbrero) for clustering relational data. The slides can be found here: [slides_villavialaneix_ERUM2018](http://www.nathalievilla.org/doc/pdf/slides_villavialaneix_ERUM2018.pdf).
 
-<iframe border=0 frameborder=0 height=250 width=550
- src="https://twitframe.com/show?url=https://twitter.com/petolauri/status/996363514796179458"></iframe>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr">Unsupervised <a href="https://twitter.com/hashtag/learning?src=hash&amp;ref_src=twsrc%5Etfw">#learning</a> for relational data, dissimilarities with <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> packages adjclust and SOMbrero by <a href="https://twitter.com/Natty_V2?ref_src=twsrc%5Etfw">@Natty_V2</a> <a href="https://twitter.com/hashtag/erum2018?src=hash&amp;ref_src=twsrc%5Etfw">#erum2018</a> <a href="https://twitter.com/hashtag/DataScience?src=hash&amp;ref_src=twsrc%5Etfw">#DataScience</a> <a href="https://twitter.com/hashtag/MachineLearning?src=hash&amp;ref_src=twsrc%5Etfw">#MachineLearning</a><br>Great talk! <a href="https://t.co/O73rzg7O1z">pic.twitter.com/O73rzg7O1z</a></p>&mdash; Peter Laurinec (@petolauri) <a href="https://twitter.com/petolauri/status/996363514796179458?ref_src=twsrc%5Etfw">May 15, 2018</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 Afterward, [Erin LeDell](https://github.com/ledell) from H2O talked about automated ensemble learning using [`h2o`](https://cran.r-project.org/package=h2o) package. The `h2o.automl` function allows various interesting things, for example, limit (restrict) learning time for a creation of ensemble.
 
