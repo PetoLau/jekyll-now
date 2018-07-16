@@ -4,7 +4,7 @@ title: About Me
 permalink: /about/
 ---
 
-I am a **PhD. student** at the [Faculty of Informatics and Information Technologies](http://www.fiit.stuba.sk/en.html?page_id=749), Slovak University of Technology in Bratislava. I took my master's degree in **Probability and Mathematical Statistics** at the [FMFI UK](http://fmph.uniba.sk/en/). My current research scopes and interests include:
+I have **PhD** from the [Faculty of Informatics and Information Technologies](http://www.fiit.stuba.sk/en.html?page_id=749), Slovak University of Technology in Bratislava. I took my master's degree in **Probability and Mathematical Statistics** at the [FMFI UK](http://fmph.uniba.sk/en/). My research scopes and interests include:
 
  * Time Series Data Mining
  * Machine Learning
