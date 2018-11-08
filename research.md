@@ -24,6 +24,16 @@ You can read my research papers related to the thesis on [**Google Scholar**](ht
 Works (papers) that were presented by me at a conference, a workshop or a meetup are listed below.
 
 <hr>
+##### **Time Series Data Mining - from PhD to Startup**
+**Conference:** [SatRday-Belgrade'2018](https://belgrade2018.satrdays.org/#programme)
+
+**Date:** 27.10.2018
+
+**Where:** Belgrade, Serbia
+
+<a href="/presentations/satrday_beograd_laurinec.pdf" target="_blank">Download the presentation (PDF)</a>
+
+<hr>
 ##### **Time Series Representations for Better Data Mining**
 **Conference:** [eRum'2018](http://2018.erum.io)
 
