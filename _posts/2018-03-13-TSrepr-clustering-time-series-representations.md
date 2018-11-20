@@ -249,7 +249,7 @@ ggplot(data_plot, aes(Time, value, group = ID)) +
  
 The interpretability of these results would be difficult. Therefore, model-based time series representations are very effective in this use case (so the typical profiles extraction).
  
-I will show you the usage of one more representation method - **FeaClip**. The **FeaClip** is feature extraction method from a clipping representation. The windowing approach alongside FeaClip is recommended to use for every day of time series. The big advantage is that normalisation is not needed alongside FeaClip method. Let's use it in our case. The windowing method is also directly implemented in `repr_matrix` function.
+I will show you the usage of one more representation method - **FeaClip**. The **FeaClip** is feature extraction method from a clipped representation (Laurinec and Lucká (2018)). The windowing approach alongside FeaClip is recommended to use for every day of time series. The big advantage is that normalisation is not needed alongside FeaClip method. Let's use it in our case. The windowing method is also directly implemented in `repr_matrix` function.
 
 {% highlight r %}
 data_feaclip <- repr_matrix(elec_load, func = repr_feaclip,
@@ -328,3 +328,5 @@ You can check how I use time series representations in my dissertation thesis in
 Laurinec, Peter, and Mária Lucká. 2016. “Comparison of Representations of Time Series for Clustering Smart Meter Data.” In Lecture Notes in Engineering and Computer Science: Proceedings of the World Congress on Engineering and Computer Science 2016, 458–63.
  
 Laurinec, Peter, Marek Lóderer, Petra Vrablecová, Mária Lucká, Viera Rozinajová, and Anna Bou Ezzeddine. 2016. “Adaptive Time Series Forecasting of Energy Consumption Using Optimized Cluster Analysis.” In Data Mining Workshops (Icdmw), 2016 Ieee 16th International Conference on, 398–405. IEEE.
+ 
+Laurinec, Peter, and Mária Lucká. 2018. "Interpretable multiple data streams clustering with clipped streams representation for the improvement of electricity consumption forecasting". Data Mining and Knowledge Discovery. Springer. DOI: [10.1007/s10618-018-0598-2](https://doi.org/10.1007/s10618-018-0598-2).

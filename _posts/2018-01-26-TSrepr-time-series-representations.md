@@ -206,7 +206,7 @@ repr_sax(data_ts, q = 12, a = 10)
 The last type of implemented representation methods is the **data dictated** - clipped. I developed two methods in this category - **FeaClip** and **FeaTrend**.
 Both creates bit-level (binary) representation from original time series and computes run lengths of values by RLE (Run Length Encoding). Then interpretable features are extracted from run lengths.
  
-I will now describe the first of the mentioned methods - **FeaClip**. Clipping representation is created very easily - if a value of a time series is greater then its average value, then the value is transformed to 1 and otherwise to 0. It can be defined formally as follows:
+I will now describe the first of the mentioned methods - **FeaClip** (Laurinec and Lucká (2018)). Clipping representation is created very easily - if a value of a time series is greater then its average value, then the value is transformed to 1 and otherwise to 0. It can be defined formally as follows:
  
 $$ \hat{x}_t = \left\{
 \begin{array}{rl}
@@ -281,7 +281,7 @@ repr_feaclip(data_oneday)
 ##     5    11    16     6    16     2     0     0
 {% endhighlight %}
  
-The **FeaClip** method is recommended to use with **windowing** approach, so for every specified window the FeaClip computation is separately applied. For the electricity consumption data, I am using the length of the window equal to 1 day so 48 measurements. The windowing method is implemented by function `repr_windowing` and its arguments are representation function (`func`), window size (`win_size`) and list of additional arguments to representation function (`args`). Let's use it in our case:
+The **FeaClip** method is recommended to use with **windowing** approach, so for every specified window the FeaClip computation is separately applied (Laurinec and Lucká (2018)). For the electricity consumption data, I am using the length of the window equal to 1 day so 48 measurements. The windowing method is implemented by function `repr_windowing` and its arguments are representation function (`func`), window size (`win_size`) and list of additional arguments to representation function (`args`). Let's use it in our case:
 
 {% highlight r %}
 data_feaclip <- repr_windowing(data_ts, func = repr_feaclip, win_size = 48)
@@ -376,5 +376,7 @@ Esling, Philippe, and Carlos Agon. 2012. “Time-series data mining.” ACM Comp
 Laurinec, Peter, and Mária Lucká. 2016. “Comparison of Representations of Time Series for Clustering Smart Meter Data.” In Lecture Notes in Engineering and Computer Science: Proceedings of the World Congress on Engineering and Computer Science 2016, 458–63.
  
 Laurinec, Peter, Marek Lóderer, Petra Vrablecová, Mária Lucká, Viera Rozinajová, and Anna Bou Ezzeddine. 2016. “Adaptive Time Series Forecasting of Energy Consumption Using Optimized Cluster Analysis.” In Data Mining Workshops (Icdmw), 2016 Ieee 16th International Conference on, 398–405. IEEE.
+ 
+Laurinec, Peter, and Mária Lucká. 2018. "Interpretable multiple data streams clustering with clipped streams representation for the improvement of electricity consumption forecasting". Data Mining and Knowledge Discovery. Springer. DOI: [10.1007/s10618-018-0598-2](https://doi.org/10.1007/s10618-018-0598-2).
  
 Ratanamahatana, Chotirat, Eamonn Keogh, Anthony J Bagnall, and Stefano Lonardi. 2005. “A Novel Bit Level Time Series Representation with Implication of Similarity Search and Clustering.” In Pacific-Asia Conference on Knowledge Discovery and Data Mining, 771–77. Springer.
