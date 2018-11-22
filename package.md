@@ -82,7 +82,7 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   theme_bw()
 {% endhighlight %}
 
-![plot of chunk paa_vs_pla](/\images\package-paa_vs_pla-1.png)
+![plot of chunk paa_vs_pla](\images\package-paa_vs_pla-1.png)
  
 ## For more information
  
