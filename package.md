@@ -57,7 +57,7 @@ Additional useful functions are implemented as:
   * Normalisation functions - z-score (`norm_z`), min-max (`norm_min_max`)
   * Normalisation functions with output also of scaling parameters - z-score (`norm_z_list`), min-max (`norm_min_max_list`)
   * Denormalisation functions - z-score (`denorm_z`), min-max (`denorm_min_max`)
-  * Forecasting accuracy measures - MAE, RMSE, MdAE, MAPE, sMAPE, MASE
+  * Forecasting accuracy measures - MAE, RMSE, MdAE, MAPE, sMAPE, MAAPE, MASE
  
 ## Usage
  
@@ -82,7 +82,7 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   theme_bw()
 {% endhighlight %}
 
-![plot of chunk paa_vs_pla](\images\package-paa_vs_pla-1.png)
+![plot of chunk paa_vs_pla](/\images\package-paa_vs_pla-1.png)
  
 ## For more information
  
