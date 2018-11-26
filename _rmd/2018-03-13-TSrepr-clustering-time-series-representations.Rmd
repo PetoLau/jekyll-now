@@ -3,7 +3,7 @@ title: TSrepr use case - Clustering time series representations in R
 author: Peter Laurinec
 layout: post
 published: no
-status: process
+status: processed
 tags: R TSrepr clustering
 draft: no
 ---
