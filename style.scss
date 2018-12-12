@@ -32,6 +32,12 @@ body {
   width: 100%;
 }
 
+.center {
+  display: table;
+  margin-right: auto;
+  margin-left: auto;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: $helveticaNeue;
   color: $darkerGray;
