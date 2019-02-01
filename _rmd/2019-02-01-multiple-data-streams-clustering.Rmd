@@ -309,14 +309,13 @@ gg_anim <- ggplot(data_plot) +
 ```
 
 Let's animate!
-```{r, eval=F, echo=T}
+```{r, eval=T, echo=T, message=F, warning=F}
 gganimate::animate(gg_anim, fps = 2, nframes = n_win,
-                   width = 800, height = 500, res = 120,
+                   width = 720, height = 450, res = 120,
                    renderer = av_renderer('animation.mp4'))
-# utils::browseURL('animation.mp4')
 ```
 
-![](/images/post_10/animation.mp4)
+<!-- ![](/images/post_10/animation.mp4) -->
 
 We can see how *FeaClip* representation adapts on different behavior of electricity consumption - when it's low around zero, or it gets high etc. - it makes drastic noise reduction and extract only key features from the time series.
 
