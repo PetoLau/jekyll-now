@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Multiple Data (Time Series) Streams Clustering in R
+title: Multiple Data (Time Series) Streams Clustering
 author: Peter Laurinec
 published: true
 status: process
@@ -48,7 +48,7 @@ Whole method is developed in **unsupervised** fashion (yey!), so **representatio
 
 Firstly, read the London smart meter data, which compromise more than 4000 consumers and load all the needed packages.
 
-```{r}
+```{r, warning=F, message=F}
 library(data.table)
 library(parallel)
 library(cluster)
@@ -62,7 +62,7 @@ library(gganimate)
 library(av)
 ```
 
-```{r}
+```{r, warning=F, message=F}
 data <- OpenML::getOMLDataSet(data.id = 41060)
 data <- data.matrix(data$data)
 ```
@@ -120,7 +120,7 @@ ggplot(data.table(Time = 1:period,
 Peak on start of a day...
 
 Now, let's plot weekly pattern:
-```{r, fig.height=3.8, fig.width=8.5}
+```{r, fig.height=3.8, fig.width=9}
 ggplot(data.table(Time = 1:(period*7),
                   Value = repr_seas_profile(data_cons[200,],
                                             freq = period*7,
@@ -165,7 +165,7 @@ data_centroid <- data.table(melt(res_clust$centers))
 data_centroid[, Clust := Var1]
 ```
 
-```{r}
+```{r, fig.height=6, fig.width=9}
 ggplot(data_plot) +
   facet_wrap(~Clust, scales = "free", ncol = 3) +
   geom_line(aes(Var2, value, group = Var1), alpha = 0.7) +
@@ -214,9 +214,10 @@ print(gg2, vp = define_region(2, 1))
 ```
 
 Let's compute it also for consumption of length 2 weeks - by windows.
-```{r, fig.height=7, fig.width=9}
+```{r, fig.height=6.2, fig.width=10}
 win <- 14
-ts_feaclip_long <- repr_windowing(data_cons[1, 1:(period*win)], func = repr_feaclip, win_size = period)
+ts_feaclip_long <- repr_windowing(data_cons[1, 1:(period*win)],
+                                  func = repr_feaclip, win_size = period)
 
 means <- sapply(0:(win-1), function(i) mean(data_cons[1, ((period*i)+1):(period*(i+1))]))
 means <- data.table(Consumption = rep(means, each = period),
@@ -225,8 +226,10 @@ means <- data.table(Consumption = rep(means, each = period),
 gg1 <- ggplot(data.table(Consumption = data_cons[1, 1:(period*win)],
                          Time = 1:(period*win))) +
   geom_line(aes(Time, Consumption), alpha = 0.95) +
-  geom_vline(xintercept = seq(from=period,to=(period*win)-period, by=period), alpha = 0.75, size = 1.0, col = "dodgerblue2", linetype = 2) +
-  geom_line(data = means, aes(Time, Consumption), color = "firebrick2", alpha = 0.8, size = 1.2, linetype = 5) +
+  geom_vline(xintercept = seq(from=period,to=(period*win)-period, by=period),
+             alpha = 0.75, size = 1.0, col = "dodgerblue2", linetype = 2) +
+  geom_line(data = means, aes(Time, Consumption), color = "firebrick2",
+            alpha = 0.8, size = 1.2, linetype = 5) +
   labs(y = "Consumption (kWh)", title = NULL, x = NULL) +
   scale_x_continuous(breaks=seq(from=period/2, to=(period*win), by = period),
                      labels=c(1:win)) +
@@ -235,7 +238,8 @@ gg1 <- ggplot(data.table(Consumption = data_cons[1, 1:(period*win)],
 gg2 <- ggplot(data.table(Count = ts_feaclip_long,
                          Time = 1:length(ts_feaclip_long))) +
   geom_line(aes(Time, Count)) +
-  geom_vline(xintercept = seq(from=8,to=(8*win)-8, by=8), alpha = 0.75, size = 1.0, col = "dodgerblue2", linetype = 2) +
+  geom_vline(xintercept = seq(from=8,to=(8*win)-8, by=8),
+             alpha = 0.75, size = 1.0, col = "dodgerblue2", linetype = 2) +
   # geom_point(aes(Time, Count), size = 2, alpha = 0.8) +
   scale_x_continuous(breaks=seq(from=8/2, to=(8*win), by = 8),
                      labels=c(1:win)) +
@@ -264,7 +268,8 @@ data_feaclip_all <- repr_windowing(data_cons[1,],
 win <- 14
 win_size <- 14*8
 n_win <- length(data_feaclip_all)/8 - win
-data_feaclip_all_anim <- sapply(0:(n_win - 1), function(i) data_feaclip_all[((i*8)+1):((i*8) + win_size)])
+data_feaclip_all_anim <- sapply(0:(n_win - 1), function(i) 
+  data_feaclip_all[((i*8)+1):((i*8) + win_size)])
 data_feaclip_all_anim <- data.table(melt(data_feaclip_all_anim))
 data_feaclip_all_anim[, Type := "Representation - FeaClip"]
 
@@ -272,7 +277,8 @@ data_feaclip_all_anim[, Type := "Representation - FeaClip"]
 win <- 14
 win_size <- 14*period
 n_win <- ncol(data_cons)/period - win
-data_cons_anim <- sapply(0:(n_win - 1), function(i) data_cons[1, ((i*period)+1):((i*period) + win_size)])
+data_cons_anim <- sapply(0:(n_win - 1), function(i) 
+  data_cons[1, ((i*period)+1):((i*period) + win_size)])
 row.names(data_cons_anim) <- NULL
 data_cons_anim <- data.table(melt(data_cons_anim))
 data_cons_anim[, Type := "Original TS"]
@@ -296,22 +302,23 @@ gg_anim <- ggplot(data_plot) +
   geom_line(aes(Var1, value)) +
   geom_vline(data = data_vline, aes(xintercept = Var1),
              alpha = 0.75, size = 0.8, col = "dodgerblue2", linetype = 2) +
-  labs(x = "Length", y = NULL, title = "Time series and its representation, Window: {frame_time}") +
+  labs(x = "Length", y = NULL,
+       title = "Time series and its representation, Window: {frame_time}") +
   theme_ts +
   transition_time(Window)
 ```
 
 Let's animate!
-```{r}
+```{r, eval=T, echo=T}
 gganimate::animate(gg_anim, fps = 2, nframes = n_win,
-                   width = 900, height = 500, res = 120,
+                   width = 800, height = 500, res = 120,
                    renderer = av_renderer('animation.mp4'))
 # utils::browseURL('animation.mp4')
 ```
 
 ![](/images/post_10/animation.mp4)
 
-We can see how *FeaClip* representation adapts on different behavior of electricity consumption - when it's low around zero, or it gets high etc. - it makes drastic noise reduction and extract only key features from time series.
+We can see how *FeaClip* representation adapts on different behavior of electricity consumption - when it's low around zero, or it gets high etc. - it makes drastic noise reduction and extract only key features from the time series.
 
 ## Multiple Data Streams
 
@@ -394,7 +401,7 @@ outliers <- detectOutliersIQR(data_clip, treshold = 1.5)
 ```
 
 Let's show outlier consumers with PCA:
-```{r, fig.height=5.5, fig.width=7.5}
+```{r, fig.height=6.5, fig.width=8.5}
 pc_clip <- prcomp(data_clip, center = T, scale. = T)$x[,1:2]
 pc_clip <- data.table(pc_clip,
                       Outlier = factor(outliers$class))
@@ -416,7 +423,7 @@ which(pc_clip$PC2 == max(pc_clip$PC2))
 which(pc_clip$PC1 == min(pc_clip$PC1)) # zeros
 ```
 
-```{r, fig.height=3.8, fig.width=8.5}
+```{r, fig.height=3.8, fig.width=9}
 ggplot(data.table(Time = 1:ncol(data_win),
                   Value = data_win[which(pc_clip$PC2 == max(pc_clip$PC2)),])) +
   geom_line(aes(Time, Value)) +
@@ -424,9 +431,9 @@ ggplot(data.table(Time = 1:ncol(data_win),
   theme_ts
 ```
 
-```{r, fig.height=3.8, fig.width=8.5}
+```{r, fig.height=3.8, fig.width=9}
 ggplot(data.table(Time = 1:ncol(data_win),
-                  Value = data_win[which(pc_clip$PC1 == min(pc_clip$PC1)),])) +
+                  Value = data_win[which(pc_clip$PC1 == min(pc_clip$PC1))[1],])) +
   geom_line(aes(Time, Value)) +
   labs(y = "Consumption (kWh)") +
   theme_ts
@@ -442,7 +449,8 @@ k.min <- 8
 k.max <- 15
 
 clip_filtered <- data_clip[-outliers$outliers,]
-clus_res <- clusterOptimKmedoidsDB(clip_filtered, k.min, k.max, 4, criterium = "Davies_Bouldin")
+clus_res <- clusterOptimKmedoidsDB(clip_filtered, k.min, k.max, 4,
+                                   criterium = "Davies_Bouldin")
 
 clustering <- outliers$class
 clustering[which(clustering == 1)] <- clus_res$clustering
@@ -451,52 +459,52 @@ clustering[which(clustering == 1)] <- clus_res$clustering
 Let's assign outliers to nearest clusters (i.e. to nearest medoids).
 ```{r}
 out_clust <- sapply(seq_along(outliers$outliers),
-                    function(z) my_knn(clus_res$medoids, as.numeric(data_clip[outliers$outliers[z],])))
+                    function(z) 
+                      my_knn(clus_res$medoids,
+                             as.numeric(data_clip[outliers$outliers[z],])))
 
 clustering[which(clustering == 0)] <- out_clust
 ```
 
 In the plot, average daily *FeaClip* representations will be plotted, because of the longer length of original *FeaClip* representation.
-```{r, fig.height=8, fig.width=10}
-ave_clip <- repr_matrix(data_clip, func = repr_seas_profile, args = list(freq = 8,
-                                                                        func = mean))
+```{r, fig.height=8.5, fig.width=10.5}
+ave_clip <- repr_matrix(data_clip, func = repr_seas_profile,
+                        args = list(freq = 8, func = mean))
 data_plot <- data.table(melt(ave_clip))
 data_plot[, Clust := rep(clustering, ncol(ave_clip))]
 pc_clip[,Var1 := 1:.N]
 data_plot[pc_clip[, .(Var1, Outlier)], Outlier := i.Outlier, on = .(Var1)]
 
-medoids <- data.table(melt(repr_matrix(clus_res$medoids, func = repr_seas_profile, args = list(freq = 8,
-                                                                       func = mean))))
+medoids <- data.table(melt(repr_matrix(clus_res$medoids,
+                                       func = repr_seas_profile,
+                                       args = list(freq = 8, func = mean))))
 medoids[, Clust := Var1]
 
-gg2 <- ggplot(data_plot) +
+ggplot(data_plot) +
   facet_wrap(~Clust, scales = "free", ncol = 3) +
   geom_line(aes(Var2, value, group = Var1, color = Outlier), alpha = 0.7) +
   geom_line(data = medoids, aes(Var2, value, group = Var1),
             alpha = 0.9, color = "dodgerblue2", size = 1) +
-  labs(title = "Clusters of average daily FeaClip representations", y = "Count", x = NULL) +
-  scale_x_continuous(breaks = 1:8, labels = c("m_1", "s_1", "m_0", "cr.", names(ts_feaclip)[5:8])) +
+  labs(title = "Clusters of average daily FeaClip representations",
+       y = "Count", x = NULL) +
+  scale_x_continuous(breaks = 1:8, labels = c("m_1", "s_1", "m_0", "cr.",
+                                              names(ts_feaclip)[5:8])) +
   scale_color_manual(values = c("salmon", "black")) +
   theme_ts
-
-grid.newpage()
-pushViewport(viewport(layout = grid.layout(1, 2)))
-print(gg1, vp = define_region(1, 1))
-print(gg2, vp = define_region(1, 2))
 ```
 
 Nice distinguishable patterns.
 
 #### Streaming
 
-Now, flow the data! I will make update every new day during 50 days and plot the results - detected outliers and clusters with also assigned outliers. The code is available on my [GitHub repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
+Now, flow the data! I will make update every new day during 50 days and plot the results - detected outliers and clusters with also assigned outliers. The code is available on my [GitHub repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). For full resolution - right click and click on the view image option.
 
 ![](/images/post_10/clipstream_1.gif)
 
 ## Conclusion
 
 In this post, I showed you how to process and cluster multiple seasonal time series streams with the *ClipStream* method. I showed you also detected outliers that were automatically found from the *FeaClip* representation.
-The results of clustering can be also used for improving forecasting accuracy of aggregated consumption. Read my publications for more information about this topic in the [research section](https://petolau.github.io/research).
+The results of clustering can be also used for improving **forecasting** accuracy of aggregated consumption. Read my publications for more information about this topic in the [research section](https://petolau.github.io/research).
 
 ### References
 
