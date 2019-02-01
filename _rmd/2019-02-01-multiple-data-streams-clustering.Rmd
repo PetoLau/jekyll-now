@@ -24,7 +24,7 @@ This method is attribute based, so multiple attributes (features) are gathered f
 You can read more about it from my [journal paper](https://rdcu.be/bbL6y).
 
 I will show you use case on smart meter data - electricity consumption time series (consumers) from London ( [openly available here](https://www.openml.org/d/41060)).
-Motivation for clustering such a data is to:
+**Motivation** for clustering such a data is to:
 
   1. extract typical patterns of consumption,
   2. detect outliers,
@@ -32,7 +32,7 @@ Motivation for clustering such a data is to:
   4. create more forecastable groups of time series,
   5. monitor changes and behavior.
 
-*ClipStream* has following steps (very briefly):
+**ClipStream** has following steps (very briefly):
 
   1. computing data streams representation for every stream (dimensionality reduction) - i.e. synopsis,
   2. detect outlier (anomal) streams directly from extracted representations,
@@ -103,7 +103,7 @@ ggplot(data.table(Time = 1:ncol(data_cons),
 
 We can see stochastic behavior, but also some pattern.
 
-We can plot, for example, its average daily or weekly profile. We will do it by [TSrepr's package](https://cran.r-project.org/package=TSrepr) function repr_seas_profile.
+We can plot, for example, its average daily or weekly profile. We will do it by [TSrepr's package](https://cran.r-project.org/package=TSrepr) function `repr_seas_profile`.
 ```{r, fig.height=3.8, fig.width=8}
 ggplot(data.table(Time = 1:period,
                   Value = repr_seas_profile(data_cons[200,],
@@ -165,7 +165,7 @@ data_centroid <- data.table(melt(res_clust$centers))
 data_centroid[, Clust := Var1]
 ```
 
-```{r, fig.height=6, fig.width=9}
+```{r, fig.height=8, fig.width=10.5}
 ggplot(data_plot) +
   facet_wrap(~Clust, scales = "free", ncol = 3) +
   geom_line(aes(Var2, value, group = Var1), alpha = 0.7) +
@@ -186,7 +186,7 @@ Here comes on screen more sophisticated multiple **data streams clustering** met
 In *ClipStream* that uses *FeaClip* time series streams representation (see my previous post about [time series represetnations](https://petolau.github.io/TSrepr-time-series-representations/)), a representation can be computed incrementally, clustering are created in batches, outliers are detected straight from representation and etc.
 
 *FeaClip* is interpretable time series representation. It extracts 8 interpretable features from clipped representation (again please see the mentioned blog post). Let's plot result from one day consumption time series:
-```{r, fig.height=7, fig.width=8}
+```{r, fig.height=6, fig.width=8}
 ts_feaclip <- repr_feaclip(data_cons[1, 1:48])
 
 define_region <- function(row, col){
@@ -309,7 +309,7 @@ gg_anim <- ggplot(data_plot) +
 ```
 
 Let's animate!
-```{r, eval=T, echo=T}
+```{r, eval=F, echo=T}
 gganimate::animate(gg_anim, fps = 2, nframes = n_win,
                    width = 800, height = 500, res = 120,
                    renderer = av_renderer('animation.mp4'))
@@ -323,7 +323,7 @@ We can see how *FeaClip* representation adapts on different behavior of electric
 ## Multiple Data Streams
 
 We already got picture of one consumers time series stream.
-Let's again play with whole customer base (in our playing scenario with 1000 consumers).
+Let's again play with the whole customer base (in our playing scenario with 1000 consumers).
 In this part, I would like to make nice animation of outlier detection and clustering phase in one.
 
 #### First iteration
@@ -332,7 +332,6 @@ Let's get through the first iteration (window) of streams processing and cluster
 So, first thing to do is to subset window of time series streams and compute *FeaClip* representations (window of length 14 days as in the previous case).
 ```{r}
 i = 0
-
 data_win <- data_cons[, ((i*period)+1):((i+win)*period)]
 
 data_clip <- repr_matrix(data_win, func = repr_feaclip,
@@ -394,7 +393,7 @@ my_knn <- function(data, query) {
 }
 ```
 
-The second phase is to detect anomal streams. This is done by "simple" IQR-quantile method from 2 key *FeaClip* features - Sum_1 and number of crossing.
+The second phase is an outlier detection from streams. This is done by "simple" IQR-quantile method from 2 key *FeaClip* features - Sum_1 and number of crossings.
 The source code for function `detectOutliersIQR` is in the [*ClipStream* method repo](https://github.com/PetoLau/ClipStream). Let's do it.
 ```{r}
 outliers <- detectOutliersIQR(data_clip, treshold = 1.5)
@@ -439,10 +438,10 @@ ggplot(data.table(Time = 1:ncol(data_win),
   theme_ts
 ```
 
-The first scenario is a consumer with the few large moments of high consumption and lot of crossings.
+The first scenario is a consumer with the few large moments of a high consumption and lot of crossings.
 The second scenario is the zero consumption type of a consumer.
 
-The clustering phase is executed by an automatic K-medoids method. The number of clusters are automatically selected by the Davies-Bouldin index from the predefined range of clusters. We will cluster only non-outlier representations, because of reduction of data and also higher stability of clustering results.
+The clustering phase is executed by an automatic K-medoids method. The number of clusters are automatically selected by the Davies-Bouldin index from the predefined range of clusters. We will cluster only non-outlier representations, for the reduction of data and also higher stability of clustering results.
 ```{r}
 # n.of.clusters range
 k.min <- 8
@@ -467,7 +466,7 @@ clustering[which(clustering == 0)] <- out_clust
 ```
 
 In the plot, average daily *FeaClip* representations will be plotted, because of the longer length of original *FeaClip* representation.
-```{r, fig.height=8.5, fig.width=10.5}
+```{r, fig.height=9, fig.width=10.5}
 ave_clip <- repr_matrix(data_clip, func = repr_seas_profile,
                         args = list(freq = 8, func = mean))
 data_plot <- data.table(melt(ave_clip))
@@ -497,7 +496,7 @@ Nice distinguishable patterns.
 
 #### Streaming
 
-Now, flow the data! I will make update every new day during 50 days and plot the results - detected outliers and clusters with also assigned outliers. The code is available on my [GitHub repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). For full resolution - right click and click on the view image option.
+Now, flow the data! I will make update every new day during 50 days and plot the results - detected outliers and clusters with also assigned outliers. The code is available on my [GitHub repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). For full resolution - right click on the gif and click on the view image option.
 
 ![](/images/post_10/clipstream_1.gif)
 
