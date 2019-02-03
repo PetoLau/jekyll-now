@@ -12,16 +12,16 @@ draft: false
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Nowadays, **data streams** occur in many scenarios. For example, they are generated from sensors, web traffic, satellites and other interesting use cases.
+Nowadays, **data streams** occur in many real scenarios. For example, they are generated from sensors, web traffic, satellites, and other interesting use cases.
 We have to process them in a fast way and extract from them as much knowledge as we can.
-Data streams have theirs own specific characteristics for processing and data mining. For example, they can be very fast, we can not process whole history of streams in a memory, so we have to do it incrementally or in (e.g. sliding) windows.
+Data streams have their own specific characteristics for processing and data mining. For example, they can be very fast, we can not process the whole history of data streams in memory, so we have to do it incrementally or in (e.g. sliding) windows.
 
 In this post, I will cover one **data streams clustering** method that was developed by me.
 In **R**, you can do data stream clustering by [stream](https://cran.r-project.org/package=stream) package, BUT! there are methods only for one stream clustering (not multiple streams). However, I want to show you clustering of multiple data streams, so from multiple sources (e.g. sensors).
 
 I created clustering method that is adapted for **time series streams** - called [*ClipStream*](https://link.springer.com/article/10.1007/s10618-018-0598-2) [1].
 This method is attribute based, so multiple attributes (features) are gathered from multiple streams windows.
-You can read more about it from my [journal paper](https://rdcu.be/bbL6y).
+You can read more about it from my [**journal paper**](https://rdcu.be/bbL6y).
 
 I will show you use case on smart meter data - electricity consumption time series (consumers) from London ( [openly available here](https://www.openml.org/d/41060)).
 **Motivation** for clustering such a data is to:
@@ -32,17 +32,19 @@ I will show you use case on smart meter data - electricity consumption time seri
   4. create more forecastable groups of time series,
   5. monitor changes and behavior.
 
+The motivation to process them as streams is the fact that the data of electricity consumption (or production) are measured every 5, 15 or 30 minutes.
+
 **ClipStream** has following steps (very briefly):
 
   1. computing data streams representation for every stream (dimensionality reduction) - i.e. synopsis,
   2. detect outlier (anomal) streams directly from extracted representations,
-  3. Cluster non-outlier representations by K-medoids,
-  4. Assign outlier streams to nearest clusters (medoids),
-  5. Aggregate time series by clusters,
-  6. Detect changes in aggregated time series.
+  3. cluster non-outlier representations by K-medoids,
+  4. assign outlier streams to nearest clusters (medoids),
+  5. aggregate time series by clusters,
+  6. detect changes in aggregated time series.
 
-In this post, I will mainly focus on first 4 parts of my approach, since there are applicable for various task - not only on smart meter data and its forecasting.
-Whole method is developed in **unsupervised** fashion (yey!), so **representation**, **clustering** and **outlier detection** of time series streams are "learned" unsupervised.
+In this post, I will mainly focus on the first 4 parts of my approach, since there are applicable to various use cases - not only on smart meter data and its forecasting.
+The whole method is developed in **unsupervised** fashion (yey!), so **representation**, **clustering** and **outlier detection** of time series streams are "learned" unsupervised.
 
 ## Data exploration
 
@@ -70,7 +72,7 @@ data <- data.matrix(data$data)
 Let's subset first 1000 consumers for more simple operations.
 ```{r}
 data_cons <- data[1:1000,]
-period <- 48 # frequency of time series
+period <- 48 # frequency of time series, every day 48 measurements are gathered
 ```
 
 ```{r, echo=F, eval=T}
@@ -101,7 +103,7 @@ ggplot(data.table(Time = 1:ncol(data_cons),
   theme_ts
 ```
 
-We can see stochastic behavior, but also some pattern.
+We can see stochastic behavior, but also some consumption pattern.
 
 We can plot, for example, its average daily or weekly profile. We will do it by [TSrepr's package](https://cran.r-project.org/package=TSrepr) function `repr_seas_profile`.
 ```{r, fig.height=3.8, fig.width=8}
@@ -117,7 +119,7 @@ ggplot(data.table(Time = 1:period,
   theme_ts
 ```
 
-Peak on start of a day...
+The peak at the start of a day...
 
 Now, let's plot weekly pattern:
 ```{r, fig.height=3.8, fig.width=9}
@@ -134,9 +136,9 @@ ggplot(data.table(Time = 1:(period*7),
 
 There is some change during a week.
 
-Let's explore whole consumer base, but how when we have more than 1000 time series?
+Let's explore the whole consumer base, but how when we have more than 1000 time series?
 We can cluster time series and just plot its daily patterns for example by created clusters.
-We will reduce length of the visualized time series and also number of time series in one plot.
+We will reduce the length of the visualized time series and also a number of time series in one plot.
 
 First, extract average daily patterns, we will make it by `repr_matrix` function from TSrepr.
 Normalization of every consumer time series - row-wise by z-score is necessary!
@@ -151,12 +153,12 @@ data_ave_prof <- repr_matrix(data_cons,
                              func_norm = norm_z)
 ```
 
-cluster them for example by K-means and to 12 clusters:
+Let's cluster computed mean daily profiles for example by K-means and to 12 clusters:
 ```{r}
 res_clust <- kmeans(data_ave_prof, 12, nstart = 20)
 ```
 
-Preprocess results with `data.table` package and plot them:
+Preprocess clustering results with `data.table` package and plot them:
 ```{r}
 data_plot <- data.table(melt(data_ave_prof))
 data_plot[, Clust := rep(res_clust$cluster, ncol(data_ave_prof))]
@@ -165,7 +167,7 @@ data_centroid <- data.table(melt(res_clust$centers))
 data_centroid[, Clust := Var1]
 ```
 
-```{r, fig.height=8, fig.width=10.5}
+```{r, fig.height=8, fig.width=10.1}
 ggplot(data_plot) +
   facet_wrap(~Clust, scales = "free", ncol = 3) +
   geom_line(aes(Var2, value, group = Var1), alpha = 0.7) +
@@ -179,13 +181,13 @@ ggplot(data_plot) +
 Various interesting patterns of daily consumption!
 
 BUT (here comes motivation)!
-When we would like to cluster just most recent data (for example 2-3 weeks), and update it regularly every day (or eventought half-hour), automatically detect changes in time series streams and detect anomalies (outlier consumers),
-detect automatically number of clusters, and make it as quickly as possible...
+When we would like to cluster just most recent data (for example 2-3 weeks), and update it regularly every day (or even thought half-hour), automatically detect changes in time series streams and detect anomalies (outlier consumers),
+detect automatically the number of clusters, and make it as quickly as possible...
 We can not do it like in the previous case, because of computational and memory load and also accuracy.
 Here comes on screen more sophisticated multiple **data streams clustering** methods.
-In *ClipStream* that uses *FeaClip* time series streams representation (see my previous post about [time series represetnations](https://petolau.github.io/TSrepr-time-series-representations/)), a representation can be computed incrementally, clustering are created in batches, outliers are detected straight from representation and etc.
+In *ClipStream* that uses *FeaClip* time series streams representation (see my previous post about [time series represetnations](https://petolau.github.io/TSrepr-time-series-representations/)), a representation can be computed incrementally, clusterings are computed in data batches, outliers are detected straight from representation and etc.
 
-*FeaClip* is interpretable time series representation. It extracts 8 interpretable features from clipped representation (again please see the mentioned blog post). Let's plot result from one day consumption time series:
+*FeaClip* is interpretable time series representation. It extracts 8 interpretable features from clipped representation (again please see the mentioned blog post). Let's plot representation from one day consumption time series:
 ```{r, fig.height=6, fig.width=8}
 ts_feaclip <- repr_feaclip(data_cons[1, 1:48])
 
@@ -252,12 +254,12 @@ print(gg1, vp = define_region(1, 1))
 print(gg2, vp = define_region(2, 1))
 ```
 
-We can see typical pattern during working days and some changes when consumption goes high -
-the representation adapts to these changes, but not drastically - because of average of window (normalization).
+We can see the typical pattern during working days and some changes when consumption goes high -
+the representation adapts to these changes, but not drastically - because of the average of a window (normalization).
 
 ## FeaClip animation
 
-Now, let's play little bit with `gganimate` and `av` packages and visualize behavior of FeaClip through time (stream).
+Now, let's play a little bit with `gganimate` and `av` packages and visualize the behavior of FeaClip through time (stream).
 
 First, prepare whole one time series as a stream.
 ```{r}
@@ -317,18 +319,18 @@ gganimate::animate(gg_anim, fps = 2, nframes = n_win,
 
 <!-- ![](/images/post_10/animation.mp4) -->
 
-We can see how *FeaClip* representation adapts on different behavior of electricity consumption - when it's low around zero, or it gets high etc. - it makes drastic noise reduction and extract only key features from the time series.
+We can see how *FeaClip* representation adapts on different behavior of electricity consumption - when it's low around zero, or it gets high etc. - it makes drastic noise reduction and extracts only key features from the time series.
 
 ## Multiple Data Streams
 
-We already got picture of one consumers time series stream.
+We already got a picture of one consumer time series stream.
 Let's again play with the whole customer base (in our playing scenario with 1000 consumers).
-In this part, I would like to make nice animation of outlier detection and clustering phase in one.
+In this part, I would like to make nice animation of outlier detection and clustering phase in one image.
 
 #### First iteration
 
 Let's get through the first iteration (window) of streams processing and clustering of *ClipStream*.
-So, first thing to do is to subset window of time series streams and compute *FeaClip* representations (window of length 14 days as in the previous case).
+So, first thing to do is to subset window of time series streams and compute *FeaClip* representations (the most recent window of length 14 days as in the previous case).
 ```{r}
 i = 0
 data_win <- data_cons[, ((i*period)+1):((i+win)*period)]
@@ -437,10 +439,10 @@ ggplot(data.table(Time = 1:ncol(data_win),
   theme_ts
 ```
 
-The first scenario is a consumer with the few large moments of a high consumption and lot of crossings.
+The first scenario is a consumer with a few large moments of high consumption and lot of crossings.
 The second scenario is the zero consumption type of a consumer.
 
-The clustering phase is executed by an automatic K-medoids method. The number of clusters are automatically selected by the Davies-Bouldin index from the predefined range of clusters. We will cluster only non-outlier representations, for the reduction of data and also higher stability of clustering results.
+The clustering phase is executed by an automatic K-medoids method. The number of clusters is automatically selected by the Davies-Bouldin index from the predefined range of clusters. We will cluster only non-outlier representations, for the reduction of data and also higher stability of clustering results.
 ```{r}
 # n.of.clusters range
 k.min <- 8
@@ -495,14 +497,16 @@ Nice distinguishable patterns.
 
 #### Streaming
 
-Now, flow the data! I will make update every new day during 50 days and plot the results - detected outliers and clusters with also assigned outliers. The code is available on my [GitHub repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). For full resolution - right click on the gif and click on the view image option.
+Now, let's flow the data! I will make an update every new day during 50 days period and plot the results - detected outliers and clusters with also assigned outliers. The code is available on my [GitHub repo](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts). For full resolution - right click on the gif and click on the view image option.
 
 ![](/images/post_10/clipstream_1.gif)
+
+We can see that the number of outliers and clusters dynamically changes through time (daily windows). You can build your own data streams clustering algorithm with a different streams representation - for example, see [**TSrepr**](https://petolau.github.io/package) list of methods.
 
 ## Conclusion
 
 In this post, I showed you how to process and cluster multiple seasonal time series streams with the *ClipStream* method. I showed you also detected outliers that were automatically found from the *FeaClip* representation.
-The results of clustering can be also used for improving **forecasting** accuracy of aggregated consumption. Read my publications for more information about this topic in the [research section](https://petolau.github.io/research).
+The results of clustering can be also used for improving **forecasting** accuracy of aggregated consumption. For more information, read my publications about this topic in the [research section](https://petolau.github.io/research).
 
 ### References
 
