@@ -24,6 +24,16 @@ You can read my research papers related to the thesis on [**Google Scholar**](ht
 Works (papers) that were presented by me at a conference, a workshop or a meetup are listed below.
 
 <hr>
+##### **Time Series Data Mining - Representation and Clustering**
+**Talk:** [Presentation within Data Mining course](http://www.iam.fmph.uniba.sk/ospm/Harman/index.htm)
+
+**Date:** 14.5.2019
+
+**Where:** Bratislava, Slovakia
+
+<a href="/presentations/ts-data-mining-intro_laurinec.pdf" target="_blank">Download the presentation (PDF)</a>
+
+<hr>
 ##### **Time Series Data Mining - from PhD to Startup**
 **Conference:** [SatRday-Belgrade'2018](https://belgrade2018.satrdays.org/#programme)
 
