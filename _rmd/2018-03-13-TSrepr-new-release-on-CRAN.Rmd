@@ -1,0 +1,21 @@
+---
+title: TSrepr v1.0.1 on CRAN - based on JOSS review
+author: Peter Laurinec
+layout: post
+published: no
+status: processed
+tags: test
+draft: no
+---
+
+I am happy to announce that the new version of package [**TSrepr**](https://cran.r-project.org/package=TSrepr) is on CRAN.
+This is my second submission to CRAN and so the second version of my package [**TSrepr**](https://cran.r-project.org/package=TSrepr), it has now version 1.0.1.
+There is no new functionality or new implemented methods in this release, but there was some interesting process before the release.
+
+I submitted the project, [**TSrepr**](https://github.com/PetoLau/TSrepr) source code repository, to [The Journal of Open Source Software](http://joss.theoj.org/).
+
+
+
+## Unit tests in R
+
+testthat, Travis CI, codecov.

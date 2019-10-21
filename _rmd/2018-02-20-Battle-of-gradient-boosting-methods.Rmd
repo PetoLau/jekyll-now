@@ -1,0 +1,587 @@
+---
+layout: post
+title: Battle of gradient boosting methods - time series regression case study
+author: Peter Laurinec
+published: false
+status: processed
+tags: test
+draft: false
+---
+
+Modelling trend in a long term is not possible, so we need to add additional independent variables (features) to model.
+
+https://petolau.github.io/Regression-trees-for-forecasting-time-series-in-R/
+https://petolau.github.io/Ensemble-of-trees-for-forecasting-time-series/
+
+```{r, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+options( java.parameters = "-Xmx7g" )
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(data.table) # data manipulation
+library(lubridate) # dates
+library(ggplot2) # visualisations
+library(mgcv) # analysis of indep. var.
+library(forecast) # fourier fun
+library(randomForest)
+library(extraTrees)
+library(xgboost)
+library(lightgbm) # devtools::install_github("Microsoft/LightGBM", subdir = "R-package")
+library(catboost) # devtools::install_url("https://github.com/catboost/catboost/releases/download/v0.6.1.1/catboost-R-Windows-0.6.1.1.tgz")
+library(h2o)
+library(visreg) # gam vis.
+library(grid) # vis.
+library(gridExtra) # vis.
+```
+
+Read dataset directly from my GitHub repository: [github.com/PetoLau/petolau.github.io/](https://github.com/PetoLau/petolau.github.io/tree/master/_rmd).
+And change type of dates by lubridate function `ymd_hms`.
+```{r, message=FALSE, warning=FALSE}
+DT <- fread("https://raw.githubusercontent.com/PetoLau/petolau.github.io/master/_rmd/DT_load_17weeks_weather.csv")
+DT[, date_time := ymd_hms(date_time)]
+```
+
+Store my default favourite theme to object for time series with ggplot2.
+```{r}
+theme_ts <- theme(panel.border = element_rect(fill = NA, 
+                                              colour = "grey10"),
+                  panel.background = element_blank(),
+                  panel.grid.minor = element_line(colour = "grey85"),
+                  panel.grid.major = element_line(colour = "grey85"),
+                  panel.grid.major.x = element_line(colour = "grey85"),
+                  axis.text = element_text(size = 13, face = "bold"),
+                  axis.title = element_text(size = 15, face = "bold"),
+                  plot.title = element_text(size = 16, face = "bold"),
+                  legend.text = element_text(size = 15),
+                  legend.title = element_text(size = 16, face = "bold"),
+                  legend.background = element_rect(fill = "white"),
+                  legend.key = element_rect(fill = "white"))
+```
+
+Plot temperature.
+```{r}
+ggplot(DT, aes(date_time, temperature)) +
+  geom_line() +
+  labs(x = "Time", y = "Temperature (°C)") +
+  theme_ts
+```
+
+Comparison of dependence of temperature on electricity consumption in plot.
+```{r}
+ggplot(DT, aes(temperature, value)) +
+  geom_point() +
+  geom_smooth(method = "gam") +
+  labs(y = "Load (kW)", x = "Temperature (°C)") +
+  theme_ts
+```
+
+Low correlation:
+```{r}
+cor(DT$value, DT$temperature)
+```
+
+But in linear model it is significant, also humidity.
+```{r}
+summary(lm(value ~ temperature + pressure + humidity, data = DT))
+```
+
+GAM.
+```{r}
+gam_all <- gam(value ~ s(temperature, bs = "cr") + s(humidity, bs = "ps") + s(pressure, bs = "ps"),
+               data = DT)
+```
+
+Modelling non-linear dependencies with GAM. See one of my previous blog post about [analysing time series and doing magic with GAM](https://petolau.github.io/Analyzing-double-seasonal-time-series-with-GAM-in-R/).
+
+Check summary of model.
+```{r}
+summary(gam_all)$s.table
+```
+
+All significant.
+
+Let's check it by nice visualisation by `visreg`.
+```{r}
+gg1 <- visreg(gam_all, "temperature", gg=TRUE) + theme_ts
+gg2 <- visreg(gam_all, "humidity", gg=TRUE) + theme_ts
+gg3 <- visreg(gam_all, "pressure", gg=TRUE) + theme_ts
+
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 3)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+print(gg1, vp = vplayout(1, 1))  # key is to define vplayout
+print(gg2, vp = vplayout(1, 2))
+print(gg3, vp = vplayout(1, 3))
+```
+
+Non-linear character.
+
+Store some variables.
+```{r}
+n_date <- unique(DT[, date])
+period <- 48
+```
+
+Split dataset on train, and validation part - length of 14 weeks, 3 weeks
+```{r}
+data_train <- DT[date %in% n_date[1:(14*7)]]
+data_val <- DT[date %in% n_date[((14*7)+1):(17*7)]]
+```
+
+Compare once agian temperature and electricity consumption. Normalise data first.
+```{r}
+data_train_scale <- data.table(value = c(scale(data_train$value),
+                                         scale(data_train$temperature)),
+                               date_time = rep(data_train$date_time, 2),
+                               ts = factor(rep(c("Load", "Temp"), each = nrow(data_train))))
+
+ggplot(data_train_scale, aes(date_time, value, color = ts)) +
+  geom_line(size = 0.8, alpha = 0.8) +
+  labs(x = "Date", y = "Load (kW)") +
+  scale_color_manual(values = c("black", "firebrick1")) +
+  theme_ts
+```
+
+Training data.
+```{r}
+data_ts <- ts(data_train$value, freq = period * 7)
+decomp_ts <- stl(data_ts, s.window = "periodic", robust = TRUE)$time.series
+
+data_msts <- msts(data_train$value, seasonal.periods = c(period, period*7))
+
+K <- 2
+fuur <- fourier(data_msts, K = c(K, K)) # Fourier features to model (Daily and Weekly)
+
+N <- nrow(data_train)
+window <- (N / period) - 7 # we will create lag of one week, so therefore minus 7
+
+lag_seas <- decomp_ts[1:(period*window), 1] # lag feature to model; only double-seasonal part is used here!
+
+# lag, 8 Fourier terms, temperature, humidity, and pressure
+matrix_train <- data.table(Load = tail(c(data_ts), window*period),
+                           fuur[(period*7 + 1):N,],
+                           Lag = lag_seas,
+                           data_train[((.N-window*period)+1):.N, .(temperature, humidity, pressure)])
+```
+
+Testing data matrix.
+```{r}
+
+test_lag <- decomp_ts[((period*(window))+1):N, 1]
+fuur_test <- fourier(data_msts, K = c(K, K), h = period*7*3)
+
+matrix_test <- data.table(fuur_test,
+                          Lag = test_lag,
+                          data_val[, .(temperature, humidity, pressure)])
+```
+
+Define MAPE
+```{r}
+mape <- function(real, pred) {
+  return(100 * mean(abs((real - pred)/real))) # MAPE - Mean Absolute Percentage Error
+}
+```
+
+## Random forest benchmark
+
+Train model and see variable importance plot.
+```{r}
+rf_model <- randomForest(Load ~ ., data = data.frame(matrix_train),
+                          ntree = 1000, mtry = 6, nodesize = 5, importance = TRUE)
+
+varImpPlot(rf_model)
+```
+
+```{r}
+pred_rf <- predict(rf_model, data.frame(matrix_test))
+pred_rf <- data.table(value = pred_rf, Var2 = 1:(period*7*3), Var1 = "RF")
+
+mape(data_val$value, pred_rf$value)
+```
+
+Extra Randomized Trees.
+Faster implementation, runs on multiple cores automatically (java)
+```{r}
+ext_model <- extraTrees(matrix_train[, -1, with = F], matrix_train$Load,
+                        ntree = 1000, mtry = 6, nodesize = 5, numRandomCuts = 3)
+
+pred_ext <- predict(ext_model, matrix_test)
+pred_ext <- data.table(value = pred_ext, Var2 = 1:(period*7*3), Var1 = "ExTrees")
+
+mape(data_val$value, pred_ext$value) # worse results
+```
+
+Compare it graphically.
+```{r}
+pred_true <- data.table(value = data_val$value, Var2 = 1:(period*7*3), Var1 = "Real")
+preds_all <- rbindlist(list(pred_true, pred_rf, pred_ext), use.names = T)
+
+ggplot(preds_all, aes(Var2, value, color = as.factor(Var1))) +
+  geom_line(alpha = 0.6, size = 1.2) +
+  labs(x = "Time", y = "Load (kW)", title = "Comparison of Ensemble Learning forecasts") +
+  guides(color=guide_legend(title="Method")) +
+  theme_ts
+```
+
+## GBM
+
+Initialzation of h2o local cluster
+```{r, message=FALSE, warning=FALSE}
+h2o.init(nthreads = 4)
+```
+
+Create training data of class h2o
+```{r}
+train_gbm <- as.h2o(matrix_train, "train")
+```
+
+First trivial model without hyperparameter tuning - never do it!
+```{r}
+m_gbm_trivial <- h2o.gbm(x = colnames(train_gbm)[2:ncol(matrix_train)],
+                 y = colnames(train_gbm)[1],
+                 training_frame = train_gbm,
+                 distribution = "gaussian" #laplace, huber
+                 )
+```
+
+Evaluation.
+```{r}
+test_gbm <- as.h2o(matrix_test, "test")
+pred_gbm_trivial <- h2o.predict(m_gbm_trivial, test_gbm)
+pred_gbm_trivial <- data.table(value = as.vector(pred_gbm_trivial), Var2 = 1:(period*7*3), Var1 = "GBM")
+
+mape(data_val$value, pred_gbm_trivial$value)
+```
+
+Try change some hyperparameter setting.
+```{r}
+m_gbm <- h2o.gbm(x = colnames(train_gbm)[2:ncol(matrix_train)],
+                 y = colnames(train_gbm)[1],
+                 training_frame = train_gbm,
+                 distribution = "gaussian", #laplace, huber
+                 ntrees = 800,
+                 max_depth = 8,
+                 min_rows = 5,
+                 learn_rate = 0.02,
+                 learn_rate_annealing = 0.995,
+                 sample_rate = 0.66,
+                 col_sample_rate = 0.7,
+                 col_sample_rate_per_tree = 0.7,
+                 min_split_improvement = 1e-05,
+                 histogram_type = "QuantilesGlobal")
+```
+
+```{r}
+pred_gbm <- h2o.predict(m_gbm, test_gbm)
+pred_gbm <- data.table(value = as.vector(pred_gbm), Var2 = 1:(period*7*3), Var1 = "GBM")
+
+mape(data_val$value, pred_gbm$value)
+```
+
+Compare.
+```{r}
+preds_all <- rbindlist(list(pred_true, pred_gbm), use.names = T)
+
+ggplot(preds_all, aes(Var2, value, color = as.factor(Var1))) +
+  geom_line(alpha = 0.7, size = 1.2) +
+  labs(x = "Time", y = "Load (kW)", title = "GBM forecast") +
+  guides(color=guide_legend(title="Method")) +
+  theme_ts
+
+```
+
+## Xgboost
+
+Some words about it.
+hyperparameter explanation, same as GBM but possible to use regularizations (L1 and L2)
+
+Try naive model.
+Load data.
+```{r}
+dtrain_xgb <- xgb.DMatrix(data.matrix(matrix_train[, -1, with = F]), label = matrix_train$Load)
+```
+
+Try defaults.
+```{r}
+param_xgb <- list(objective = "reg:linear")
+
+m_xgb_1 <- xgb.train(params              = param_xgb,
+                     data                = dtrain_xgb,
+                     nrounds             = 600 # changed from 300
+                     )
+```
+
+Eval.
+```{r}
+pred_xgb_1 <- predict(m_xgb_1, data.matrix(matrix_test))
+pred_xgb_1 <- data.table(value = pred_xgb_1, Var2 = 1:(period*7*3), Var1 = "xgboost")
+
+mape(data_val$value, pred_xgb_1$value)
+```
+
+Change some parameters.
+```{r}
+param_xgb <- list(objective          = "reg:linear",
+                  booster            = "gbtree",
+                  eta                = 0.02,
+                  gamma              = 0,
+                  max_depth          = 8,  # changed from default of 6
+                  subsample          = 0.7,
+                  colsample_bytree   = 0.7,
+                  colsample_bylevel  = 0.7,
+                  silent             = 1,
+                  alpha              = 2, # L1
+                  lambda             = 0.1, # L2
+                  tree_method        = "auto", # "hist"
+                  lambda_bias        = 0.1)
+
+m_xgb_2 <- xgb.train(params     = param_xgb,
+                     data       = dtrain_xgb,
+                     nrounds    = 600 # changed from 300
+                     )
+```
+
+Eval
+```{r}
+pred_xgb_2 <- predict(m_xgb_2, data.matrix(matrix_test))
+pred_xgb_2 <- data.table(value = pred_xgb_2, Var2 = 1:(period*7*3), Var1 = "xgboost")
+
+mape(data_val$value, pred_xgb_2$value)
+```
+
+Compare.
+```{r}
+preds_all <- rbindlist(list(pred_true, pred_xgb_2), use.names = T)
+
+ggplot(preds_all, aes(Var2, value, color = as.factor(Var1))) +
+  geom_line(alpha = 0.7, size = 1.2) +
+  labs(x = "Time", y = "Load (kW)", title = "XGB forecast") +
+  guides(color=guide_legend(title="Method")) +
+  theme_ts
+```
+
+Possible to see feature importance.
+```{r}
+xgb.ggplot.importance(xgb.importance(model = m_xgb_2)) + theme_ts
+```
+
+## lightGBM
+
+some words about it. Very fast.
+
+try default settings first with lightGBM.
+Load data.
+```{r}
+dtrain_lgb <- lgb.Dataset(data.matrix(matrix_train[, -1, with = FALSE]), label = matrix_train$Load)
+```
+
+Train.
+```{r}
+params <- list(objective = "regression", metric = "l2")
+
+lgbm_m_1 <- lgb.train(params,
+                     dtrain_lgb,
+                     600,
+                     min_data = 5,
+                     learning_rate = 1)
+```
+
+Eval.
+```{r}
+pred_lgbm <- predict(lgbm_m_1, data.matrix(matrix_test))
+
+mape(data_val$value, pred_lgbm)
+```
+
+Since it is fast, we can do gridSearch - LGBM.
+```{r, eval=FALSE}
+dvalid <- lgb.Dataset.create.valid(dtrain_lgb, data.matrix(matrix_test[, -1, with = F]), label = data_val$value)
+valids <- list(test = dvalid)
+
+grid_search <- expand.grid(min_data_in_leaf = c(5,8,12),
+                           min_sum_hessian_in_leaf = c(0.1,0.05,0.005),
+                           feature_fraction = c(0.6,0.7,0.8,0.9),
+                           bagging_fraction = c(0.7,0.8,0.9),
+                           bagging_freq = c(1),
+                           lambda_l1 = c(0,0.5,1,2),
+                           lambda_l2 = c(0,0.4,0.8),
+                           min_gain_to_split = c(0.01,0.001,0.0001))
+
+perf <- numeric(nrow(grid_search))
+
+for (i in 1:nrow(grid_search)) {
+  model <- lgb.train(list(objective = "regression_l2",
+                          metric = "l2",
+                          # max_depth = grid_search[i, "max_depth"],
+                          min_data_in_leaf = grid_search[i,"min_data_in_leaf"],
+                          min_sum_hessian_in_leaf = grid_search[i, "min_sum_hessian_in_leaf"],
+                          feature_fraction =  grid_search[i, "feature_fraction"],
+                          bagging_fraction =  grid_search[i, "bagging_fraction"],
+                          bagging_freq =  grid_search[i, "bagging_freq"],
+                          lambda_l1 =  grid_search[i, "lambda_l1"],
+                          lambda_l2 =  grid_search[i, "lambda_l2"],
+                          min_gain_to_split =  grid_search[i, "min_gain_to_split"]),
+                     dtrain_wea,
+                     2,
+                     valids,
+                     #min_data = 1,
+                     num_leaves = 100,
+                     learning_rate = 0.1,
+                     early_stopping_rounds = 20)
+  perf[i] <- min(rbindlist(model$record_evals$test$l2))
+  gc(verbose = FALSE)
+}
+
+cat("Model ", which.min(perf), " is lowest loss: ", min(perf), sep = "","\n")
+print(grid_search[which.min(perf), ])
+```
+
+L1 and L2 loss regression versions.
+```{r}
+params_tuned_l1 <- list(objective = "regression_l1",
+                metric = "l1",
+                boosting = "gbdt",
+                min_data_in_leaf = 5,
+                min_sum_hessian_in_leaf = 0.05,
+                feature_fraction = 0.9,
+                bagging_fraction = 0.7,
+                bagging_freq = 1,
+                lambda_l1 = 0,
+                lambda_l2 = 0.4,
+                min_split_gain = 0.0001,
+                num_leaves = 250)
+
+params_tuned_l2 <- list(objective = "regression_l2",
+                     metric = "l2",
+                     boosting = "gbdt",
+                     # max_depth = 10,
+                     min_data_in_leaf = 12,
+                     min_sum_hessian_in_leaf = 0.01,
+                     feature_fraction = 0.6,
+                     bagging_fraction = 0.7,
+                     bagging_freq = 1,
+                     lambda_l1 = 2,
+                     lambda_l2 = 0.4,
+                     min_split_gain = 0.001,
+                     num_leaves = 100)
+```
+
+Train.
+```{r}
+lgbm_m_l1 <- lgb.train(params_tuned_l1,
+                      dtrain_lgb,
+                      400,
+                      learning_rate = 0.01,
+                      verbose = 0,
+                      record = FALSE)
+
+lgbm_m_l2 <- lgb.train(params_tuned_l2,
+                      dtrain_lgb,
+                      400,
+                      learning_rate = 0.01,
+                      verbose = 0,
+                      record = FALSE)
+```
+
+Eval.
+```{r}
+pred_lgbm_l1 <- predict(lgbm_m_l1, data.matrix(matrix_test))
+pred_lgbm_l1 <- data.table(value = pred_lgbm_l1, Var2 = 1:(period*7*3), Var1 = "lightGBM-L1")
+
+pred_lgbm_l2 <- predict(lgbm_m_l2, data.matrix(matrix_test))
+pred_lgbm_l2 <- data.table(value = pred_lgbm_l2, Var2 = 1:(period*7*3), Var1 = "lightGBM-L2")
+
+mape(data_val$value, pred_lgbm_l1$value)
+mape(data_val$value, pred_lgbm_l2$value)
+```
+
+Compare.
+```{r}
+preds_all <- rbindlist(list(pred_true, pred_lgbm_l1, pred_lgbm_l2), use.names = T)
+
+ggplot(preds_all, aes(Var2, value, color = as.factor(Var1))) +
+  geom_line(alpha = 0.7, size = 1.2) +
+  labs(x = "Time", y = "Load (kW)", title = "Comparison of LGBM forecasts") +
+  guides(color=guide_legend(title="Method")) +
+  theme_ts
+```
+
+## Catboost
+
+Some words.
+
+Load data.
+```{r}
+train_pool <- catboost.load_pool(as.matrix(matrix_train[,-1]),
+                                 label = as.matrix(matrix_train[,1]))
+
+test_pool <- catboost.load_pool(as.matrix(matrix_test),
+                                label = as.matrix(data_val$value))
+```
+
+Try naive setting.
+```{r}
+fit_params <- list(iterations = 200)
+
+m_cat_trivia <- catboost.train(train_pool, test_pool, fit_params)
+pred_cat_trivia <- catboost.predict(m_cat_trivia, test_pool)
+mape(data_val$value, pred_cat_trivia) # wow!
+```
+
+Very good results.
+
+Try some magic.
+```{r}
+fit_params <- list(iterations = 500,
+                   learning_rate = 0.008,
+                   depth = 8,
+                   thread_count = 4,
+                   loss_function = 'RMSE',
+                   eval_metric = "MAPE",
+                   rsm = 0.8,
+                   l2_leaf_reg = 2,
+                   train_dir = "train_dir",
+                   logging_level = "Verbose",
+                   boosting_type = "Dynamic",
+                   bootstrap_type = "Bernoulli",
+                   subsample = 0.7,
+                   sampling_frequency = "PerTreeLevel",
+                   use_best_model = F
+                  )
+
+m_cat <- catboost.train(train_pool, test_pool, fit_params)
+```
+
+Eval.
+```{r}
+pred_cat <- catboost.predict(m_cat, test_pool)
+pred_cat <- data.table(value = pred_cat, Var2 = 1:(period*7*3), Var1 = "Catboost")
+mape(data_val$value, pred_cat$value) # best result
+```
+
+```{r}
+preds_all <- rbindlist(list(pred_true, pred_cat), use.names = T)
+
+ggplot(preds_all, aes(Var2, value, color = as.factor(Var1))) +
+  geom_line(alpha = 0.7, size = 1.2) +
+  labs(x = "Time", y = "Load (kW)", title = "Catboost forecast") +
+  guides(color=guide_legend(title="Method")) +
+  theme_ts
+```
+
+## Conclusion
+
+Compare all MAPEs.
+```{r}
+mape(data_val$value, pred_rf$value)
+mape(data_val$value, pred_ext$value)
+mape(data_val$value, pred_gbm$value)
+mape(data_val$value, pred_xgb_2$value)
+mape(data_val$value, pred_lgbm_l1$value)
+mape(data_val$value, pred_lgbm_l2$value)
+mape(data_val$value, pred_cat$value)
+```
+
+all in range from 5.73 - 6.55 - little differences.
+
+Ending words.

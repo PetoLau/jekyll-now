@@ -4,7 +4,7 @@ author: "Peter Laurinec"
 layout: post
 published: true
 status: publish
-tags: test forecast
+tags: R forecast
 draft: no
 ---
  
@@ -329,4 +329,4 @@ In this blog post, I showed you how to simply use four various bootstrapping met
  
 [1] Bergmeir C., Hyndman R.J., BenÃ­tez J.M.: Bagging exponential smoothing methods using stl decomposition and boxâ€“cox transformation. International Journal of Forecasting, 32(2):303â€“312, (2016)
  
-[2] Laurinec P., LÃ³derer M., LuckÃ¡ M. et al.: Density-based unsupervised ensemble learning methods for time series forecasting of aggregated or clustered electricity consumption, Journal Intelligent Information Systems, 53(2):219-239, (2019). [DOI link](https://doi.org/10.1007/s10844-019-00550-3)
+[2] Laurinec P., Loderer M., Lucka M. et al.: Density-based unsupervised ensemble learning methods for time series forecasting of aggregated or clustered electricity consumption, Journal Intelligent Information Systems, 53(2):219-239, (2019). [DOI link](https://doi.org/10.1007/s10844-019-00550-3)
