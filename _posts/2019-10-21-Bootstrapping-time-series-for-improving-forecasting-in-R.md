@@ -204,10 +204,12 @@ print_boot_series <- function(data, ntimes = 100, k_range = c(12, 20)) {
   data_boot_3 <- KMboot(data, ntimes, k_range = k_range)
   data_boot_4 <- KMboot.norm(data, ntimes, k_range = k_range)
   
-  datas_all <- data.table(Value = c(unlist(data_boot_1), unlist(data_boot_2), unlist(data_boot_3), unlist(data_boot_4)),
+  datas_all <- data.table(Value = c(unlist(data_boot_1), unlist(data_boot_2),
+                                    unlist(data_boot_3), unlist(data_boot_4)),
                           ID = rep(rep(1:ntimes, each = length(data)), 4),
                           Time = rep(rep(1:length(data), ntimes), 4),
-                          Method = factor(rep(c("MBB", "S.MBB", "KM", "KM.boot"), each = ntimes*length(data)))
+                          Method = factor(rep(c("MBB", "S.MBB", "KM", "KM.boot"),
+                                              each = ntimes*length(data)))
   )
   
   datas_all[, Method := factor(Method, levels(Method)[c(3,4,1,2)])]
@@ -285,7 +287,8 @@ So, let's see average Rank instead:
 {% highlight r %}
 ggplot(res_all[, .(Rank = mean(Rank, na.rm = TRUE)), by = .(Base_method, Boot_method)]) +
   facet_wrap(~Base_method, ncol = 3, scales = "fix") +
-  geom_bar(aes(Boot_method, Rank, fill = Boot_method, color = Boot_method), alpha = 0.8, stat = "identity") +
+  geom_bar(aes(Boot_method, Rank, fill = Boot_method, color = Boot_method), alpha = 0.8,
+           stat = "identity") +
   geom_text(aes(Boot_method, y = Rank + 0.22, label = paste(round(Rank, 2))), size = 5) +
   scale_fill_d3() +
   scale_color_d3() +
@@ -327,6 +330,6 @@ In this blog post, I showed you how to simply use four various bootstrapping met
  
 ### References
  
-[1] Bergmeir C., Hyndman R.J., BenÃ­tez J.M.: Bagging exponential smoothing methods using stl decomposition and boxâ€“cox transformation. International Journal of Forecasting, 32(2):303â€“312, (2016)
+[1] Bergmeir C., Hyndman R.J., Benitez J.M.: Bagging exponential smoothing methods using stl decomposition and box-cox transformation. International Journal of Forecasting, 32(2):303-312, (2016)
  
 [2] Laurinec P., Loderer M., Lucka M. et al.: Density-based unsupervised ensemble learning methods for time series forecasting of aggregated or clustered electricity consumption, Journal Intelligent Information Systems, 53(2):219-239, (2019). [DOI link](https://doi.org/10.1007/s10844-019-00550-3)
