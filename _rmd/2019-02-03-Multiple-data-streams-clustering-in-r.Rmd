@@ -3,7 +3,7 @@ layout: post
 title: Multiple Data (Time Series) Streams Clustering
 author: Peter Laurinec
 published: true
-status: process
+status: processed
 tags: R TSrepr clustering
 draft: false
 ---
