@@ -14,7 +14,7 @@ draft: no
 It is called bootstrapping, and after applying the forecasting method on each new time series, forecasts are then aggregated by average or median - then it is **bagging** - bootstrap aggregating.
 It is proofed by multiple methods, e.g. in regression, that bagging helps improve predictive accuracy - in methods like classical bagging, random forests, gradient boosting methods and so on.
 The bagging methods for time series forecasting were used also in the latest [M4 forecasting competition](https://www.mcompetitions.unic.ac.cy/m4/).
-For residential electricity consumption (load) time series (as used in my previous [blog posts](petolau.github.io/blog)),
+For residential electricity consumption (load) time series (as used in my previous [blog posts](https://petolau.github.io/blog)),
 I proposed three new bootstrapping methods for time series forecasting methods.
 The first one is an enhancement of the originally proposed method by Bergmeir - [link to article](https://doi.org/10.1016/j.ijforecast.2015.07.002) - and two clustering-based methods.
 I also combined classical bagging for regression trees and time series bagging to create ensemble forecasts - I will cover it in some next post. These methods are all covered in the journal article entitled: [Density-based Unsupervised Ensemble Learning Methods for Time Series Forecasting of Aggregated or Clustered Electricity Consumption](https://link.springer.com/article/10.1007%2Fs10844-019-00550-3).
