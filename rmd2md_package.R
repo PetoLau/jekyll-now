@@ -14,18 +14,18 @@
 #' @return nothing.
 #' @author Jason Bryer <jason@bryer.org> edited by Andy South
 rmd2md <- function( path_site = getwd(),
-                    dir_rmd = "_rmd",
-                    dir_md = "_posts",                              
+                    dir_rmd = "",
+                    dir_md = "",                              
                     #dir_images = "figures",
-                    url_images = "images/post_11/",
+                    url_images = "",
                     out_ext='.md', 
-                    in_ext='.rmd', 
+                    in_ext='.Rmd', 
                     recursive=FALSE) {
   
   require(knitr, quietly=TRUE, warn.conflicts=FALSE)
   
   #andy change to avoid path problems when running without sh on windows 
-  files <- list.files(path=file.path(path_site,dir_rmd), pattern=in_ext, ignore.case=TRUE, recursive=recursive)
+  files <- list.files(path=file.path(path_site,dir_rmd), pattern=in_ext, ignore.case=TRUE, recursive=recursive)[2]
   
   for(f in files) {
     message(paste("Processing ", f, sep=''))

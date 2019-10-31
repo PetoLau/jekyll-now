@@ -10,7 +10,7 @@ published: true
  
 
  
-[**TSrepr**](https://github.com/PetoLau/TSrepr) is **R** package for fast time series representations and dimensionality reduction computations. Z-score normalisation, min-max normalisation, forecasting accuracy measures and other useful functions implemented in C++ (Rcpp) and R. **TSrepr** package is available on [CRAN](https://CRAN.R-project.org/package=TSrepr).
+[**TSrepr**](https://github.com/PetoLau/TSrepr) is **R** package for fast time series representations and dimensionality reduction computations (i.e. time series feature extraction). Z-score normalisation, min-max normalisation, forecasting accuracy measures and other useful functions implemented in C++ (Rcpp) and R. **TSrepr** package is available on [CRAN](https://CRAN.R-project.org/package=TSrepr).
  
 ## Installation
  
@@ -57,7 +57,7 @@ Additional useful functions are implemented as:
   * Normalisation functions - z-score (`norm_z`), min-max (`norm_min_max`)
   * Normalisation functions with output also of scaling parameters - z-score (`norm_z_list`), min-max (`norm_min_max_list`)
   * Denormalisation functions - z-score (`denorm_z`), min-max (`denorm_min_max`)
-  * Forecasting accuracy measures - MAE, RMSE, MdAE, MAPE, sMAPE, MAAPE, MASE
+  * Forecasting accuracy measures - MSE, MAE, RMSE, MdAE, MAPE, sMAPE, MAAPE, MASE
  
 ## Usage
  
@@ -82,12 +82,13 @@ ggplot(data_plot, aes(time, value, color = type, size = type)) +
   theme_bw()
 {% endhighlight %}
 
-![plot of chunk paa_vs_pla](\images\package-paa_vs_pla-1.png)
+![plot of chunk paa_vs_pla](/\images\package-paa_vs_pla-1.png)
  
 ## For more information
  
  - Check my blog post at [petolau.github.io/TSrepr-time-series-representations](https://petolau.github.io/TSrepr-time-series-representations/),
- - Check my blog post about clustering time series representations at [petolau.github.io/TSrepr-clustering-time-series-representations](https://petolau.github.io/TSrepr-clustering-time-series-representations/).
+ - Check my blog post about clustering time series representations at [petolau.github.io/TSrepr-clustering-time-series-representations](https://petolau.github.io/TSrepr-clustering-time-series-representations/),
+  - Blog post about using *FeaClip* representation in multiple data streams clustering at [petolau.github.io/Multiple-data-streams-clustering-in-r](https://petolau.github.io/Multiple-data-streams-clustering-in-r/).
  
 ## Contact
  

@@ -3,7 +3,7 @@ title: Bootstrapping time series for improving forecasting accuracy
 author: "Peter Laurinec"
 layout: post
 published: false
-status: process
+status: processed
 tags: R forecast
 draft: no
 ---
