@@ -9,3 +9,6 @@ Gemfile.lock
 node_modules
 package.json
 .Rproj.user
+.Rdata
+.RData
+.csv
