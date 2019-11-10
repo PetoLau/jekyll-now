@@ -17,7 +17,7 @@ You can read more about time series forecasting, representations and clustering 
  
 Aaand teaser, what I will create in this blog post:
  
-![](images/post_12/gif_ba_whole.gif)
+![](/images/post_12/gif_ba_whole.gif)
  
 In this blog post you will learn how to:
  
@@ -654,7 +654,7 @@ new_gif
  
 Voilaaa:
  
-![](images/post_12/gif_ba_streets.gif)
+![](/images/post_12/gif_ba_streets.gif)
  
 For full resolution - right click on the gif and click on the view image option.
  
