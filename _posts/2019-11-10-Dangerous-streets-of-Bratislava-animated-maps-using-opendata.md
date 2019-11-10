@@ -59,12 +59,12 @@ data_violation_19 <- fread("https://opendata.bratislava.sk/dataset/download/911"
                            encoding = "Latin-1")
  
 # colnames to English
-setnames(data_violation_17, colnames(data_violation_17), c("Date_Time", "Group_vio", "Type_vio",
-                                                           "Street", "Place"))
-setnames(data_violation_18, colnames(data_violation_18), c("Date_Time", "Group_vio", "Type_vio",
-                                                           "Street", "Place"))
-setnames(data_violation_19, colnames(data_violation_19), c("Date_Time", "Group_vio", "Type_vio",
-                                                           "Street", "Place"))
+setnames(data_violation_17, colnames(data_violation_17), c("Date_Time", "Group_vio",
+                                                           "Type_vio", "Street", "Place"))
+setnames(data_violation_18, colnames(data_violation_18), c("Date_Time", "Group_vio",
+                                                           "Type_vio", "Street", "Place"))
+setnames(data_violation_19, colnames(data_violation_19), c("Date_Time", "Group_vio",
+                                                           "Type_vio", "Street", "Place"))
 {% endhighlight %}
  
 Let's bind all the data together.
@@ -271,7 +271,8 @@ dt_uni_streets[, Street_edit := gsub(pattern = "Ã¯", replacement = "d", x = St
 dt_uni_streets[, Street_edit := gsub(pattern = "Ã ", replacement = "r", x = Street_edit)]
 dt_uni_streets[, Street_edit := stri_trans_general(Street_edit, "Latin-ASCII")]
 dt_uni_streets[, Street_edit := sub(" - MC.*", "", Street_edit)]
-dt_uni_streets[, Street_edit := gsub(pattern = "Nam.", replacement = "Namestie ", x = Street_edit)]
+dt_uni_streets[, Street_edit := gsub(pattern = "Nam.", replacement = "Namestie ",
+                                     x = Street_edit)]
  
 dt_uni_streets[, Street_query := gsub(pattern = " ", replacement = "+", x = Street_edit)]
 dt_uni_streets[, Street_query := paste0(Street_query, "+Bratislava")]
@@ -358,8 +359,10 @@ Next, I will bound streets by existing polygons of Bratislava and add merging co
 
 {% highlight r %}
 ba_streets_vio$L1 <- 1:nrow(ba_streets_vio)
-data_streets_st <- merge(data_streets_st, as.data.table(ba_streets_vio)[, .(L1, name)], by = "L1")
-data_streets_st[street_names_vio[, .(name, Street_edit)], on = .(name), Street_edit := i.Street_edit]
+data_streets_st <- merge(data_streets_st, as.data.table(ba_streets_vio)[, .(L1, name)],
+                         by = "L1")
+data_streets_st[street_names_vio[, .(name, Street_edit)], on = .(name),
+                Street_edit := i.Street_edit]
 setnames(data_streets_st, c("X", "Y"), c("lon", "lat"))
 data_streets_st <- data_streets_st[!lon > data_poly_ba[, max(lon)]]
 data_streets_st <- data_streets_st[!lon < data_poly_ba[, min(lon)]]
@@ -475,7 +478,8 @@ data_streets_st_max <- copy(data_streets_st_max[, .(lon = mean(lon),
                                                     lat = mean(lat),
                                                     Street_edit = first(Street_edit),
                                                     N_violations = first(N_violations),
-                                                    N_violations_per_street = first(N_violations_per_street)
+                                                    N_violations_per_street = 
+                                                      first(N_violations_per_street)
                                                     ),
                                                 by = .(Year_M)])
 {% endhighlight %}

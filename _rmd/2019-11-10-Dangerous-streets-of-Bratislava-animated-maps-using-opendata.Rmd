@@ -20,7 +20,7 @@ You can read more about time series forecasting, representations and clustering 
 
 Aaand teaser, what I will create in this blog post:
 
-![](images/post_12/gif_ba_whole.gif)
+![](/images/post_12/gif_ba_whole.gif)
 
 In this blog post you will learn how to:
 
@@ -60,12 +60,12 @@ data_violation_19 <- fread("https://opendata.bratislava.sk/dataset/download/911"
                            encoding = "Latin-1")
 
 # colnames to English
-setnames(data_violation_17, colnames(data_violation_17), c("Date_Time", "Group_vio", "Type_vio",
-                                                           "Street", "Place"))
-setnames(data_violation_18, colnames(data_violation_18), c("Date_Time", "Group_vio", "Type_vio",
-                                                           "Street", "Place"))
-setnames(data_violation_19, colnames(data_violation_19), c("Date_Time", "Group_vio", "Type_vio",
-                                                           "Street", "Place"))
+setnames(data_violation_17, colnames(data_violation_17), c("Date_Time", "Group_vio",
+                                                           "Type_vio", "Street", "Place"))
+setnames(data_violation_18, colnames(data_violation_18), c("Date_Time", "Group_vio",
+                                                           "Type_vio", "Street", "Place"))
+setnames(data_violation_19, colnames(data_violation_19), c("Date_Time", "Group_vio",
+                                                           "Type_vio", "Street", "Place"))
 ```
 
 Let's bind all the data together.
@@ -197,7 +197,7 @@ data_poly_ba_mean_place <- copy(data_poly_ba[, .(lon = mean(lon),
 ```
 
 Let's test visualization of violations on June 2019:
-```{r, fig.height=6.5, fig.width=7.5}
+```{r, fig.height=6.9, fig.width=7.5}
 ggplot() +
   geom_polygon(data = data_places[.(2019.06), on = .(Year_M)],
                aes(x = lon, y = lat,
@@ -232,7 +232,8 @@ dt_uni_streets[, Street_edit := gsub(pattern = "ï", replacement = "d", x = Stre
 dt_uni_streets[, Street_edit := gsub(pattern = "à", replacement = "r", x = Street_edit)]
 dt_uni_streets[, Street_edit := stri_trans_general(Street_edit, "Latin-ASCII")]
 dt_uni_streets[, Street_edit := sub(" - MC.*", "", Street_edit)]
-dt_uni_streets[, Street_edit := gsub(pattern = "Nam.", replacement = "Namestie ", x = Street_edit)]
+dt_uni_streets[, Street_edit := gsub(pattern = "Nam.", replacement = "Namestie ",
+                                     x = Street_edit)]
 
 dt_uni_streets[, Street_query := gsub(pattern = " ", replacement = "+", x = Street_edit)]
 dt_uni_streets[, Street_query := paste0(Street_query, "+Bratislava")]
@@ -249,7 +250,7 @@ bratislava <- opq(bbox = ba_bb) %>%
 ```
 
 Let's plot it:
-```{r, fig.height=5.5, fig.width=9}
+```{r, fig.height=5.5, fig.width=7}
 ggplot(data = bratislava$osm_lines) +
   geom_sf() +
   theme_bw()
@@ -311,8 +312,10 @@ data_streets_st <- data.table::data.table(sf::st_coordinates(ba_streets_vio$geom
 Next, I will bound streets by existing polygons of Bratislava and add merging column - Street_edit:
 ```{r, eval=FALSE}
 ba_streets_vio$L1 <- 1:nrow(ba_streets_vio)
-data_streets_st <- merge(data_streets_st, as.data.table(ba_streets_vio)[, .(L1, name)], by = "L1")
-data_streets_st[street_names_vio[, .(name, Street_edit)], on = .(name), Street_edit := i.Street_edit]
+data_streets_st <- merge(data_streets_st, as.data.table(ba_streets_vio)[, .(L1, name)],
+                         by = "L1")
+data_streets_st[street_names_vio[, .(name, Street_edit)], on = .(name),
+                Street_edit := i.Street_edit]
 setnames(data_streets_st, c("X", "Y"), c("lon", "lat"))
 data_streets_st <- data_streets_st[!lon > data_poly_ba[, max(lon)]]
 data_streets_st <- data_streets_st[!lon < data_poly_ba[, min(lon)]]
@@ -376,7 +379,7 @@ map_ba <- get_map(location = bbox, source = 'stamen', maptype = "watercolor")
 ```
 
 Now, let's make it altogether to one visualization - so violations by city districts and also streets for one time-stamp (*Year_M*).
-```{r, fig.height=6.5,fig.width=8}
+```{r, fig.height=6.9,fig.width=8.5}
 ggmap(map_ba, extent = "device") +
   geom_polygon(data = data_places[.(2019.06),
                                   on = .(Year_M)],
@@ -410,7 +413,8 @@ data_streets_st_max <- copy(data_streets_st_max[, .(lon = mean(lon),
                                                     lat = mean(lat),
                                                     Street_edit = first(Street_edit),
                                                     N_violations = first(N_violations),
-                                                    N_violations_per_street = first(N_violations_per_street)
+                                                    N_violations_per_street = 
+                                                      first(N_violations_per_street)
                                                     ),
                                                 by = .(Year_M)])
 ```
@@ -583,7 +587,7 @@ new_gif
 
 Voilaaa:
 
-![](images/post_12/gif_ba_streets.gif)
+![](/images/post_12/gif_ba_streets.gif)
 
 For full resolution - right click on the gif and click on the view image option.
 
@@ -594,7 +598,7 @@ Also notice, that peripheral areas of districts as Ruzinov and Vrakuna have stre
 ### Streets with the most violations
 
 Let's see some of the most violated streets as time series as we seen in the animation.
-```{r, fig.height=4, fig.width=8.5}
+```{r, fig.height=4.5, fig.width=9}
 times <- data.table(Year_M = data_violation_agg_street[, sort(unique(Year_M))])
 times[, Date := as.Date("2017-01-01")]
 times[, row_id := 1:.N]
