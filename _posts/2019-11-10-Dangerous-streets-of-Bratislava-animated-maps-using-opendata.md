@@ -4,8 +4,8 @@ author: "Peter Laurinec"
 layout: post
 published: true
 status: publish
-tags: test spatial-data opendata
-draft: yes
+tags: R spatial-data opendata
+draft: no
 ---
  
 
