@@ -51,11 +51,11 @@ library(magick) # image handling
 Then, let's download the violations data from [opendata.bratislava.sk](https://opendata.bratislava.sk) webpage and translate Slovak column names to English.
 
 {% highlight r %}
-data_violation_17 <- fread("https://opendata.bratislava.sk/dataset/download/852",
+data_violation_17 <- fread("https://opendata.bratislava.sk/dataset/download/pocet-priestupkov-podla-druhu-udalosti-v-roku-r/1",
                            encoding = "Latin-1")
-data_violation_18 <- fread("https://opendata.bratislava.sk/dataset/download/407",
+data_violation_18 <- fread("https://opendata.bratislava.sk/dataset/download/pocet-priestupkov-podla-druhu-udalosti-v-roku-/1",
                            encoding = "Latin-1")
-data_violation_19 <- fread("https://opendata.bratislava.sk/dataset/download/911",
+data_violation_19 <- fread("https://opendata.bratislava.sk/dataset/download/pocet-priestupkov-podla-druhu-udalosti-----ethyanzgrthar/1",
                            encoding = "Latin-1")
  
 # colnames to English
@@ -702,3 +702,5 @@ In this blog post, I showed you how to:
  * create animated maps using packages as `ggplot2`, `ggmap`, `gganimate`, and `magick`.
  
 I hope, you will use these information with your spatial-time series data combo for creating some interesting visualization :)
+ 
+The source code for this blog post can be found on [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
