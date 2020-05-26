@@ -334,14 +334,14 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="350" frameborder="0" src="//dyg_focus_clust_2_6.html"></iframe>
+<iframe width="100%" height="350" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
 
 ```{r}
 # shiny::includeHTML("dyg_focus_clust_2_6.html")
 ```
 
 ```{r}
-htmltools::includeHTML("dyg_focus_clust_2_6.html")
+# htmltools::includeHTML("dyg_focus_clust_2_6.html")
 ```
 
 Check some clusters interactively with dygraphs:
