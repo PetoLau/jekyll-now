@@ -51,30 +51,9 @@ Data are coming from [Johns Hopkins CSSE GitHub repository](https://github.com/C
 Read prepared data at *2020-05-24* snapshot.
 
 {% highlight r %}
-data_covid_ts <- fread("data_covid_time_series_2020-05-24.csv")
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in fread("data_covid_time_series_2020-05-24.csv"): File 'data_covid_time_series_2020-05-24.csv' does not exist or is non-readable. getwd()=='C:/Users/PeterLaurinec/Downloads/petolau.github.io'
-{% endhighlight %}
-
-
-
-{% highlight r %}
+data_covid_ts <- fread("_rmd/data_covid_time_series_2020-05-24.csv")
 data_covid_ts[, DateRep := as.Date(DateRep)] # transform character to Date class
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'data_covid_ts' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 # what we got
 str(data_covid_ts)
 {% endhighlight %}
@@ -82,7 +61,25 @@ str(data_covid_ts)
 
 
 {% highlight text %}
-## Error in str(data_covid_ts): object 'data_covid_ts' not found
+## Classes 'data.table' and 'data.frame':	19344 obs. of  17 variables:
+##  $ Country                                       : chr  "Afghanistan" "Afghanistan" "Afghanistan" "Afghanistan" ...
+##  $ DateRep                                       : Date, format: "2020-01-22" "2020-01-23" "2020-01-24" "2020-01-25" ...
+##  $ Cases_cumsum                                  : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Cases                                         : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Deaths_cumsum                                 : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Deaths                                        : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Recovered_cumsum                              : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Recovered                                     : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Active_cases_cumsum                           : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ New cases per 1 million population            : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ New deaths per 1 million population           : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ New recovered cases per 1 million population  : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Death rate (%)                                : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ Total active cases per 1 million population   : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Total deaths per 1 million population         : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Total cases per 1 million population          : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ Total recovered cases per 1 million population: int  0 0 0 0 0 0 0 0 0 0 ...
+##  - attr(*, ".internal.selfref")=<externalptr>
 {% endhighlight %}
  
 Different interesting statistics also computed "per 1 million population" for better comparison.
@@ -99,87 +96,27 @@ data_covid_100_cases <- copy(data_covid_ts[,
                                                               min(DateRep,
                                                                   na.rm = T)]],
                                             by = .(Country)])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in copy(data_covid_ts[, .SD[DateRep >= .SD[Cases_cumsum >= n_cases, : object 'data_covid_ts' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 setorder(data_covid_100_cases,
          Country,
          DateRep)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.frame(x): object 'data_covid_100_cases' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 # Create 'days since' column
 data_covid_100_cases[, (paste0("Days_since_first_",
                                n_cases, "_case")) := 1:.N,
                      by = .(Country)]
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'data_covid_100_cases' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+   
 # top N countries selection for analysis
 data_cases_order <- copy(data_covid_100_cases[,
                                       .SD[DateRep == max(DateRep),
                                           get(statistic)],
                                       by = .(Country)
                                       ])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in copy(data_covid_100_cases[, .SD[DateRep == max(DateRep), get(statistic)], : object 'data_covid_100_cases' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 setnames(data_cases_order, "V1", statistic)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.frame(x): object 'data_cases_order' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 setorderv(data_cases_order, statistic, -1)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.frame(x): object 'data_cases_order' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 # subset data based on selected parameter -  top 82 countries and analyzed columns
 data_covid_cases_sub <- copy(data_covid_100_cases[.(c(data_cases_order[1:82][!is.na(Country), Country],
                                                       "Slovakia")),
@@ -189,46 +126,16 @@ data_covid_cases_sub <- copy(data_covid_100_cases[.(c(data_cases_order[1:82][!is
                                                              paste0("Days_since_first_", n_cases, "_case"),
                                                              statistic)
                                                  ])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in copy(data_covid_100_cases[.(c(data_cases_order[1:82][!is.na(Country), : object 'data_covid_100_cases' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 # Make same length time series from countries data
 data_covid_trajectories <- dcast(data_covid_cases_sub,
                                  get(paste0("Days_since_first_", n_cases, "_case")) ~ Country,
                                  value.var = statistic)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.table(data): object 'data_covid_cases_sub' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 setnames(data_covid_trajectories,
          colnames(data_covid_trajectories)[1],
          paste0("Days_since_first_", n_cases, "_case"))
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.frame(x): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 DT::datatable(data_covid_trajectories,
               class = "compact",
               extensions = 'Scroller',
@@ -241,11 +148,7 @@ DT::datatable(data_covid_trajectories,
               ))
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in crosstalk::is.SharedData(data): object 'data_covid_trajectories' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-3](/images/post_13/unnamed-chunk-3-1.png)
  
 Prepare trajectories' data for clustering:
 
@@ -254,86 +157,24 @@ q_sma <- 3
  
 # save stats of dt
 n_col <- ncol(data_covid_trajectories)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in ncol(data_covid_trajectories): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 n_row <- nrow(data_covid_trajectories)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in nrow(data_covid_trajectories): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 n_row_na <- rowSums(data_covid_trajectories[, lapply(.SD, is.na)])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.frame(x): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
 n_col_na <- colSums(data_covid_trajectories[, lapply(.SD, is.na)])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.frame(x): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 # remove all NA rows and cols - for sure
 if (length(which(n_row_na %in% n_col)) != 0) {
  
   data_covid_trajectories <- copy(data_covid_trajectories[-which(n_row_na == n_col)])
       
 }
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in n_row_na %in% n_col: object 'n_row_na' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+    
 if (length(which(n_col_na %in% n_row)) != 0) {
       
   data_covid_trajectories <- copy(data_covid_trajectories[, -which(n_col_na %in% n_row), with = FALSE])
       
 }
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in n_col_na %in% n_row: object 'n_col_na' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 # use SMA for preprocessing time series from my TSrepr package
 data_covid_trajectories[,
                         (colnames(data_covid_trajectories)[-1]) := lapply(.SD, function(i)
@@ -341,17 +182,7 @@ data_covid_trajectories[,
                         ceiling(repr_sma(i, q_sma))
                           )),
                         .SDcols = colnames(data_covid_trajectories)[-1]]
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 DT::datatable(data_covid_trajectories,
               class = "compact",
               extensions = 'Scroller',
@@ -364,11 +195,7 @@ DT::datatable(data_covid_trajectories,
               ))
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in crosstalk::is.SharedData(data): object 'data_covid_trajectories' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-4](/images/post_13/unnamed-chunk-4-1.png)
  
  
 Define clustering function with DTW distance with additional data preprocessing necessary for dtwclust package.
@@ -429,24 +256,39 @@ Execute clustering
 clust_res <- cluster_trajectories(data = data_covid_trajectories,
                                   k = 14,
                                   normalize = TRUE)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in t(data[, .SD, .SDcols = colnames(data)[-1]]): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 clust_res
 {% endhighlight %}
 
 
 
 {% highlight text %}
-## Error in eval(expr, envir, enclos): object 'clust_res' not found
+## hierarchical clustering with 14 clusters
+## Using dtw_basic distance
+## Using dba centroids
+## Using method ward.D2 
+## 
+## Time required for analysis:
+##    user  system elapsed 
+##    0.97    0.11    1.65 
+## 
+## Cluster sizes with average intra-cluster distance:
+## 
+##    size   av_dist
+## 1    21 0.5011793
+## 2     6 0.5170467
+## 3     2 0.9447618
+## 4    10 0.4015355
+## 5    11 0.5774944
+## 6     5 0.6441501
+## 7     7 0.4719638
+## 8     2 0.5682452
+## 9     5 0.7722092
+## 10    2 0.8360796
+## 11    4 0.4361994
+## 12    5 0.5527005
+## 13    2 0.5363868
+## 14    1 0.0000000
 {% endhighlight %}
  
 Prepare data for plotting:
@@ -455,17 +297,7 @@ Prepare data for plotting:
 # prepare time series
 data_clust_id <- data.table(Cluster = clust_res@cluster,
                             Country = names(clust_res@cluster))
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in data.table(Cluster = clust_res@cluster, Country = names(clust_res@cluster)): object 'clust_res' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 data_plot <- melt(data_covid_trajectories,
                   id.vars = colnames(data_covid_trajectories)[1],
                   variable.name = "Country",
@@ -473,43 +305,13 @@ data_plot <- melt(data_covid_trajectories,
                   value.name = statistic,
                   value.factor = FALSE
                   )
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.table(data): object 'data_covid_trajectories' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 data_plot <- copy(data_plot[.(data_clust_id$Country), on = .(Country)])
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in copy(data_plot[.(data_clust_id$Country), on = .(Country)]): object 'data_plot' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 data_plot[data_clust_id,
           on = .(Country),
           Cluster := i.Cluster]
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(expr, envir, enclos): object 'data_plot' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 DT::datatable(data_plot,
               class = "compact",
               extensions = 'Scroller',
@@ -523,11 +325,7 @@ DT::datatable(data_plot,
               ))
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in crosstalk::is.SharedData(data): object 'data_plot' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-7](/images/post_13/unnamed-chunk-7-1.png)
  
 Plot of cluster members....
 
@@ -565,11 +363,7 @@ ggplot(data_plot,
       theme_my
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in ggplot(data_plot, aes(get(colnames(data_plot)[1]), get(statistic), : object 'data_plot' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-8](/images/post_13/unnamed-chunk-8-1.png)
  
 Check some clusters interactively with dygraphs:
 
@@ -577,17 +371,7 @@ Check some clusters interactively with dygraphs:
 data_clust_focus <- dcast(data_plot[.(c(2,6)), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
                           value.var = statistic)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.table(data): object 'data_plot' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 dygraph(data_clust_focus,
         main = "Clusters n. 2 and 6") %>%
       dyAxis("x", label = colnames(data_clust_focus)[1]) %>%
@@ -604,11 +388,7 @@ dygraph(data_clust_focus,
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in dygraph(data_clust_focus, main = "Clusters n. 2 and 6"): object 'data_clust_focus' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-9](/images/post_13/unnamed-chunk-9-1.png)
  
 Check some clusters interactively with dygraphs:
 
@@ -616,17 +396,7 @@ Check some clusters interactively with dygraphs:
 data_clust_focus <- dcast(data_plot[.(7), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
                           value.var = statistic)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.table(data): object 'data_plot' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 dygraph(data_clust_focus,
         main = "Cluster n.7") %>%
       dyAxis("x", label = colnames(data_clust_focus)[1]) %>%
@@ -643,11 +413,7 @@ dygraph(data_clust_focus,
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in dygraph(data_clust_focus, main = "Cluster n.7"): object 'data_clust_focus' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-10](/images/post_13/unnamed-chunk-10-1.png)
  
 Check some clusters interactively with dygraphs:
 
@@ -655,17 +421,7 @@ Check some clusters interactively with dygraphs:
 data_clust_focus <- dcast(data_plot[.(1), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
                           value.var = statistic)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in is.data.table(data): object 'data_plot' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 dygraph(data_clust_focus,
         main = "Cluster n. 1") %>%
       dyAxis("x", label = colnames(data_clust_focus)[1]) %>%
@@ -682,94 +438,36 @@ dygraph(data_clust_focus,
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in dygraph(data_clust_focus, main = "Cluster n. 1"): object 'data_clust_focus' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-11](/images/post_13/unnamed-chunk-11-1.png)
  
 Dendrogram to see nicer connections between countries in a tree:
 
 {% highlight r %}
 dend <- as.dendrogram(clust_res)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in as.dendrogram(clust_res): object 'clust_res' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 dend <- dend %>%
   color_branches(k = 14) %>%
   color_labels(k = 14) %>%
   set("branches_lwd", 1) %>%
   set("labels_cex", 0.8)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in eval(lhs, parent, parent): object 'dend' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 ggd1 <- as.ggdend(dend)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in as.ggdend(dend): object 'dend' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 ggplot(ggd1,
        horiz = T)
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in ggplot(ggd1, horiz = T): object 'ggd1' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-12](/images/post_13/unnamed-chunk-12-1.png)
  
 MDS 2D plot - we can use simply DTW distances.
 
 {% highlight r %}
 mds_classical <- cmdscale(clust_res@distmat, eig = FALSE, k = 2)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in cmdscale(clust_res@distmat, eig = FALSE, k = 2): object 'clust_res' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 data_plot <- data.table(mds_classical,
                         Country = row.names(mds_classical),
                         Cluster = clust_res@cluster)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in data.table(mds_classical, Country = row.names(mds_classical), : object 'mds_classical' not found
-{% endhighlight %}
-
-
-
-{% highlight r %}
+ 
 ggplot(data_plot, aes(x = get("V1"),
                       y = get("V2"),
                       label = Country,
@@ -788,11 +486,7 @@ ggplot(data_plot, aes(x = get("V1"),
       theme_my
 {% endhighlight %}
 
-
-
-{% highlight text %}
-## Error in ggplot(data_plot, aes(x = get("V1"), y = get("V2"), label = Country, : object 'data_plot' not found
-{% endhighlight %}
+![plot of chunk unnamed-chunk-13](/images/post_13/unnamed-chunk-13-1.png)
  
 ## Recap
  

@@ -51,7 +51,7 @@ Data are coming from [Johns Hopkins CSSE GitHub repository](https://github.com/C
 
 Read prepared data at *2020-05-24* snapshot.
 ```{r}
-data_covid_ts <- fread("data_covid_time_series_2020-05-24.csv")
+data_covid_ts <- fread("_rmd/data_covid_time_series_2020-05-24.csv")
 data_covid_ts[, DateRep := as.Date(DateRep)] # transform character to Date class
 
 # what we got

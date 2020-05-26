@@ -3,7 +3,7 @@ title: My eRum 2018 biggest highlights
 author: Peter Laurinec
 layout: post
 published: false
-status: process
+status: processed
 tags: R meetup
 draft: false
 ---
