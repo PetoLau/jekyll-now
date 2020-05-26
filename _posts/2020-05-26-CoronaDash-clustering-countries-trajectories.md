@@ -37,14 +37,14 @@ Firstly, load all the needed packages.
 
 {% highlight r %}
 library(data.table) # data handling
-library(TSrepr) # time series representation, pls use dev version devtools::install_github("PetoLau/TSrepr")
+library(TSrepr) # ts representations, use dev version devtools::install_github("PetoLau/TSrepr")
 library(ggplot2) # visualisations
 library(dtwclust) # clustering using DTW distance
 library(dygraphs) # interactive visualizations
 library(ggrepel) # nice labels in ggplot
 library(dendextend) # dendrograms
 library(DT) # nice datatable
-library(htmlwidgets)
+library(htmlwidgets) # save html objects
 {% endhighlight %}
  
 Data are coming from [Johns Hopkins CSSE GitHub repository](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series), [GitHub repository by ulklc](https://github.com/ulklc/covid19-timeseries), and tests data are coming from [COVID19 API](https://github.com/ChrisMichaelPerezSantiago/covid19).
@@ -119,35 +119,41 @@ setnames(data_cases_order, "V1", statistic)
 setorderv(data_cases_order, statistic, -1)
     
 # subset data based on selected parameter -  top 82 countries and analyzed columns
-data_covid_cases_sub <- copy(data_covid_100_cases[.(c(data_cases_order[1:82][!is.na(Country), Country],
+data_covid_cases_sub <- copy(data_covid_100_cases[.(c(data_cases_order[1:82][!is.na(Country),
+                                                                             Country],
                                                       "Slovakia")),
                                                   on = .(Country),
                                                  .SD,
                                                  .SDcols = c("Country",
-                                                             paste0("Days_since_first_", n_cases, "_case"),
+                                                             paste0("Days_since_first_",
+                                                                    n_cases, "_case"),
                                                              statistic)
                                                  ])
  
 # Make same length time series from countries data
 data_covid_trajectories <- dcast(data_covid_cases_sub,
-                                 get(paste0("Days_since_first_", n_cases, "_case")) ~ Country,
+                                 get(paste0("Days_since_first_", n_cases, "_case")) ~
+                                   Country,
                                  value.var = statistic)
     
 setnames(data_covid_trajectories,
          colnames(data_covid_trajectories)[1],
          paste0("Days_since_first_", n_cases, "_case"))
  
-# DT::datatable(data_covid_trajectories,
-#               class = "compact",
-#               extensions = 'Scroller',
-#               options = list(
-#                 dom = 't',
-#                 deferRender = TRUE,
-#                 scrollY = 270,
-#                 scroller = TRUE,
-#                 scrollX = TRUE
-#               ))
+dt <- DT::datatable(data_covid_trajectories,
+                    class = "compact",
+                    extensions = 'Scroller',
+                    options = list(
+                        dom = 't',
+                deferRender = TRUE,
+                    scrollY = 270,
+                   scroller = TRUE,
+                    scrollX = TRUE
+                    ))
+htmlwidgets::saveWidget(dt, "dt_traj_1.html", selfcontained = T)
 {% endhighlight %}
+ 
+<iframe width="100%" height="380" frameborder="0" src="/dt_traj_1.html"></iframe>
  
 Prepare trajectories' data for clustering:
 
@@ -170,30 +176,35 @@ if (length(which(n_row_na %in% n_col)) != 0) {
     
 if (length(which(n_col_na %in% n_row)) != 0) {
       
-  data_covid_trajectories <- copy(data_covid_trajectories[, -which(n_col_na %in% n_row), with = FALSE])
+  data_covid_trajectories <- copy(data_covid_trajectories[, -which(n_col_na %in% n_row),
+                                                          with = FALSE])
       
 }
  
 # use SMA for preprocessing time series from my TSrepr package
 data_covid_trajectories[,
-                        (colnames(data_covid_trajectories)[-1]) := lapply(.SD, function(i)
-                        c(rep(NA, q_sma - 1),
-                        ceiling(repr_sma(i, q_sma))
-                          )),
+                        (colnames(data_covid_trajectories)[-1]) :=
+                          lapply(.SD, function(i)
+                            c(rep(NA, q_sma - 1),
+                              ceiling(repr_sma(i, q_sma))
+                              )),
                         .SDcols = colnames(data_covid_trajectories)[-1]]
  
-# DT::datatable(data_covid_trajectories,
-#               class = "compact",
-#               extensions = 'Scroller',
-#               options = list(
-#                 dom = 't',
-#                 deferRender = TRUE,
-#                 scrollY = 270,
-#                 scroller = TRUE,
-#                 scrollX = TRUE
-#               ))
+dt <- DT::datatable(data_covid_trajectories,
+                    class = "compact",
+                    extensions = 'Scroller',
+                    options = list(
+                        dom = 't',
+                        deferRender = TRUE,
+                        scrollY = 270,
+                        scroller = TRUE,
+                        scrollX = TRUE
+                    ))
+ 
+htmlwidgets::saveWidget(dt, "dt_traj_2.html", selfcontained = T)
 {% endhighlight %}
  
+<iframe width="100%" height="380" frameborder="0" src="/dt_traj_2.html"></iframe>
  
 Define clustering function with DTW distance with additional data preprocessing necessary for dtwclust package.
 
@@ -214,7 +225,7 @@ cluster_trajectories <- function(data, k, normalize = FALSE) {
  
   if (length(which(n_list %in% 0:1)) != 0) {
     
-    data_trajectories_trans_list <- data_trajectories_trans_list[-which(n_list %in% 0:1)]
+   data_trajectories_trans_list <- data_trajectories_trans_list[-which(n_list %in% 0:1)]
     
   }
   
@@ -224,9 +235,9 @@ cluster_trajectories <- function(data, k, normalize = FALSE) {
   if (normalize) {
     
     data_trajectories_trans_list <- lapply(names(data_trajectories_trans_list),
-                                                function(i)
-                                                  norm_z(data_trajectories_trans_list[[i]])
-                                                 )
+                                            function(i)
+                                              norm_z(data_trajectories_trans_list[[i]])
+                                                )
     names(data_trajectories_trans_list) <- list_names
     
   }
@@ -267,7 +278,7 @@ clust_res
 ## 
 ## Time required for analysis:
 ##    user  system elapsed 
-##    0.56    0.02    0.11 
+##    0.67    0.06    0.14 
 ## 
 ## Cluster sizes with average intra-cluster distance:
 ## 
@@ -321,21 +332,10 @@ dt <- DT::datatable(data_plot,
                 scrollX = TRUE
               ))
  
-# frameWidget(dt, height = 350, width = '95%')
 htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="100%" height="480" frameborder="0" src="/dt_data_plot.html"></iframe>
- 
-
-{% highlight r %}
-# shiny::includeHTML("dt_data_plot.html")
-{% endhighlight %}
- 
-
-{% highlight r %}
-# htmltools::includeHTML("dt_data_plot.html")
-{% endhighlight %}
+<iframe width="100%" height="380" frameborder="0" src="/dt_data_plot.html"></iframe>
  
 Plot of cluster members....
 
@@ -373,7 +373,7 @@ ggplot(data_plot,
       theme_my
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-10](/images/post_13/unnamed-chunk-10-1.png)
+![plot of chunk unnamed-chunk-8](/images/post_13/unnamed-chunk-8-1.png)
  
 Check some clusters interactively with dygraphs:
 
@@ -401,16 +401,6 @@ saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 {% endhighlight %}
  
 <iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
- 
-
-{% highlight r %}
-# shiny::includeHTML("dyg_focus_clust_2_6.html")
-{% endhighlight %}
- 
-
-{% highlight r %}
-# htmltools::includeHTML("dyg_focus_clust_2_6.html")
-{% endhighlight %}
  
 Check some clusters interactively with dygraphs:
 
@@ -464,9 +454,7 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 {% endhighlight %}
  
- 
-<iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_1.html"></iframe>
- 
+<iframe width="100%" height="490" frameborder="0" src="/dyg_focus_clust_1.html"></iframe>
  
 Dendrogram to see nicer connections between countries in a tree:
 
@@ -485,7 +473,7 @@ ggplot(ggd1,
        horiz = T)
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-16](/images/post_13/unnamed-chunk-16-1.png)
+![plot of chunk unnamed-chunk-12](/images/post_13/unnamed-chunk-12-1.png)
  
 MDS 2D plot - we can use simply DTW distances.
 
@@ -514,7 +502,7 @@ ggplot(data_plot, aes(x = get("V1"),
       theme_my
 {% endhighlight %}
 
-![plot of chunk unnamed-chunk-17](/images/post_13/unnamed-chunk-17-1.png)
+![plot of chunk unnamed-chunk-13](/images/post_13/unnamed-chunk-13-1.png)
  
 ## Recap
  
