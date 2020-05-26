@@ -3,7 +3,7 @@ title: Dangerous streets of Bratislava! Animated maps using open data in R
 author: "Peter Laurinec"
 layout: post
 published: no
-status: process
+status: processed
 tags: R spatial-data opendata
 draft: no
 ---
