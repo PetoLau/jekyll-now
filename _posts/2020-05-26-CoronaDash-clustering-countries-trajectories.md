@@ -402,8 +402,6 @@ saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
  
 <iframe width="100%" height="350" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
 
-{% include dyg_focus_clust_2_6.html %}
-
 {% capture includeGuts %}
 {% include dyg_focus_clust_2_6.html %}
 {% endcapture %}
