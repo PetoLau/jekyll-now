@@ -45,6 +45,7 @@ library(dygraphs) # interactive visualizations
 library(ggrepel) # nice labels in ggplot
 library(dendextend) # dendrograms
 library(DT) # nice datatable
+library(htmlwidgets)
 ```
 
 Data are coming from [Johns Hopkins CSSE GitHub repository](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series), [GitHub repository by ulklc](https://github.com/ulklc/covid19-timeseries), and tests data are coming from [COVID19 API](https://github.com/ChrisMichaelPerezSantiago/covid19).
@@ -260,13 +261,11 @@ dt <- DT::datatable(data_plot,
                 scrollX = TRUE
               ))
 
-# saveWidget(dt, "dt_data_plot.html", selfcontained = T)
+# frameWidget(dt, height = 350, width = '95%')
+DT::saveWidget(dt, "images/post_13/dt_data_plot.html", selfcontained = T)
 ```
 
-```{r, echo=FALSE}
-# htmltools::includeHTML("dt_data_plot.html")
-htmltools::tagList(dt)
-```
+<iframe width="820" height="350" frameborder="0" src="images/post_13/dt_data_plot.html"></iframe>
 
 Plot of cluster members....
 ```{r, warning=FALSE, message=FALSE, fig.height=8, fig.width=10}
@@ -324,13 +323,10 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 
-# saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
+saveWidget(dyg, "images/post_13/dyg_focus_clust_2_6.html", selfcontained = T)
 ```
 
-```{r, echo=FALSE}
-# htmltools::includeHTML("dyg_focus_clust_2_6.html")
-htmltools::tagList(dyg)
-```
+<iframe width="820" height="350" frameborder="0" src="images/post_13/dyg_focus_clust_2_6.html"></iframe>
 
 Check some clusters interactively with dygraphs:
 ```{r, warning=FALSE}
@@ -353,13 +349,10 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 
-# saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
+saveWidget(dyg, "images/post_13/dyg_focus_clust_7.html", selfcontained = T)
 ```
 
-```{r, echo=FALSE}
-# htmltools::includeHTML("dyg_focus_clust_7.html")
-htmltools::tagList(dyg)
-```
+<iframe width="820" height="350" frameborder="0" src="images/post_13/dyg_focus_clust_7.html"></iframe>
 
 Check some clusters interactively with dygraphs:
 ```{r, warning=FALSE}
@@ -382,12 +375,12 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 
-# saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
+saveWidget(dyg, "images/post_13/dyg_focus_clust_1.html", selfcontained = T)
 ```
 
-```{r, echo=FALSE}
-htmltools::tagList(dyg)
-```
+
+<iframe width="820" height="350" frameborder="0" src="images/post_13/dyg_focus_clust_1.html"></iframe>
+
 
 Dendrogram to see nicer connections between countries in a tree:
 ```{r, warning=FALSE, message=FALSE, fig.height=12, fig.width=10}
