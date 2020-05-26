@@ -15,11 +15,11 @@
 #' @author Jason Bryer <jason@bryer.org> edited by Andy South
 rmd2md <- function( path_site = getwd(),
                     dir_rmd = "_rmd",
-                    dir_md = "_posts",                              
+                    dir_md = "_posts",
                     #dir_images = "figures",
                     url_images = "images/post_13/",
-                    out_ext='.md', 
-                    in_ext='.rmd', 
+                    out_ext='.md',
+                    in_ext='.rmd',
                     recursive=FALSE) {
   
   require(knitr, quietly=TRUE, warn.conflicts=FALSE)
