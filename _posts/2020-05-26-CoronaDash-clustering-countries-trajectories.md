@@ -325,7 +325,7 @@ dt <- DT::datatable(data_plot,
 htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="820" height="350" frameborder="0" src="dt_data_plot.html"></iframe>
+<iframe width="820" height="350" frameborder="0" src="https://raw.githubusercontent.com/PetoLau/petolau.github.io/master/_posts/dt_data_plot.html"></iframe>
  
 Plot of cluster members....
 
