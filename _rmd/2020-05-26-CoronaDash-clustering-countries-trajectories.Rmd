@@ -51,7 +51,7 @@ Data are coming from [Johns Hopkins CSSE GitHub repository](https://github.com/C
 
 Read prepared data at *2020-05-24* snapshot.
 ```{r}
-data_covid_ts <- fread("_rmd/data_covid_time_series_2020-05-24.csv")
+data_covid_ts <- fread("_rmd/data_covid_time_series_2020-05-24.csv") # 
 data_covid_ts[, DateRep := as.Date(DateRep)] # transform character to Date class
 
 # what we got
@@ -111,16 +111,16 @@ setnames(data_covid_trajectories,
          colnames(data_covid_trajectories)[1],
          paste0("Days_since_first_", n_cases, "_case"))
 
-DT::datatable(data_covid_trajectories,
-              class = "compact",
-              extensions = 'Scroller',
-              options = list(
-                dom = 't',
-                deferRender = TRUE,
-                scrollY = 270,
-                scroller = TRUE,
-                scrollX = TRUE
-              ))
+# DT::datatable(data_covid_trajectories,
+#               class = "compact",
+#               extensions = 'Scroller',
+#               options = list(
+#                 dom = 't',
+#                 deferRender = TRUE,
+#                 scrollY = 270,
+#                 scroller = TRUE,
+#                 scrollX = TRUE
+#               ))
 ```
 
 Prepare trajectories' data for clustering:
@@ -155,16 +155,16 @@ data_covid_trajectories[,
                           )),
                         .SDcols = colnames(data_covid_trajectories)[-1]]
 
-DT::datatable(data_covid_trajectories,
-              class = "compact",
-              extensions = 'Scroller',
-              options = list(
-                dom = 't',
-                deferRender = TRUE,
-                scrollY = 270,
-                scroller = TRUE,
-                scrollX = TRUE
-              ))
+# DT::datatable(data_covid_trajectories,
+#               class = "compact",
+#               extensions = 'Scroller',
+#               options = list(
+#                 dom = 't',
+#                 deferRender = TRUE,
+#                 scrollY = 270,
+#                 scroller = TRUE,
+#                 scrollX = TRUE
+#               ))
 ```
 
 
@@ -260,11 +260,12 @@ dt <- DT::datatable(data_plot,
                 scrollX = TRUE
               ))
 
-saveWidget(dt, "dt_data_plot.html", selfcontained = T)
+# saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 ```
 
 ```{r, echo=FALSE}
-htmltools::includeHTML("dt_data_plot.html")
+# htmltools::includeHTML("dt_data_plot.html")
+htmltools::tagList(dt)
 ```
 
 Plot of cluster members....
@@ -323,11 +324,12 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 
-saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
+# saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 ```
 
 ```{r, echo=FALSE}
-htmltools::includeHTML("dyg_focus_clust_2_6.html")
+# htmltools::includeHTML("dyg_focus_clust_2_6.html")
+htmltools::tagList(dyg)
 ```
 
 Check some clusters interactively with dygraphs:
@@ -351,11 +353,12 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 
-saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
+# saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
 ```
 
 ```{r, echo=FALSE}
-htmltools::includeHTML("dyg_focus_clust_7.html")
+# htmltools::includeHTML("dyg_focus_clust_7.html")
+htmltools::tagList(dyg)
 ```
 
 Check some clusters interactively with dygraphs:
@@ -379,11 +382,11 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
 
-saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
+# saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 ```
 
 ```{r, echo=FALSE}
-htmltools::includeHTML("dyg_focus_clust_1.html")
+htmltools::tagList(dyg)
 ```
 
 Dendrogram to see nicer connections between countries in a tree:
