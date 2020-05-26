@@ -248,7 +248,7 @@ data_plot[data_clust_id,
           on = .(Country),
           Cluster := i.Cluster]
 
-DT::datatable(data_plot,
+dt <- DT::datatable(data_plot,
               class = "compact",
               extensions = 'Scroller',
               filter = "top",
@@ -259,6 +259,12 @@ DT::datatable(data_plot,
                 scroller = TRUE,
                 scrollX = TRUE
               ))
+
+saveWidget(dt, "dt_data_plot.html", selfcontained = T)
+```
+
+```{r, echo=FALSE}
+htmltools::includeHTML("dt_data_plot.html")
 ```
 
 Plot of cluster members....
@@ -297,12 +303,12 @@ ggplot(data_plot,
 ```
 
 Check some clusters interactively with dygraphs:
-```{r, warning=FALSE, fig.width=9}
+```{r, warning=FALSE}
 data_clust_focus <- dcast(data_plot[.(c(2,6)), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
                           value.var = statistic)
 
-dygraph(data_clust_focus,
+dyg <- dygraph(data_clust_focus,
         main = "Clusters n. 2 and 6") %>%
       dyAxis("x", label = colnames(data_clust_focus)[1]) %>%
       dyAxis("y", label = statistic) %>%
@@ -316,16 +322,22 @@ dygraph(data_clust_focus,
                                              pointSize = 4)) %>%
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
+
+saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
+```
+
+```{r, echo=FALSE}
+htmltools::includeHTML("dyg_focus_clust_2_6.html")
 ```
 
 Check some clusters interactively with dygraphs:
-```{r, warning=FALSE, fig.width=9}
+```{r, warning=FALSE}
 data_clust_focus <- dcast(data_plot[.(7), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
                           value.var = statistic)
 
-dygraph(data_clust_focus,
-        main = "Cluster n.7") %>%
+dyg <- dygraph(data_clust_focus,
+               main = "Cluster n.7") %>%
       dyAxis("x", label = colnames(data_clust_focus)[1]) %>%
       dyAxis("y", label = statistic) %>%
       dyOptions(strokeWidth = 2,
@@ -338,16 +350,22 @@ dygraph(data_clust_focus,
                                              pointSize = 4)) %>%
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
+
+saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
+```
+
+```{r, echo=FALSE}
+htmltools::includeHTML("dyg_focus_clust_7.html")
 ```
 
 Check some clusters interactively with dygraphs:
-```{r, warning=FALSE, fig.width=9}
+```{r, warning=FALSE}
 data_clust_focus <- dcast(data_plot[.(1), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
                           value.var = statistic)
 
-dygraph(data_clust_focus,
-        main = "Cluster n. 1") %>%
+dyg <- dygraph(data_clust_focus,
+               main = "Cluster n. 1") %>%
       dyAxis("x", label = colnames(data_clust_focus)[1]) %>%
       dyAxis("y", label = statistic) %>%
       dyOptions(strokeWidth = 2,
@@ -360,6 +378,12 @@ dygraph(data_clust_focus,
                                              pointSize = 4)) %>%
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
+
+saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
+```
+
+```{r, echo=FALSE}
+htmltools::includeHTML("dyg_focus_clust_1.html")
 ```
 
 Dendrogram to see nicer connections between countries in a tree:
