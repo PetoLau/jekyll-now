@@ -265,7 +265,15 @@ dt <- DT::datatable(data_plot,
 htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 ```
 
-<iframe width="820" height="350" frameborder="0" src="dt_data_plot.html"></iframe>
+<iframe width="100%" height="350" frameborder="0" src="/dt_data_plot.html"></iframe>
+
+```{r}
+shiny::includeHTML("dt_data_plot.html")
+```
+
+```{r}
+htmltools::includeHTML("dt_data_plot.html")
+```
 
 Plot of cluster members....
 ```{r, warning=FALSE, message=FALSE, fig.height=8, fig.width=10}
@@ -326,7 +334,15 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 ```
 
-<iframe width="820" height="350" frameborder="0" src="dyg_focus_clust_2_6.html"></iframe>
+<iframe width="100%" height="350" frameborder="0" src="//dyg_focus_clust_2_6.html"></iframe>
+
+```{r}
+shiny::includeHTML("dyg_focus_clust_2_6.html")
+```
+
+```{r}
+htmltools::includeHTML("dyg_focus_clust_2_6.html")
+```
 
 Check some clusters interactively with dygraphs:
 ```{r, warning=FALSE}
