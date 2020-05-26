@@ -326,7 +326,8 @@ htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 {% endhighlight %}
  
 <iframe width="100%" height="350" frameborder="0" src="//dt_data_plot.html"></iframe>
- 
+
+{% include dt_data_plot.html %}
 
 {% highlight r %}
 # shiny::includeHTML("dt_data_plot.html")
@@ -401,7 +402,8 @@ saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 {% endhighlight %}
  
 <iframe width="100%" height="350" frameborder="0" src="//dyg_focus_clust_2_6.html"></iframe>
- 
+
+{% include dyg_focus_clust_2_6.html %}
 
 {% highlight r %}
 # shiny::includeHTML("dyg_focus_clust_2_6.html")
