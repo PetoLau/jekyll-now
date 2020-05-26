@@ -267,7 +267,7 @@ clust_res
 ## 
 ## Time required for analysis:
 ##    user  system elapsed 
-##    0.58    0.05    0.17 
+##    0.50    0.03    0.14 
 ## 
 ## Cluster sizes with average intra-cluster distance:
 ## 
@@ -322,16 +322,10 @@ dt <- DT::datatable(data_plot,
               ))
  
 # frameWidget(dt, height = 350, width = '95%')
-DT::saveWidget(dt, "images/post_13/dt_data_plot.html", selfcontained = T)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in normalizePath(path.expand(path), winslash, mustWork): path[1]="images/post_13": The system cannot find the path specified
+htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="820" height="350" frameborder="0" src="images/post_13/dt_data_plot.html"></iframe>
+<iframe width="820" height="350" frameborder="0" src="dt_data_plot.html"></iframe>
  
 Plot of cluster members....
 
@@ -393,16 +387,10 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
  
-saveWidget(dyg, "images/post_13/dyg_focus_clust_2_6.html", selfcontained = T)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in normalizePath(path.expand(path), winslash, mustWork): path[1]="images/post_13": The system cannot find the path specified
+saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="820" height="350" frameborder="0" src="images/post_13/dyg_focus_clust_2_6.html"></iframe>
+<iframe width="820" height="350" frameborder="0" src="dyg_focus_clust_2_6.html"></iframe>
  
 Check some clusters interactively with dygraphs:
 
@@ -426,16 +414,10 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
  
-saveWidget(dyg, "images/post_13/dyg_focus_clust_7.html", selfcontained = T)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in normalizePath(path.expand(path), winslash, mustWork): path[1]="images/post_13": The system cannot find the path specified
+saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="820" height="350" frameborder="0" src="images/post_13/dyg_focus_clust_7.html"></iframe>
+<iframe width="820" height="350" frameborder="0" src="dyg_focus_clust_7.html"></iframe>
  
 Check some clusters interactively with dygraphs:
 
@@ -459,17 +441,11 @@ dyg <- dygraph(data_clust_focus,
       dyLegend(width = 150, show = "follow",
                hideOnMouseOut = TRUE, labelsSeparateLines = TRUE)
  
-saveWidget(dyg, "images/post_13/dyg_focus_clust_1.html", selfcontained = T)
-{% endhighlight %}
-
-
-
-{% highlight text %}
-## Error in normalizePath(path.expand(path), winslash, mustWork): path[1]="images/post_13": The system cannot find the path specified
+saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 {% endhighlight %}
  
  
-<iframe width="820" height="350" frameborder="0" src="images/post_13/dyg_focus_clust_1.html"></iframe>
+<iframe width="820" height="350" frameborder="0" src="dyg_focus_clust_1.html"></iframe>
  
  
 Dendrogram to see nicer connections between countries in a tree:
