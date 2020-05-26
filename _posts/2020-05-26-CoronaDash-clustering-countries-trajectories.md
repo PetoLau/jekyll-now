@@ -402,11 +402,6 @@ saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
  
 <iframe width="100%" height="350" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
 
-{% capture includeGuts %}
-{% include dyg_focus_clust_2_6.html %}
-{% endcapture %}
-{{ includeGuts | replace: '    ', ''}}
-
 {% highlight r %}
 # shiny::includeHTML("dyg_focus_clust_2_6.html")
 {% endhighlight %}
