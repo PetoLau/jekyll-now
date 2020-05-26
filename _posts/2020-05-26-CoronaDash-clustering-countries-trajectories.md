@@ -267,7 +267,7 @@ clust_res
 ## 
 ## Time required for analysis:
 ##    user  system elapsed 
-##    0.62    0.05    0.12 
+##    0.56    0.02    0.11 
 ## 
 ## Cluster sizes with average intra-cluster distance:
 ## 
@@ -325,7 +325,7 @@ dt <- DT::datatable(data_plot,
 htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="100%" height="350" frameborder="0" src="//dt_data_plot.html"></iframe>
+<iframe width="100%" height="480" frameborder="0" src="/dt_data_plot.html"></iframe>
  
 
 {% highlight r %}
@@ -400,7 +400,8 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="100%" height="350" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
+<iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
+ 
 
 {% highlight r %}
 # shiny::includeHTML("dyg_focus_clust_2_6.html")
@@ -436,7 +437,7 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
 {% endhighlight %}
  
-<iframe width="820" height="350" frameborder="0" src="dyg_focus_clust_7.html"></iframe>
+<iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_7.html"></iframe>
  
 Check some clusters interactively with dygraphs:
 
@@ -464,7 +465,7 @@ saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 {% endhighlight %}
  
  
-<iframe width="820" height="350" frameborder="0" src="dyg_focus_clust_1.html"></iframe>
+<iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_1.html"></iframe>
  
  
 Dendrogram to see nicer connections between countries in a tree:
