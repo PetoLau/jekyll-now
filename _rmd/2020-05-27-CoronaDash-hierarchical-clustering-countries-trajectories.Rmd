@@ -3,8 +3,8 @@ title: "CoronaDash app use case - Clustering countries' COVID-19 active cases tr
 author: "Peter Laurinec"
 layout: post
 published: no
-status: process
-tags: test clustering shiny opendata
+status: processed
+tags: R clustering shiny opendata
 draft: no
 ---
 

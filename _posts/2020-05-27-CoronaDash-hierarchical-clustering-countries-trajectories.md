@@ -4,7 +4,7 @@ author: "Peter Laurinec"
 layout: post
 published: true
 status: publish
-tags: test clustering shiny opendata
+tags: R clustering shiny opendata
 draft: no
 ---
  
@@ -296,7 +296,7 @@ clust_res
 ## 
 ## Time required for analysis:
 ##    user  system elapsed 
-##    0.48    0.00    0.13 
+##    0.39    0.00    0.08 
 ## 
 ## Cluster sizes with average intra-cluster distance:
 ## 
