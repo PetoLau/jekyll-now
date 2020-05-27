@@ -12,25 +12,25 @@ draft: no
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-COVID-19 disease spread hit the World really globally and also field of mathematicians/ statisticians/ machine learning researchers and related.
-These experts want to help to understand for example future trends (forecast) of corona virus spread.
-My motivation in this case was to create **interactive dashboard** about COVID-19 to inform about various scenarios in every country and compare them through **data mining methods**.
+COVID-19 disease spread hit the World really globally and also the field of mathematicians/ statisticians/ machine learning researchers and related.
+These experts want to help to understand for example future trends (forecast) of the coronavirus spread.
+My motivation, in this case, was to create **interactive dashboard** about COVID-19 to inform about various scenarios in every country and compare them through **data mining methods**.
 
 I created **CoronaDash** `shinydashboard` application that is hosted on [**petolau.shinyapps.io** RStudio platform](https://petolau.shinyapps.io/coronadash/).
 The dashboard provides various data mining/ visualization techniques for **comparing countries' COVID-19 data statistics** as:
 
   * extrapolating total confirmed cases by exponential smoothing model,
   * trajectories of cases/ deaths spread,
-  * multidimensional clustering of countries' data/ statistics - with dendogram and table of clusters averages,
+  * multidimensional clustering of countries' data/ statistics - with dendrogram and table of clusters averages,
   * aggregated views for the whole World,
-  * hierarchical clustering of countries' trajectories based on DTW distance and preprocessing by SMA (+ normalization), for fast comparison of large number of countries' COVID-19 magnitudes and trends.
+  * hierarchical clustering of countries' trajectories based on DTW distance and preprocessing by SMA (+ normalization), for fast comparison of a large number of countries' COVID-19 magnitudes and trends.
 
 The blog post will be about the last bullet of the above list - **clustering of countries' trajectories**.
-This use case is challenging because of **clustering time series with different lengths**.
+This use case is challenging because of the **clustering time series with different lengths**.
 
 ### CovidR contest
 
-I submitted my shiny application also to interesting initiative of eRum 2020 organizers - [**CovidR Contest**](https://milano-r.github.io/erum2020-covidr-contest/index.html).
+I submitted my shiny application also to the interesting initiative of eRum 2020 organizers - [**CovidR Contest**](https://milano-r.github.io/erum2020-covidr-contest/index.html).
 If you like my contribution, please vote for me at [**erum2020-covidr-contest/laurinec-CoronaDash**](https://milano-r.github.io/erum2020-covidr-contest/laurinec-CoronaDash.html) gallery post, thank you! :)
 
 ## Preprocessing COVID-19 open-data
@@ -59,9 +59,9 @@ data_covid_ts[, DateRep := as.Date(DateRep)] # transform character to Date class
 str(data_covid_ts)
 ```
 
-Since I want to analyse (cluster) trajectories of countries' active cases spread, I need to set **starting position for every countries' time series** - in this case (and in other many analysis out there) *100-th* cumulative confirmed case is set as starting point.
+Since I want to analyze (cluster) trajectories of countries' active cases spread, I need to set **starting position for every countries' time series** - in this case (and in other many analyses out there) *100-th* cumulative confirmed case is set as starting point.
 I will also use only top *82* affected countries (+ Slovakia as my home country) for the whole analysis.
-Let's transform our data for 'since first 100-th case' countries' trajectories (with same lengths!).
+Let's transform our data for 'since first 100-th case' countries' trajectories (with the same lengths!).
 ```{r, warning=FALSE, message=FALSE}
 n_cases <- 100 # you can vary
 statistic <- 'Total active cases per 1 million population' # you can also choose other stat
@@ -132,7 +132,7 @@ htmlwidgets::saveWidget(dt, "dt_traj_1.html", selfcontained = T)
 
 <div align="left"><iframe width="100%" height="300" frameborder="0" src="/dt_traj_1.html"></iframe></div>
 
-You can see that we got nicely same length time series for every country.
+You can see that we got nicely the same length time series for every country.
 
 Now, preparation of **trajectories' data for clustering** is coming...
 We have to remove missing rows/ columns if there are so + I will preprocess time series with **Simple Moving Average** (SMA) to little bit smooth our trajectories (removes noise) - the function `repr_sma` is implemented in my [**TSrepr package**](https://github.com/PetoLau/TSrepr).
@@ -187,12 +187,12 @@ htmlwidgets::saveWidget(dt, "dt_traj_2.html", selfcontained = T)
 <div align="left"><iframe width="100%" height="320" frameborder="0" src="/dt_traj_2.html"></iframe></div>
 
 
-## Clustering trajectories with hierarchical method with DTW distance
+## Clustering trajectories with the hierarchical method with DTW distance
 
-Since we use data with different lengths, we have to use different distance measure than Euclidean (or Manhattan etc.).
+Since we use data with different lengths, we have to use different distance measures than Euclidean (or Manhattan, etc.).
 Here comes very handy [**Dynamic Time Warping**](https://en.wikipedia.org/wiki/Dynamic_time_warping) distance measure that can compute distances between time series with various lags and different lengths.
 
-As clustering method, I picked [**hierarchical clustering with Ward criterion**](https://en.wikipedia.org/wiki/Ward%27s_method) for its next nice post-analysis tools as **dendrograms**.
+As a clustering method, I picked [**hierarchical clustering with Ward criterion**](https://en.wikipedia.org/wiki/Ward%27s_method) for its next nice post-analysis tools as **dendrograms**.
 
 Let's define clustering function with DTW distance with additional data preprocessing steps necessary for [`dtwclust` package](https://cran.r-project.org/package=dtwclust). I allow user also vary number of clusters and normalization of time series before clustering.
 ```{r}
@@ -293,7 +293,7 @@ dt <- DT::datatable(data_plot,
 htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 ```
 
-You can also search for your prefered country in the `datatable`.
+You can also search for your preferred country in the `datatable`.
 
 <div align="left"><iframe width="100%" height="380" frameborder="0" src="/dt_data_plot.html"></iframe></div>
 
@@ -355,7 +355,7 @@ saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 
 <div align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe></div>
 
-Here, I picked two clusters (2 and 6) with nice deacreasing trends - there are countries mostly from Central/ West Europe.
+Here, I picked two clusters (2 and 6) with nice decreasing trends - there are countries mostly from Central/ West Europe.
 
 Let's see also clusters with increasing trends of active cases per 1 mil. population:
 ```{r, warning=FALSE}
@@ -408,7 +408,7 @@ saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 
 <div align="left"><iframe width="100%" height="490" frameborder="0" src="/dyg_focus_clust_1.html"></iframe></div>
 
-We can see that at this day, increasing trend of active cases have countries mostly in the Western Asia, South America and Africa.
+We can see that on this day, the increasing trend of active cases has countries mostly in Western Asia, South America, and Africa.
 
 ## Post-analysis visualizations with dendrograms and MDS
 
@@ -459,8 +459,8 @@ In both graphs (dendrogram and MDS scatter plot), we can see clearly how far (or
 
 ## Summary
 
-In this blog post, I showed you how to **cluster time series with different lengths** with DTW distance and hierachical method, and how to visualize results of such a analysis.
-As use case, I picked data of **countries' COVID-19 active cases trajectories computed per 1 mil. population** to see trends of the desease spread.
+In this blog post, I showed you how to **cluster time series with different lengths** with DTW distance and hierarchical method, and how to visualize the results of such an analysis.
+As a use case, I picked data of **countries' COVID-19 active cases trajectories computed per 1 mil. population** to see trends of the disease spread.
 
 ### Sources
 
