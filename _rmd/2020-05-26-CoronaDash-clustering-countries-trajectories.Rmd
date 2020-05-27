@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 COVID-19 disease spread hit the World really globally and also field of mathematicians/ statisticians/ machine learning researchers and related.
 These experts want to help to understand for example future trends (forecast) of corona virus spread.
-My motivation in this case was to create **interactive dashboard** about COVID-19 to inform about various scenarios in every country in the World through **data mining methods**.
+My motivation in this case was to create **interactive dashboard** about COVID-19 to inform about various scenarios in every country and compare them through **data mining methods**.
 
 I created **CoronaDash** `shinydashboard` application that is hosted on [**petolau.shinyapps.io** RStudio platform](https://petolau.shinyapps.io/coronadash/).
 The dashboard provides various data mining/ visualization techniques for **comparing countries' COVID-19 data statistics** as:
@@ -28,14 +28,14 @@ The dashboard provides various data mining/ visualization techniques for **compa
 The blog post will be about the last bullet of the above list - **clustering of countries' trajectories**.
 This use case is challenging because of **clustering time series with different lengths**.
 
-#### CovidR contest
+### CovidR contest
 
 I submitted my shiny application also to interesting initiative of eRum 2020 organizers - [**CovidR Contest**](https://milano-r.github.io/erum2020-covidr-contest/index.html).
-If you like my contribution, please vote for me at [**erum2020-covidr-contest/laurinec-CoronaDash**](https://milano-r.github.io/erum2020-covidr-contest/laurinec-CoronaDash.html) gallery post :)
+If you like my contribution, please vote for me at [**erum2020-covidr-contest/laurinec-CoronaDash**](https://milano-r.github.io/erum2020-covidr-contest/laurinec-CoronaDash.html) gallery post, thank you! :)
 
-## Preprocessing of COVID-19 open-data
+## Preprocessing COVID-19 open-data
 
-Firstly, load all the needed packages.
+Firstly, load all the needed packages for an analysis.
 ```{r, message = FALSE, warning=FALSE}
 library(data.table) # data handling
 library(TSrepr) # ts representations, use dev version devtools::install_github("PetoLau/TSrepr")
@@ -48,23 +48,23 @@ library(DT) # nice datatable
 library(htmlwidgets) # save html objects
 ```
 
-Data are coming from [Johns Hopkins CSSE GitHub repository](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series), [GitHub repository by ulklc](https://github.com/ulklc/covid19-timeseries), and tests data are coming from [COVID19 API](https://github.com/ChrisMichaelPerezSantiago/covid19).
+I use data coming from [Johns Hopkins CSSE GitHub repository](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series) - cases and deaths numbers, [GitHub repository by ulklc](https://github.com/ulklc/covid19-timeseries) - recovery cases number, tests data are coming from [COVID19 API](https://github.com/ChrisMichaelPerezSantiago/covid19), and population sizes are from [worldometers](https://www.worldometers.info/coronavirus/).
 
-Read prepared data at *2020-05-24* snapshot.
+I prepared time series data at *2020-05-24* snapshot with various statistics also computed **per 1 million population** (so much better comparable), so let's read them.
 ```{r}
-data_covid_ts <- fread("_rmd/data_covid_time_series_2020-05-24.csv") # 
+data_covid_ts <- fread("_rmd/data_covid_time_series_2020-05-24.csv")
 data_covid_ts[, DateRep := as.Date(DateRep)] # transform character to Date class
 
 # what we got
 str(data_covid_ts)
 ```
 
-Different interesting statistics also computed "per 1 million population" for better comparison.
-
-Transform data for 'since first 100th case' countries trajectories with same lengths:
+Since I want to analyse (cluster) trajectories of countries' active cases spread, I need to set starting position for every countries' time series - in this case (and in other many analysis out there) *100-th* cumulative confirmed case is set as starting point.
+I will also use only top $82$ affected countries (+ Slovakia as my home country) for the whole analysis.
+Let's transform our data for 'since first 100-th case' countries' trajectories (with same lengths!).
 ```{r, warning=FALSE, message=FALSE}
 n_cases <- 100 # you can vary
-statistic <- 'Total active cases per 1 million population'
+statistic <- 'Total active cases per 1 million population' # you can also choose other stat
 
 # Cases greater than threshold
 data_covid_100_cases <- copy(data_covid_ts[,
@@ -73,6 +73,7 @@ data_covid_100_cases <- copy(data_covid_ts[,
                                                                   na.rm = T)]],
                                             by = .(Country)])
 
+# Order data
 setorder(data_covid_100_cases,
          Country,
          DateRep)
@@ -82,7 +83,7 @@ data_covid_100_cases[, (paste0("Days_since_first_",
                                n_cases, "_case")) := 1:.N,
                      by = .(Country)]
    
-# top N countries selection for analysis
+# top N countries selection for an analysis
 data_cases_order <- copy(data_covid_100_cases[,
                                       .SD[DateRep == max(DateRep),
                                           get(statistic)],
@@ -90,7 +91,6 @@ data_cases_order <- copy(data_covid_100_cases[,
                                       ])
     
 setnames(data_cases_order, "V1", statistic)
-
 setorderv(data_cases_order, statistic, -1)
     
 # subset data based on selected parameter -  top 82 countries and analyzed columns
@@ -115,6 +115,7 @@ setnames(data_covid_trajectories,
          colnames(data_covid_trajectories)[1],
          paste0("Days_since_first_", n_cases, "_case"))
 
+# see interactively what we got with DT package
 dt <- DT::datatable(data_covid_trajectories,
                     class = "compact",
                     extensions = 'Scroller',
@@ -125,15 +126,17 @@ dt <- DT::datatable(data_covid_trajectories,
                    scroller = TRUE,
                     scrollX = TRUE
                     ))
+
 htmlwidgets::saveWidget(dt, "dt_traj_1.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="380" frameborder="0" src="/dt_traj_1.html"></iframe>
+<div align="left"><iframe width="100%" height="400" frameborder="0" src="/dt_traj_1.html"></iframe></div>
 
-Prepare trajectories' data for clustering:
+You can see that we got nicely same length time series for every country.
+
+Now, preparation of **trajectories' data for clustering** is coming...
+We have to remove missing rows/ columns if there are so + I will preprocess time series with **Simple Moving Average** (SMA) to little bit smooth our trajectories (removes noise) - it is implemented in my [**TSrepr package**](https://github.com/PetoLau/TSrepr).
 ```{r, warning=FALSE, message=FALSE}
-q_sma <- 3
-
 # save stats of dt
 n_col <- ncol(data_covid_trajectories)
 n_row <- nrow(data_covid_trajectories)
@@ -155,7 +158,9 @@ if (length(which(n_col_na %in% n_row)) != 0) {
       
 }
 
-# use SMA for preprocessing time series from my TSrepr package
+# use SMA for preprocessing time series
+q_sma <- 3 # order of moving average
+
 data_covid_trajectories[,
                         (colnames(data_covid_trajectories)[-1]) :=
                           lapply(.SD, function(i)
@@ -164,6 +169,7 @@ data_covid_trajectories[,
                               )),
                         .SDcols = colnames(data_covid_trajectories)[-1]]
 
+# again see data interactively
 dt <- DT::datatable(data_covid_trajectories,
                     class = "compact",
                     extensions = 'Scroller',
@@ -178,9 +184,17 @@ dt <- DT::datatable(data_covid_trajectories,
 htmlwidgets::saveWidget(dt, "dt_traj_2.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="380" frameborder="0" src="/dt_traj_2.html"></iframe>
+<div align="left"><iframe width="100%" height="400" frameborder="0" src="/dt_traj_2.html"></iframe></div>
 
-Define clustering function with DTW distance with additional data preprocessing necessary for dtwclust package.
+
+## Clustering trajectories with hierarchical method with DTW distance
+
+Since we use data with different lengths, we have to use different distance measure than Euclidean (or Manhattan etc.).
+Here comes very handy [**Dynamic Time Warping**](https://en.wikipedia.org/wiki/Dynamic_time_warping) distance measure that can compute distances between time series with various lags and different lengths.
+
+As clustering method, I picked [**hierarchical clustering with Ward criterion**](https://en.wikipedia.org/wiki/Ward%27s_method) for its next nice post-analysis tools as **dendrograms**.
+
+Let's define clustering function with DTW distance with additional data preprocessing necessary for [`dtwclust` package](https://cran.r-project.org/package=dtwclust). I allow user also vary number of clusters and normalization of time series before clustering.
 ```{r}
 cluster_trajectories <- function(data, k, normalize = FALSE) {
   
@@ -188,10 +202,12 @@ cluster_trajectories <- function(data, k, normalize = FALSE) {
   data_trajectories_trans <- t(data[, .SD,
                                     .SDcols = colnames(data)[-1]])
   
+  # create list of time series
   data_trajectories_trans_list <- lapply(1:nrow(data_trajectories_trans), function(i)
     na.omit(data_trajectories_trans[i,]))
   names(data_trajectories_trans_list) <- colnames(data)[-1]
 
+  # remove data with length <= 1
   n_list <- sapply(1:length(data_trajectories_trans_list), function(i)
     length(data_trajectories_trans_list[[i]]))
   names(n_list) <- names(data_trajectories_trans_list)
@@ -215,11 +231,12 @@ cluster_trajectories <- function(data, k, normalize = FALSE) {
     
   }
 
+  # clustering with dtwclust package function
   hc_res <- tsclust(data_trajectories_trans_list,
                     type = "hierarchical",
                     k = k,
-                    distance = "dtw_basic", # "dtw", "dtw_basic", "dtw2", "sdtw"
-                    centroid = dba, # dba, sdtw_cent
+                    distance = "dtw_basic",
+                    centroid = dba,
                     trace = FALSE,
                     seed = 54321,
                     control = hierarchical_control(method = "ward.D2"),
@@ -231,16 +248,17 @@ cluster_trajectories <- function(data, k, normalize = FALSE) {
 }
 ```
 
-Execute clustering
+Let's cluster data with $14$ clusters and **normalization of countries' trajectories** for extracting clusters with **same trends (curves)** - not magnitudes! It is very important thing before every clustering/ classification task.
 ```{r}
 clust_res <- cluster_trajectories(data = data_covid_trajectories,
                                   k = 14,
                                   normalize = TRUE)
 
+# results
 clust_res
 ```
 
-Prepare data for plotting:
+Let's prepare clustered data for visualization:
 ```{r}
 # prepare time series
 data_clust_id <- data.table(Cluster = clust_res@cluster,
@@ -251,8 +269,7 @@ data_plot <- melt(data_covid_trajectories,
                   variable.name = "Country",
                   variable.factor = FALSE,
                   value.name = statistic,
-                  value.factor = FALSE
-                  )
+                  value.factor = FALSE)
 
 data_plot <- copy(data_plot[.(data_clust_id$Country), on = .(Country)])
 
@@ -260,6 +277,7 @@ data_plot[data_clust_id,
           on = .(Country),
           Cluster := i.Cluster]
 
+# again see what we got interactively
 dt <- DT::datatable(data_plot,
               class = "compact",
               extensions = 'Scroller',
@@ -275,9 +293,11 @@ dt <- DT::datatable(data_plot,
 htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="380" frameborder="0" src="/dt_data_plot.html"></iframe>
+You can also search for your prefered country in the `datatable`.
 
-Plot of cluster members....
+<div align="left"><iframe width="100%" height="380" frameborder="0" src="/dt_data_plot.html"></iframe></div>
+
+Here comes finally **plot of cluster members** with `ggplot2` package (log scale is used for better comparison of trends):
 ```{r, warning=FALSE, message=FALSE, fig.height=8, fig.width=10}
 theme_my <- theme(panel.border = element_rect(fill = NA,
                                                   colour = "grey10"),
@@ -289,12 +309,7 @@ theme_my <- theme(panel.border = element_rect(fill = NA,
                       axis.title = element_text(size = 13, face = "bold"),
                       plot.title = element_text(size = 16, face = "bold"),
                       strip.text = element_text(size = 12, face = "bold"),
-                      strip.background = element_rect(colour = "black"),
-                      legend.text = element_text(size = 14),
-                      legend.title = element_text(size = 15, face = "bold"),
-                      legend.background = element_rect(fill = "white"),
-                      legend.key = element_rect(fill = "white"),
-                      legend.position="bottom")
+                      strip.background = element_rect(colour = "black"))
 
 ggplot(data_plot,
        aes(get(colnames(data_plot)[1]),
@@ -312,7 +327,9 @@ ggplot(data_plot,
       theme_my
 ```
 
-Check some clusters interactively with dygraphs:
+We can see nicely distinguishable clusters with various active cases trends (settled, rapid/ steady increase/ decrease).
+
+Let's check some clusters interactively with [`dygraphs` package](https://rstudio.github.io/dygraphs/index.html):
 ```{r, warning=FALSE}
 data_clust_focus <- dcast(data_plot[.(c(2,6)), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
@@ -336,9 +353,11 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe>
+<div align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe></div>
 
-Check some clusters interactively with dygraphs:
+Here, I picked two clusters (2 and 6) with nice deacreasing trends - there are countries mostly from central/ west Europe.
+
+Let's see also clusters with increasing trends of active cases per 1 mil. population:
 ```{r, warning=FALSE}
 data_clust_focus <- dcast(data_plot[.(7), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
@@ -362,9 +381,8 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_7.html"></iframe>
+<div align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_7.html"></iframe></div>
 
-Check some clusters interactively with dygraphs:
 ```{r, warning=FALSE}
 data_clust_focus <- dcast(data_plot[.(1), on = .(Cluster)],
                           Days_since_first_100_case ~ Country,
@@ -388,9 +406,14 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 ```
 
-<iframe width="100%" height="490" frameborder="0" src="/dyg_focus_clust_1.html"></iframe>
+<div align="left"><iframe width="100%" height="490" frameborder="0" src="/dyg_focus_clust_1.html"></iframe></div>
 
-Dendrogram to see nicer connections between countries in a tree:
+We can see that at this day, increasing trend of active cases have countries mostly in the Western Asia, South America and Africa.
+
+## Post-analysis visualizations with dendrograms and MDS
+
+In order to see whole connectivity between countries' clusters as a tree, we can use for example **dendrogram**.
+Here, we can simply use object of clustering result to generate the tree:
 ```{r, warning=FALSE, message=FALSE, fig.height=12.2, fig.width=10}
 dend <- as.dendrogram(clust_res)
 
@@ -406,7 +429,7 @@ ggplot(ggd1,
        horiz = T)
 ```
 
-MDS 2D plot - we can use simply DTW distances.
+In order to see for example connections between countries in 2D scatter plot, we can use [**dimensionality reduction method Multidimensional scaling (MDS)**](https://en.wikipedia.org/wiki/Multidimensional_scaling). It uses (stored) distance matrix between objects - and we have it in our clustering result object (Yey `clust_res@distmat`!). For countries labels, I use great package [`ggrepel`](https://cran.r-project.org/package=ggrepel).
 ```{r, warning=FALSE, message=FALSE, fig.height=9.5, fig.width=10}
 mds_classical <- cmdscale(clust_res@distmat, eig = FALSE, k = 2)
 
@@ -432,7 +455,17 @@ ggplot(data_plot, aes(x = get("V1"),
       theme_my
 ```
 
-## Recap
+In both graphs (dendrogram and MDS scatter plot), we can see clearly how far (or close) are countries from each other based on **DTW distance**.
 
-DTW hierarchical clustering of active cases.
-CovidR contest, shinyapps.io, GitHub source code petolau + CoronaDash
+## Summary
+
+In this blog post, I showed you how to **cluster time series with different lengths** with DTW distance and hierachical method, and how to visualize results of such a analysis.
+As use case, I picked data of **countries' COVID-19 active cases trajectories computed per 1 mil. population** to see trends of the desease spread.
+
+### Sources
+
+Please, don't forget vote for my contribution in the [**CovidR contest**](https://milano-r.github.io/erum2020-covidr-contest/laurinec-CoronaDash.html).
+
+Application is also running on [petolau.shinyapps.io](https://petolau.shinyapps.io/coronadash/) platform, the source code of the whole app is on [my GitHub](https://github.com/PetoLau/CoronaDash).
+
+**Take care of yourself!**
