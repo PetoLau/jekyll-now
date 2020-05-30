@@ -26,10 +26,9 @@ The dashboard provides various data mining/ visualization techniques for **compa
 The blog post will be about the last bullet of the above list - **clustering of countries' trajectories**.
 This use case is challenging because of the **clustering time series with different lengths**.
  
-### CovidR contest
+#### CovidR contest
  
 I submitted my shiny application also to the interesting initiative of eRum 2020 organizers - [**CovidR Contest**](https://milano-r.github.io/erum2020-covidr-contest/index.html).
-If you like my contribution, please vote for me at [**erum2020-covidr-contest/laurinec-CoronaDash**](https://milano-r.github.io/erum2020-covidr-contest/laurinec-CoronaDash.html) gallery post, thank you! :)
  
 ## Preprocessing COVID-19 open-data
  
@@ -296,7 +295,7 @@ clust_res
 ## 
 ## Time required for analysis:
 ##    user  system elapsed 
-##    0.39    0.00    0.08 
+##    0.71    0.05    0.14 
 ## 
 ## Cluster sizes with average intra-cluster distance:
 ## 
@@ -536,8 +535,6 @@ As a use case, I picked data of **countries' COVID-19 active cases trajectories 
  
 ### Sources
  
-#### Please, don't forget **vote for my contribution** in the [**CovidR contest**](https://milano-r.github.io/erum2020-covidr-contest/laurinec-CoronaDash.html).
- 
-Application is also running on [**petolau.shinyapps.io**](https://petolau.shinyapps.io/coronadash/) platform, the source code of the whole app is on [**CoronaDash GitHub** repository](https://github.com/PetoLau/CoronaDash).
+Application is running on [**petolau.shinyapps.io**](https://petolau.shinyapps.io/coronadash/) platform, the source code of the whole app is on [**CoronaDash GitHub** repository](https://github.com/PetoLau/CoronaDash).
  
 *Take care of yourself!*
