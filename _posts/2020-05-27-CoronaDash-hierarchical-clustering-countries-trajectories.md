@@ -154,7 +154,7 @@ dt <- DT::datatable(data_covid_trajectories,
 htmlwidgets::saveWidget(dt, "dt_traj_1.html", selfcontained = T)
 {% endhighlight %}
  
-<div align="left"><iframe width="100%" height="300" frameborder="0" src="/dt_traj_1.html"></iframe></div>
+<div class="wrapper" align="left"><iframe width="100%" height="300" frameborder="0" src="/dt_traj_1.html"></iframe></div>
  
 You can see that we got nicely the same length time series for every country.
  
@@ -209,7 +209,7 @@ dt <- DT::datatable(data_covid_trajectories,
 htmlwidgets::saveWidget(dt, "dt_traj_2.html", selfcontained = T)
 {% endhighlight %}
  
-<div align="left"><iframe width="100%" height="320" frameborder="0" src="/dt_traj_2.html"></iframe></div>
+<div class="wrapper" align="left"><iframe width="100%" height="320" frameborder="0" src="/dt_traj_2.html"></iframe></div>
  
  
 ## Clustering trajectories with the hierarchical method with DTW distance
@@ -354,7 +354,7 @@ htmlwidgets::saveWidget(dt, "dt_data_plot.html", selfcontained = T)
  
 You can also search for your preferred country in the `datatable`.
  
-<div align="left"><iframe width="100%" height="380" frameborder="0" src="/dt_data_plot.html"></iframe></div>
+<div class="wrapper" align="left"><iframe width="100%" height="380" frameborder="0" src="/dt_data_plot.html"></iframe></div>
  
 Here comes finally **plot of cluster members** with `ggplot2` package (log scale is used for better comparison of trends):
 
@@ -416,7 +416,7 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_2_6.html", selfcontained = T)
 {% endhighlight %}
  
-<div align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe></div>
+<div class="wrapper" align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_2_6.html"></iframe></div>
  
 Here, I picked two clusters (2 and 6) with nice decreasing trends - there are countries mostly from Central/ West Europe.
  
@@ -445,7 +445,7 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_7.html", selfcontained = T)
 {% endhighlight %}
  
-<div align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_7.html"></iframe></div>
+<div class="wrapper" align="left"><iframe width="100%" height="450" frameborder="0" src="/dyg_focus_clust_7.html"></iframe></div>
  
 
 {% highlight r %}
@@ -471,7 +471,7 @@ dyg <- dygraph(data_clust_focus,
 saveWidget(dyg, "dyg_focus_clust_1.html", selfcontained = T)
 {% endhighlight %}
  
-<div align="left"><iframe width="100%" height="490" frameborder="0" src="/dyg_focus_clust_1.html"></iframe></div>
+<div class="wrapper" align="left"><iframe width="100%" height="490" frameborder="0" src="/dyg_focus_clust_1.html"></iframe></div>
  
 We can see that on this day, the increasing trend of active cases has countries mostly in Western Asia, South America, and Africa.
  
