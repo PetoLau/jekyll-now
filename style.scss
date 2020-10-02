@@ -116,6 +116,7 @@ strong, b {
 
 img {
   max-width: 100%;
+  display: block;
 }
 
 .date {
@@ -306,6 +307,16 @@ footer {
     text-decoration: none;
     text-shadow: 0px 0px 3px #d6d6c2;
     }
+}
+
+.container a {
+  padding: .2em;
+}
+
+@media (pointer: coarse) {
+  .container a {
+    padding: .8em;
+  }
 }
 
 

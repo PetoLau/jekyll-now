@@ -716,7 +716,7 @@ CtreeTrend <- function(data, set_of_date, K, period = 48){
  
 I created `plotly` boxplots graph of MAPE values from four models - CTREE simple, CTREE with detrending, RPART simple and RPART with detrending. Whole evaluation can be seen in the script that is stored in [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
  
-<iframe width="820" height="450" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/56.embed"></iframe>
+<iframe width="100%" height="450" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/56.embed"></iframe>
  
 We can see that **detrending time series** of electricity consumption improves the accuracy of the forecast with the combination of both **regression tree** methods - **RPART** and **CTREE**. My approach works as expected.
  
