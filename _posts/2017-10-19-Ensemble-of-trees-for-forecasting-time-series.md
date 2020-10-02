@@ -416,8 +416,10 @@ We can see that lowest average MAPEs are for `mtry` = 6 and `nodesize` = 2 or 5.
  
 For more exact evaluation, I made comparison of five methods - simple RPART, simple CTREE, Bagging + RPART, Bagging + CTREE and Random Forest on whole available dataset (so 98 forecasts were performed).
 I created `plotly` boxplots graph of MAPE values from these 5 methods. Whole evaluation can be seen in the script that is stored in [my GitHub repository](https://github.com/PetoLau/petolau.github.io/tree/master/_Rscripts).
- 
+
+<div class="wrapper"> 
 <iframe width="900" height="620" frameborder="0" scrolling="no" src="//plot.ly/~PetoLau2/68.embed"></iframe>
+</div>
  
 We can see that Bagging really helps decrease forecasting error for RPART and CTREE. The Random Forest has best results among all tested methods, so I proposed suitable approach for seasonal time series forecasting.
  
