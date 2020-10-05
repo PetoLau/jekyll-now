@@ -334,6 +334,11 @@ footer {
     height: 100%;
 }
 
+.MathJax_Display, .MJXc-display, .MathJax_SVG_Display {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
 // ----------------------------------
 // table custom css taken from github
 // ----------------------------------
